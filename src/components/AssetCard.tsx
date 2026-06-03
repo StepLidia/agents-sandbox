@@ -120,7 +120,7 @@ function EditableField({
 }) {
   return (
     <div className="grid grid-cols-[1fr_112px] items-center gap-3">
-      <span className="flex min-w-0 items-center gap-1.5 font-medium text-slate-800">
+      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
         <span className="truncate">{label}</span>
         {labelExtra}
       </span>

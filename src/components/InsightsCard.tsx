@@ -21,8 +21,8 @@ export function InsightsCard({ insightAmounts }: { insightAmounts: InsightAmount
           <InsightValue>+{currency(insightAmounts.favourableMarketReturnValue)} CHF</InsightValue> in 30 years.
         </li>
         <li>
-          If you invested <InsightValue>10,000 CHF</InsightValue> from your savings account, your total wealth would
-          have increased <InsightValue>+{currency(insightAmounts.savingsToInvestmentValue)} CHF</InsightValue>.
+          If you invested <InsightValue>10,000 CHF</InsightValue> from your savings account, your would add
+          <InsightValue>+{currency(insightAmounts.savingsToInvestmentValue)} CHF</InsightValue> to your total wealth in 30 years.
         </li>
       </ul>
     </section>

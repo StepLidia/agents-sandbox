@@ -180,16 +180,16 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
         30,
         investmentAsset.monthlyContribution,
       ) -
-        futureValue(
-          investmentAsset.amount,
-          investmentAsset.annualReturn,
-          30,
-          investmentAsset.monthlyContribution,
-        ),
+      futureValue(
+        investmentAsset.amount,
+        investmentAsset.annualReturn,
+        30,
+        investmentAsset.monthlyContribution,
+      ),
     ),
     savingsToInvestmentValue: Math.round(
       futureValue(10000, investmentAsset.annualReturn, 30) -
-        futureValue(10000, savingsAsset.annualReturn, 30),
+      futureValue(10000, savingsAsset.annualReturn, 30),
     ),
   };
 

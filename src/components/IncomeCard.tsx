@@ -236,5 +236,5 @@ function CurrencyInput({
 }
 
 function SmallLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-bold text-slate-800">{children}</p>;
+  return <p className="text-[13px] font-bold text-slate-800">{children}</p>;
 }
