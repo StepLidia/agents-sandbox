@@ -21,11 +21,18 @@ export const colorClasses = {
     stroke: '#047857',
   },
   coral: {
-    text: 'text-rose-600',
-    bg: 'bg-rose-500/12',
-    border: 'border-rose-300/40',
-    fill: 'rgba(244, 114, 94, 0.16)',
-    stroke: '#f4725e',
+    text: 'text-rose-500',
+    bg: 'bg-rose-400/10',
+    border: 'border-rose-200/50',
+    fill: 'rgba(251, 113, 133, 0.14)',
+    stroke: '#fb7185',
+  },
+  cyan: {
+    text: 'text-cyan-700',
+    bg: 'bg-cyan-500/12',
+    border: 'border-cyan-300/45',
+    fill: 'rgba(6, 182, 212, 0.15)',
+    stroke: '#0891b2',
   },
 };
 

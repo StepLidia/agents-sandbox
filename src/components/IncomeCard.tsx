@@ -51,14 +51,14 @@ export function IncomeCard({
               readOnly
             />
             <AllocationRow
-              color="bg-violet-600"
+              color="bg-rose-400"
               label="To Investments"
               amount={income.investmentContribution}
               percent={investmentPercent}
               readOnly
             />
             <AllocationRow
-              color="bg-rose-400"
+              color="bg-cyan-500"
               label="3rd Pillar"
               amount={income.pillar3Contribution}
               percent={pillar3Percent}
@@ -133,7 +133,7 @@ function IncomeDonut({
         cy="65"
         r={radius}
         fill="none"
-        stroke="#7c3aed"
+        stroke="#fb7185"
         strokeDasharray={`${investmentLength} ${circumference - investmentLength}`}
         strokeDashoffset={investmentOffset}
         strokeLinecap="round"
@@ -145,7 +145,7 @@ function IncomeDonut({
         cy="65"
         r={radius}
         fill="none"
-        stroke="#f4725e"
+        stroke="#0891b2"
         strokeDasharray={`${pillar3Length} ${circumference - pillar3Length}`}
         strokeDashoffset={pillar3Offset}
         strokeLinecap="round"

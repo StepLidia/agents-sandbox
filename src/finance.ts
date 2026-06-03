@@ -8,7 +8,7 @@ export type FinancialAsset = {
   monthlyContribution: number;
   annualReturn: number;
   years: number;
-  color: 'blue' | 'violet' | 'emerald' | 'coral';
+  color: 'blue' | 'violet' | 'emerald' | 'coral' | 'cyan';
 };
 
 export type ProjectionPoint = {
@@ -43,14 +43,14 @@ export const assets: FinancialAsset[] = [
     monthlyContribution: 1500,
     annualReturn: 5.5,
     years: 30,
-    color: 'violet',
+    color: 'coral',
   },
   {
     id: 'pillar2',
-    label: '2nd Pillar',
+    label: 'BVG (2nd Pillar)',
     subtitle: 'Pension fund',
     amount: 85000,
-    monthlyContribution: 0,
+    monthlyContribution: 260,
     annualReturn: 2.25,
     years: 30,
     color: 'emerald',
@@ -60,10 +60,10 @@ export const assets: FinancialAsset[] = [
     label: '3rd Pillar',
     subtitle: 'Private retirement',
     amount: 15000,
-    monthlyContribution: 588,
+    monthlyContribution: 604,
     annualReturn: 3,
     years: 30,
-    color: 'coral',
+    color: 'cyan',
   },
 ];
 
@@ -71,8 +71,8 @@ export const incomePlan: IncomePlan = {
   monthlyNetIncome: 6000,
   savingsContribution: 1000,
   investmentContribution: 1500,
-  pillar3Contribution: 588,
-  otherExpenses: 3500,
+  pillar3Contribution: 604,
+  otherExpenses: 0,
 };
 
 export function futureValue(
@@ -161,8 +161,8 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
     monthlyNetIncome === 0
       ? 0
       : ((derivedIncome.savingsContribution + derivedIncome.investmentContribution + derivedIncome.pillar3Contribution) /
-          monthlyNetIncome) *
-        100;
+        monthlyNetIncome) *
+      100;
 
   return {
     assets: calculatedAssets,

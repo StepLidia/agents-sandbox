@@ -36,25 +36,27 @@ export function ProjectionCard({
 function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palette: ChartPalette }) {
   const width = 520;
   const height = 188;
-  const padding = { top: 18, right: 18, bottom: 30, left: 42 };
-  const maxValue = Math.max(...points.map(({ value }) => value), 500000);
-  const xScale = (year: number) => padding.left + (year / 30) * (width - padding.left - padding.right);
+  const padding = { top: 18, right: 18, bottom: 30, left: 48 };
+  const maxYear = Math.max(points.at(-1)?.year ?? 30, 1);
+  const rawMaxValue = Math.max(...points.map(({ value }) => value), 1);
+  const ticks = buildValueTicks(rawMaxValue);
+  const maxValue = ticks.at(-1) ?? rawMaxValue;
+  const xScale = (year: number) => padding.left + (year / maxYear) * (width - padding.left - padding.right);
   const yScale = (value: number) => padding.top + (1 - value / maxValue) * (height - padding.top - padding.bottom);
   const line = points.map((point) => `${xScale(point.year)},${yScale(point.value)}`).join(' ');
-  const area = `${padding.left},${height - padding.bottom} ${line} ${xScale(30)},${height - padding.bottom}`;
-  const ticks = [0, 100000, 200000, 300000, 400000, 500000];
+  const area = `${padding.left},${height - padding.bottom} ${line} ${xScale(maxYear)},${height - padding.bottom}`;
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="mt-2 aspect-[2.75/1] w-full overflow-visible">
       {ticks.map((tick) => (
         <g key={tick}>
           <line x1={padding.left} x2={width - padding.right} y1={yScale(tick)} y2={yScale(tick)} stroke="rgba(100,116,139,.2)" />
-          <text x={8} y={yScale(tick) + 4} className="fill-slate-700 text-[11px]">
-            {tick === 0 ? '0' : `${tick / 1000}K`}
+          <text x={4} y={yScale(tick) + 4} className="fill-slate-700 text-[10px]">
+            {formatAxisValue(tick)}
           </text>
         </g>
       ))}
-      {[0, 5, 10, 15, 20, 25, 30].map((year) => (
+      {buildYearTicks(maxYear).map((year) => (
         <text key={year} x={xScale(year)} y={height - 7} textAnchor="middle" className="fill-slate-700 text-[11px]">
           {year}
         </text>
@@ -64,9 +66,9 @@ function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palet
       {points.filter((point) => point.year % 3 === 0).map((point) => (
         <circle key={point.year} cx={xScale(point.year)} cy={yScale(point.value)} r="3.2" fill={palette.stroke} stroke="white" strokeWidth="1.4" />
       ))}
-      <g transform={`translate(${xScale(30) - 25} ${yScale(points.at(-1)?.value ?? 0) - 31})`}>
-        <rect width="43" height="23" rx="5" fill={palette.stroke} />
-        <text x="21.5" y="15" textAnchor="middle" className="fill-white text-[11px] font-bold">
+      <g transform={`translate(${xScale(maxYear) - 29} ${yScale(points.at(-1)?.value ?? 0) - 31})`}>
+        <rect width="50" height="23" rx="5" fill={palette.stroke} />
+        <text x="25" y="15" textAnchor="middle" className="fill-white text-[10px] font-bold">
           {currency(points.at(-1)?.value ?? 0, true)}
         </text>
       </g>
@@ -75,4 +77,38 @@ function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palet
       </text>
     </svg>
   );
+}
+
+function buildValueTicks(maxValue: number) {
+  const roughStep = maxValue / 5;
+  const magnitude = 10 ** Math.floor(Math.log10(roughStep));
+  const normalized = roughStep / magnitude;
+  const niceNormalizedStep = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+  const step = niceNormalizedStep * magnitude;
+  const niceMax = Math.max(step, Math.ceil(maxValue / step) * step);
+
+  return Array.from({ length: 6 }, (_, index) => (niceMax / 5) * index);
+}
+
+function buildYearTicks(maxYear: number) {
+  const step = Math.max(1, Math.ceil(maxYear / 6));
+  const ticks = Array.from({ length: Math.floor(maxYear / step) + 1 }, (_, index) => index * step);
+
+  return ticks.at(-1) === maxYear ? ticks : [...ticks, maxYear];
+}
+
+function formatAxisValue(value: number) {
+  if (value === 0) {
+    return '0';
+  }
+
+  if (value >= 1000000) {
+    return `${Number((value / 1000000).toFixed(value >= 10000000 ? 0 : 1))}M`;
+  }
+
+  if (value >= 1000) {
+    return `${Number((value / 1000).toFixed(value >= 100000 ? 0 : 1))}K`;
+  }
+
+  return String(Math.round(value));
 }
