@@ -8,7 +8,7 @@ export function Header({ isExporting = false, onExportPdf }: { isExporting?: boo
         <p className="mt-1 text-sm text-slate-700">State of your financial situation</p>
       </div>
       <div className="flex items-center gap-2" data-pdf-exclude="true">
-        <button className="glass-control font-semibold" disabled={isExporting} onClick={onExportPdf}>
+        <button className="glass-control export-button font-semibold" disabled={isExporting} onClick={onExportPdf}>
           <Download className="h-4 w-4" />
           {isExporting ? 'Exporting...' : 'Export PDF'}
         </button>
