@@ -21,14 +21,14 @@ export function IncomeCard({
         <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
           <WalletCards className="h-4 w-4" />
         </div>
-        <h2 className="text-sm font-extrabold">Monthly Disposable Income</h2>
+        <h2 className="text-sm font-bold">Monthly Disposable Income</h2>
       </div>
-      <div className="mt-4 grid items-center gap-5 md:grid-cols-[190px_1fr]">
+      <div className="mt-4 grid items-start gap-5 md:grid-cols-[190px_1fr]">
         <div>
           <SmallLabel>Monthly Net Income (CHF)</SmallLabel>
           <CurrencyInput
             value={income.monthlyNetIncome}
-            className="mt-2 h-11 text-lg"
+            className="mt-2 h-11 w-full text-lg"
             onChange={(value) => onChange('monthlyNetIncome', value)}
           />
           <IncomeDonut
@@ -97,7 +97,7 @@ function IncomeDonut({
   const expenseOffset = -(savingsLength + investmentLength);
 
   return (
-    <svg viewBox="0 0 130 130" className="mt-2 h-36 w-36">
+    <svg viewBox="0 0 130 130" className="mx-auto mt-4 h-36 w-36">
       <circle cx="65" cy="65" r={radius} fill="none" stroke="rgba(148,163,184,.18)" strokeWidth="18" />
       <circle
         cx="65"
@@ -136,7 +136,7 @@ function IncomeDonut({
         transform="rotate(-90 65 65)"
       />
       <circle cx="65" cy="65" r="31" fill="rgba(255,255,255,.72)" />
-      <text x="65" y="62" textAnchor="middle" className="fill-slate-900 text-[18px] font-extrabold">
+      <text x="65" y="62" textAnchor="middle" className="fill-slate-900 text-[18px] font-bold">
         {currency(income)}
       </text>
       <text x="65" y="78" textAnchor="middle" className="fill-slate-600 text-[11px] font-bold">
@@ -183,7 +183,7 @@ function CurrencyInput({
   return (
     <span className={`glass-input justify-between py-2 text-sm ${className}`}>
       <input
-        className="w-full min-w-0 bg-transparent font-extrabold text-slate-950 outline-none"
+        className="w-full min-w-0 bg-transparent font-bold text-slate-950 outline-none"
         min={0}
         step={100}
         type="number"
@@ -196,5 +196,5 @@ function CurrencyInput({
 }
 
 function SmallLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-extrabold text-slate-800">{children}</p>;
+  return <p className="text-xs font-bold text-slate-800">{children}</p>;
 }

@@ -52,12 +52,12 @@ export function AssetCard({
         />
       </div>
       <div className="mt-4 border-t border-slate-300/45 pt-4">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex min-h-7 items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-xs font-bold">
             Future Value
             <CircleHelp className="h-4 w-4 text-slate-500" />
           </div>
-          <div className={`text-right text-xl font-bold ${colors.text}`}>
+          <div className={`text-right text-xl font-bold leading-none ${colors.text}`}>
             {currency(asset.futureValue)}
             <span className="ml-1 text-xs">CHF</span>
           </div>

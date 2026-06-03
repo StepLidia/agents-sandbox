@@ -18,7 +18,7 @@ export function Sidebar() {
           <BarChart3 className="h-6 w-6" />
         </div>
         <div>
-          <p className="text-2xl font-semibold tracking-normal">Assets</p>
+          <p className="text-2xl font-semibold tracking-normal">Swiss</p>
           <p className="text-xs text-slate-600">Financial Calculator</p>
         </div>
       </div>

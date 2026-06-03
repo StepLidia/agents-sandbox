@@ -48,7 +48,7 @@ function SummaryRow({
       </div>
       <div>
         <p className="text-xs text-slate-700">{label}</p>
-        <p className="text-lg font-extrabold">
+        <p className="text-lg font-bold">
           {currency(amount)} <span className="text-xs font-medium">CHF</span>
         </p>
         <p className="text-xs text-slate-600">{hint}</p>

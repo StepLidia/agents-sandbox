@@ -24,7 +24,7 @@ export function ProjectionCard({
         {note && <span className="text-xs text-slate-600">({note})</span>}
         <CircleHelp className="h-4 w-4 text-slate-500" />
       </div>
-      <p className={`mt-1 text-lg font-extrabold ${palette.text}`}>
+      <p className={`mt-1 text-lg font-bold ${palette.text}`}>
         {currency(amount)} <span className="text-xs text-slate-800">CHF</span>
       </p>
       <p className="text-xs text-slate-600">{subtitle}</p>
