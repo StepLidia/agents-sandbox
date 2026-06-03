@@ -1,12 +1,11 @@
-import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
-import { exportDashboardPdf } from '../pdf/exportDashboardPdf';
+import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { colorClasses } from './colors';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
 import { ProjectionCard } from './ProjectionCard';
-import { PdfReport } from './PdfReport';
 import { Sidebar } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
@@ -16,7 +15,6 @@ export function Dashboard() {
   const [income, setIncome] = useState<IncomePlan>(incomePlan);
   const [projectionYears, setProjectionYears] = useState(30);
   const [isExporting, setIsExporting] = useState(false);
-  const reportRef = useRef<HTMLElement>(null);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   function updateAsset(
@@ -33,14 +31,29 @@ export function Dashboard() {
     setIncome((currentIncome) => ({ ...currentIncome, [field]: value }));
   }
 
-  async function handleExportPdf() {
-    if (!reportRef.current || isExporting) {
+  function handleExportPdf() {
+    if (isExporting) {
       return;
     }
 
     setIsExporting(true);
     try {
-      await exportDashboardPdf(reportRef.current);
+      generateFinancialReportPdf({
+        assets: dashboard.assets,
+        income: dashboard.income,
+        insightAmounts: dashboard.insightAmounts,
+        projectionYears,
+        totalCurrentWealth: assets.reduce((sum, asset) => sum + asset.amount, 0),
+        totalWealth: dashboard.totalWealth,
+        pensionWealth: dashboard.pensionWealth,
+        liquidWealth: dashboard.liquidWealth,
+        totalProjection: dashboard.totalProjection,
+        pensionProjection: dashboard.pensionProjection,
+        savingsInvestmentProjection: dashboard.savingsInvestmentProjection,
+        zeroReturnTotalProjection: dashboard.zeroReturnTotalProjection,
+        zeroReturnPensionProjection: dashboard.zeroReturnPensionProjection,
+        zeroReturnSavingsInvestmentProjection: dashboard.zeroReturnSavingsInvestmentProjection,
+      });
     } finally {
       setIsExporting(false);
     }
@@ -106,11 +119,6 @@ export function Dashboard() {
               palette={colorClasses.emerald}
             />
           </div>
-        </section>
-      </div>
-      <div className="fixed -left-2500 top-0 w-235" aria-hidden="true">
-        <section ref={reportRef}>
-          <PdfReport dashboard={dashboard} projectionYears={projectionYears} />
         </section>
       </div>
     </main>
