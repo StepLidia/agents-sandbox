@@ -1,4 +1,4 @@
-import { Clock3, WalletCards } from 'lucide-react';
+import { Clock3, Wallet } from 'lucide-react';
 import { currency, type IncomePlan } from '../finance';
 
 export function IncomeCard({
@@ -20,7 +20,7 @@ export function IncomeCard({
     <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center gap-2">
         <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
-          <WalletCards className="h-4 w-4" />
+          <Wallet className="h-4 w-4" />
         </div>
         <h2 className="text-sm font-bold">Monthly Disposable Income</h2>
       </div>
