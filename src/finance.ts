@@ -172,8 +172,40 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan, proj
       : ((derivedIncome.savingsContribution + derivedIncome.investmentContribution + derivedIncome.pillar3Contribution) /
         monthlyNetIncome) *
       100;
+  const baselineInvestmentValue = futureValue(
+    investmentAsset.amount,
+    investmentAsset.annualReturn,
+    projectionYears,
+    investmentAsset.monthlyContribution,
+  );
+  const transferFromSavings = Math.min(10000, Math.max(0, savingsAsset.amount));
+  const baselineSavingsValue = futureValue(
+    savingsAsset.amount,
+    savingsAsset.annualReturn,
+    projectionYears,
+    savingsAsset.monthlyContribution,
+  );
+  const transferredSavingsValue = futureValue(
+    savingsAsset.amount - transferFromSavings,
+    savingsAsset.annualReturn,
+    projectionYears,
+    savingsAsset.monthlyContribution,
+  );
+  const transferredInvestmentValue = futureValue(
+    investmentAsset.amount + transferFromSavings,
+    investmentAsset.annualReturn,
+    projectionYears,
+    investmentAsset.monthlyContribution,
+  );
   const insightAmounts: InsightAmounts = {
-    extraInvestmentContributionValue: Math.round(futureValue(0, investmentAsset.annualReturn, projectionYears, 200)),
+    extraInvestmentContributionValue: Math.round(
+      futureValue(
+        investmentAsset.amount,
+        investmentAsset.annualReturn,
+        projectionYears,
+        investmentAsset.monthlyContribution + 200,
+      ) - baselineInvestmentValue,
+    ),
     favourableMarketReturnValue: Math.round(
       futureValue(
         investmentAsset.amount,
@@ -189,8 +221,7 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan, proj
       ),
     ),
     savingsToInvestmentValue: Math.round(
-      futureValue(10000, investmentAsset.annualReturn, projectionYears) -
-      futureValue(10000, savingsAsset.annualReturn, projectionYears),
+      transferredSavingsValue + transferredInvestmentValue - baselineSavingsValue - baselineInvestmentValue,
     ),
   };
 

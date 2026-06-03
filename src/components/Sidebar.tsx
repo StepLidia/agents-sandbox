@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { BarChart3, Footprints, Layers3, LineChart, PiggyBank, SlidersHorizontal, Target } from 'lucide-react';
+import { BarChart3, Footprints } from 'lucide-react';
 
 const navItems: Array<[string, LucideIcon]> = [
   ['Overview', BarChart3]
