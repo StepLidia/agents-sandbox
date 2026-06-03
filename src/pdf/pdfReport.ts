@@ -49,7 +49,6 @@ export function generateFinancialReportPdf(reportData: FinancialReportData) {
   drawAllocation(context, reportData.income);
   drawKeyInsights(context, reportData);
   drawCharts(context, reportData);
-  drawDisclaimer(context);
   finalizePageNumbers(context);
 
   context.pdf.save(`growly-financial-projection-report-${formatFileDate(context.generatedAt)}.pdf`);
@@ -296,14 +295,6 @@ function drawSubsectionTitle(context: PdfContext, title: string) {
   context.y += 5;
 }
 
-function drawDisclaimer(context: PdfContext) {
-  drawStatementTitle(context, 'Disclaimer');
-  context.pdf.setFont('helvetica', 'normal');
-  context.pdf.setFontSize(9);
-  context.pdf.setTextColor(70, 70, 70);
-  context.pdf.text(context.pdf.splitTextToSize(DISCLAIMER, 170), page.marginX, context.y);
-}
-
 function ensureSpace(context: PdfContext, neededHeight: number, afterPageBreak?: () => void) {
   if (context.y + neededHeight <= page.height - page.bottom) {
     return;
@@ -327,11 +318,19 @@ function drawPageHeader(context: PdfContext) {
 
 function addFooter(context: PdfContext, totalPages?: number) {
   const { pdf } = context;
+  const isLastPage = totalPages !== undefined && context.page === totalPages;
+
   pdf.setDrawColor(215, 215, 215);
   pdf.line(page.marginX, page.height - 15, page.width - page.marginX, page.height - 15);
   pdf.setFont('helvetica', 'normal');
-  pdf.setFontSize(8);
   pdf.setTextColor(90, 90, 90);
+
+  if (isLastPage) {
+    pdf.setFontSize(7.5);
+    pdf.text(DISCLAIMER, page.marginX, page.height - 8);
+  }
+
+  pdf.setFontSize(8);
   pdf.text(`Page ${context.page}${totalPages ? ` of ${totalPages}` : ''}`, page.width - page.marginX, page.height - 8, {
     align: 'right',
   });
