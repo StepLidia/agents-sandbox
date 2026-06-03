@@ -5,9 +5,10 @@ export type FinancialAsset = {
   label: string;
   subtitle: string;
   amount: number;
+  monthlyContribution: number;
   annualReturn: number;
   years: number;
-  color: 'blue' | 'violet' | 'emerald' | 'amber';
+  color: 'blue' | 'violet' | 'emerald' | 'coral';
 };
 
 export type ProjectionPoint = {
@@ -19,6 +20,7 @@ export type IncomePlan = {
   monthlyNetIncome: number;
   savingsContribution: number;
   investmentContribution: number;
+  pillar3Contribution: number;
   otherExpenses: number;
 };
 
@@ -28,6 +30,7 @@ export const assets: FinancialAsset[] = [
     label: 'Savings Account',
     subtitle: 'Liquid reserve',
     amount: 25000,
+    monthlyContribution: 1000,
     annualReturn: 1.2,
     years: 30,
     color: 'blue',
@@ -37,6 +40,7 @@ export const assets: FinancialAsset[] = [
     label: 'Investments',
     subtitle: 'Securities portfolio',
     amount: 40000,
+    monthlyContribution: 1500,
     annualReturn: 5.5,
     years: 30,
     color: 'violet',
@@ -46,6 +50,7 @@ export const assets: FinancialAsset[] = [
     label: '2nd Pillar',
     subtitle: 'Pension fund',
     amount: 85000,
+    monthlyContribution: 0,
     annualReturn: 2.25,
     years: 30,
     color: 'emerald',
@@ -55,9 +60,10 @@ export const assets: FinancialAsset[] = [
     label: '3rd Pillar',
     subtitle: 'Private retirement',
     amount: 15000,
+    monthlyContribution: 588,
     annualReturn: 3,
     years: 30,
-    color: 'amber',
+    color: 'coral',
   },
 ];
 
@@ -65,23 +71,40 @@ export const incomePlan: IncomePlan = {
   monthlyNetIncome: 6000,
   savingsContribution: 1000,
   investmentContribution: 1500,
+  pillar3Contribution: 588,
   otherExpenses: 3500,
 };
 
-export function futureValue(principal: number, annualReturnPercent: number, years: number): number {
-  return Math.max(0, principal) * (1 + annualReturnPercent / 100) ** Math.max(0, years);
+export function futureValue(
+  principal: number,
+  annualReturnPercent: number,
+  years: number,
+  monthlyContribution = 0,
+): number {
+  const safeYears = Math.max(0, Math.round(years));
+  const yearlyRate = annualReturnPercent / 100;
+  const safePrincipal = Math.max(0, principal);
+  const yearlyContribution = Math.max(0, monthlyContribution) * 12;
+  let value = safePrincipal;
+
+  for (let year = 0; year < safeYears; year += 1) {
+    value = value * (1 + yearlyRate) + yearlyContribution;
+  }
+
+  return value;
 }
 
 export function buildProjection(
   principal: number,
   annualReturnPercent: number,
   years: number,
+  monthlyContribution = 0,
 ): ProjectionPoint[] {
   const safeYears = Math.max(0, Math.round(years));
 
   return Array.from({ length: safeYears + 1 }, (_, year) => ({
     year,
-    value: futureValue(principal, annualReturnPercent, year),
+    value: futureValue(principal, annualReturnPercent, year, monthlyContribution),
   }));
 }
 
@@ -95,8 +118,8 @@ export function combineProjections(series: ProjectionPoint[][]): ProjectionPoint
 }
 
 export function calculateAsset(asset: FinancialAsset) {
-  const projection = buildProjection(asset.amount, asset.annualReturn, asset.years);
-  const value = futureValue(asset.amount, asset.annualReturn, asset.years);
+  const projection = buildProjection(asset.amount, asset.annualReturn, asset.years, asset.monthlyContribution);
+  const value = futureValue(asset.amount, asset.annualReturn, asset.years, asset.monthlyContribution);
 
   return {
     ...asset,
@@ -106,6 +129,24 @@ export function calculateAsset(asset: FinancialAsset) {
 }
 
 export function calculateDashboard(rawAssets = assets, income = incomePlan) {
+  const contributionById = Object.fromEntries(rawAssets.map((asset) => [asset.id, asset.monthlyContribution])) as Record<
+    AssetKind,
+    number
+  >;
+  const savingsContribution = Math.max(0, contributionById.savings);
+  const investmentContribution = Math.max(0, contributionById.investments);
+  const pillar3Contribution = Math.max(0, contributionById.pillar3);
+  const derivedOtherExpenses = Math.max(
+    0,
+    income.monthlyNetIncome - savingsContribution - investmentContribution - pillar3Contribution,
+  );
+  const derivedIncome = {
+    ...income,
+    savingsContribution,
+    investmentContribution,
+    pillar3Contribution,
+    otherExpenses: derivedOtherExpenses,
+  };
   const calculatedAssets = rawAssets.map(calculateAsset);
   const savingsInvestments = calculatedAssets.filter(({ id }) => id === 'savings' || id === 'investments');
   const pensionAssets = calculatedAssets.filter(({ id }) => id === 'pillar2' || id === 'pillar3');
@@ -115,9 +156,13 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
   const totalWealth = Math.round(totalProjection.at(-1)?.value ?? 0);
   const pensionWealth = Math.round(pensionProjection.at(-1)?.value ?? 0);
   const liquidWealth = Math.round(savingsInvestmentProjection.at(-1)?.value ?? 0);
-  const monthlyNetIncome = Math.max(0, income.monthlyNetIncome);
+  const monthlyNetIncome = Math.max(0, derivedIncome.monthlyNetIncome);
   const futureBuildingPercent =
-    monthlyNetIncome === 0 ? 0 : ((income.savingsContribution + income.investmentContribution) / monthlyNetIncome) * 100;
+    monthlyNetIncome === 0
+      ? 0
+      : ((derivedIncome.savingsContribution + derivedIncome.investmentContribution + derivedIncome.pillar3Contribution) /
+          monthlyNetIncome) *
+        100;
 
   return {
     assets: calculatedAssets,
@@ -128,7 +173,7 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
     pensionProjection,
     savingsInvestmentProjection,
     futureBuildingPercent,
-    income,
+    income: derivedIncome,
   };
 }
 

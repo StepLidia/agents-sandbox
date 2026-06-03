@@ -1,4 +1,4 @@
-import { ChevronRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export function InsightsCard() {
   return (
@@ -14,10 +14,6 @@ export function InsightsCard() {
         <li>Higher investment returns can add meaningful upside over 30 years.</li>
         <li>3rd pillar contributions can provide valuable tax benefits.</li>
       </ul>
-      <button className="mt-auto flex h-10 w-full items-center justify-between rounded-lg bg-white/35 px-4 text-sm font-bold text-slate-800 shadow-inner">
-        View Detailed Breakdown
-        <ChevronRight className="h-5 w-5" />
-      </button>
     </section>
   );
 }

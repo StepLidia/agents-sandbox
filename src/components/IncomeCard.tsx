@@ -8,11 +8,12 @@ export function IncomeCard({
 }: {
   income: IncomePlan;
   futureBuildingPercent: number;
-  onChange: (field: keyof IncomePlan, value: number) => void;
+  onChange: (field: keyof Pick<IncomePlan, 'monthlyNetIncome'>, value: number) => void;
 }) {
   const monthlyNetIncome = Math.max(0, income.monthlyNetIncome);
   const savingsPercent = monthlyNetIncome === 0 ? 0 : (income.savingsContribution / monthlyNetIncome) * 100;
   const investmentPercent = monthlyNetIncome === 0 ? 0 : (income.investmentContribution / monthlyNetIncome) * 100;
+  const pillar3Percent = monthlyNetIncome === 0 ? 0 : (income.pillar3Contribution / monthlyNetIncome) * 100;
   const expensePercent = monthlyNetIncome === 0 ? 0 : (income.otherExpenses / monthlyNetIncome) * 100;
 
   return (
@@ -35,6 +36,7 @@ export function IncomeCard({
             income={income.monthlyNetIncome}
             savingsPercent={savingsPercent}
             investmentPercent={investmentPercent}
+            pillar3Percent={pillar3Percent}
             expensePercent={expensePercent}
           />
         </div>
@@ -46,21 +48,28 @@ export function IncomeCard({
               label="To Savings Account"
               amount={income.savingsContribution}
               percent={savingsPercent}
-              onChange={(value) => onChange('savingsContribution', value)}
+              readOnly
             />
             <AllocationRow
               color="bg-violet-600"
               label="To Investments"
               amount={income.investmentContribution}
               percent={investmentPercent}
-              onChange={(value) => onChange('investmentContribution', value)}
+              readOnly
             />
             <AllocationRow
-              color="bg-slate-400"
-              label="Other Expenses"
+              color="bg-rose-400"
+              label="3rd Pillar"
+              amount={income.pillar3Contribution}
+              percent={pillar3Percent}
+              readOnly
+            />
+            <AllocationRow
+              color="bg-sky-400"
+              label="Expenses"
               amount={income.otherExpenses}
               percent={expensePercent}
-              onChange={(value) => onChange('otherExpenses', value)}
+              readOnly
             />
           </div>
           <div className="mt-3 flex items-center gap-3 rounded-lg border border-blue-200/50 bg-blue-500/8 px-4 py-3 text-sm font-bold text-blue-800">
@@ -77,24 +86,32 @@ function IncomeDonut({
   income,
   savingsPercent,
   investmentPercent,
+  pillar3Percent,
   expensePercent,
 }: {
   income: number;
   savingsPercent: number;
   investmentPercent: number;
+  pillar3Percent: number;
   expensePercent: number;
 }) {
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const safeSavingsPercent = Math.max(0, Math.min(100, savingsPercent));
   const safeInvestmentPercent = Math.max(0, Math.min(100 - safeSavingsPercent, investmentPercent));
-  const safeExpensePercent = Math.max(0, Math.min(100 - safeSavingsPercent - safeInvestmentPercent, expensePercent));
+  const safePillar3Percent = Math.max(0, Math.min(100 - safeSavingsPercent - safeInvestmentPercent, pillar3Percent));
+  const safeExpensePercent = Math.max(
+    0,
+    Math.min(100 - safeSavingsPercent - safeInvestmentPercent - safePillar3Percent, expensePercent),
+  );
   const savingsLength = (safeSavingsPercent / 100) * circumference;
   const investmentLength = (safeInvestmentPercent / 100) * circumference;
+  const pillar3Length = (safePillar3Percent / 100) * circumference;
   const expenseLength = (safeExpensePercent / 100) * circumference;
   const savingsOffset = 0;
   const investmentOffset = -savingsLength;
-  const expenseOffset = -(savingsLength + investmentLength);
+  const pillar3Offset = -(savingsLength + investmentLength);
+  const expenseOffset = -(savingsLength + investmentLength + pillar3Length);
 
   return (
     <svg viewBox="0 0 130 130" className="mx-auto mt-4 h-36 w-36">
@@ -128,6 +145,18 @@ function IncomeDonut({
         cy="65"
         r={radius}
         fill="none"
+        stroke="#f4725e"
+        strokeDasharray={`${pillar3Length} ${circumference - pillar3Length}`}
+        strokeDashoffset={pillar3Offset}
+        strokeLinecap="round"
+        strokeWidth="18"
+        transform="rotate(-90 65 65)"
+      />
+      <circle
+        cx="65"
+        cy="65"
+        r={radius}
+        fill="none"
         stroke="#4fc3f7"
         strokeDasharray={`${expenseLength} ${circumference - expenseLength}`}
         strokeDashoffset={expenseOffset}
@@ -152,12 +181,14 @@ function AllocationRow({
   amount,
   percent,
   onChange,
+  readOnly = false,
 }: {
   color: string;
   label: string;
   amount: number;
   percent: number;
-  onChange: (value: number) => void;
+  onChange?: (value: number) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="grid grid-cols-[1fr_112px_42px] items-center gap-3 border-b border-slate-300/35 px-4 py-3 last:border-b-0">
@@ -165,9 +196,18 @@ function AllocationRow({
         <span className={`h-3 w-3 shrink-0 rounded-full ${color}`} />
         <span className="truncate">{label}</span>
       </div>
-      <CurrencyInput value={amount} onChange={onChange} />
+      {readOnly ? <CurrencyValue value={amount} /> : <CurrencyInput value={amount} onChange={onChange ?? (() => undefined)} />}
       <span className="text-right text-xs font-semibold text-slate-600">{percent.toFixed(1)}%</span>
     </div>
+  );
+}
+
+function CurrencyValue({ value }: { value: number }) {
+  return (
+    <span className="flex min-w-0 items-center justify-between gap-3 py-2 text-sm font-normal text-slate-700">
+      <span className="min-w-0 truncate">{currency(value)}</span>
+      <span className="text-xs font-normal text-slate-600">CHF</span>
+    </span>
   );
 }
 

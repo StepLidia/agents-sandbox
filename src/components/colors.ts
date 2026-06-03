@@ -20,12 +20,12 @@ export const colorClasses = {
     fill: 'rgba(5, 150, 105, 0.16)',
     stroke: '#047857',
   },
-  amber: {
-    text: 'text-amber-600',
-    bg: 'bg-amber-500/12',
-    border: 'border-amber-300/40',
-    fill: 'rgba(217, 119, 6, 0.15)',
-    stroke: '#d97706',
+  coral: {
+    text: 'text-rose-600',
+    bg: 'bg-rose-500/12',
+    border: 'border-rose-300/40',
+    fill: 'rgba(244, 114, 94, 0.16)',
+    stroke: '#f4725e',
   },
 };
 

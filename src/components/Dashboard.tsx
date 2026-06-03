@@ -14,19 +14,23 @@ export function Dashboard() {
   const [income, setIncome] = useState<IncomePlan>(incomePlan);
   const dashboard = useMemo(() => calculateDashboard(assets, income), [assets, income]);
 
-  function updateAsset(id: AssetKind, field: keyof Pick<FinancialAsset, 'amount' | 'annualReturn' | 'years'>, value: number) {
+  function updateAsset(
+    id: AssetKind,
+    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn' | 'years'>,
+    value: number,
+  ) {
     setAssets((currentAssets) =>
       currentAssets.map((asset) => (asset.id === id ? { ...asset, [field]: value } : asset)),
     );
   }
 
-  function updateIncome(field: keyof IncomePlan, value: number) {
+  function updateIncome(field: keyof Pick<IncomePlan, 'monthlyNetIncome'>, value: number) {
     setIncome((currentIncome) => ({ ...currentIncome, [field]: value }));
   }
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
-      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.23),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(124,58,237,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(148,163,184,.24),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_1fr]">
         <Sidebar />
         <section className="px-4 py-4 sm:px-5 xl:px-6">

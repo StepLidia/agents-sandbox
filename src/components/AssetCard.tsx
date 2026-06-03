@@ -9,7 +9,11 @@ export function AssetCard({
   onChange,
 }: {
   asset: Asset;
-  onChange: (id: AssetKind, field: keyof Pick<FinancialAsset, 'amount' | 'annualReturn' | 'years'>, value: number) => void;
+  onChange: (
+    id: AssetKind,
+    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn' | 'years'>,
+    value: number,
+  ) => void;
 }) {
   const Icon =
     asset.id === 'savings' ? Landmark : asset.id === 'investments' ? TrendingUp : asset.id === 'pillar2' ? ShieldCheck : Building2;
@@ -36,7 +40,15 @@ export function AssetCard({
           onChange={(value) => onChange(asset.id, 'amount', value)}
         />
         <EditableField
-          label="Expected Return (%)"
+          label="Monthly Contribution"
+          value={asset.monthlyContribution}
+          suffix="CHF"
+          min={0}
+          step={100}
+          onChange={(value) => onChange(asset.id, 'monthlyContribution', value)}
+        />
+        <EditableField
+          label="Expected Yearly Return (%)"
           value={asset.annualReturn}
           suffix="%"
           step={0.05}
