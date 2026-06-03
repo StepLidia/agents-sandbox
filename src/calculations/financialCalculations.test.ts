@@ -111,4 +111,13 @@ describe('financial calculations', () => {
     expect(dashboard.pensionProjection[3].value).toBeCloseTo(12172.582, 3);
     expect(dashboard.savingsInvestmentProjection[3].value).toBeCloseTo(14547.671, 3);
   });
+
+  it('generates zero-return comparison chart data', () => {
+    const dashboard = calculateDashboard(testAssets, testIncome, 3);
+
+    expect(dashboard.zeroReturnTotalProjection).toHaveLength(4);
+    expect(dashboard.zeroReturnTotalProjection[3].value).toBeCloseTo(25300, 3);
+    expect(dashboard.zeroReturnPensionProjection[3].value).toBeCloseTo(11500, 3);
+    expect(dashboard.zeroReturnSavingsInvestmentProjection[3].value).toBeCloseTo(13800, 3);
+  });
 });

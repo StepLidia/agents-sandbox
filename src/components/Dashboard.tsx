@@ -68,6 +68,7 @@ export function Dashboard() {
               amount={dashboard.totalWealth}
               subtitle="All accounts combined"
               points={dashboard.totalProjection}
+              comparisonPoints={dashboard.zeroReturnTotalProjection}
               palette={colorClasses.blue}
             />
             <ProjectionCard
@@ -76,6 +77,7 @@ export function Dashboard() {
               amount={dashboard.pensionWealth}
               subtitle="Future pension capital"
               points={dashboard.pensionProjection}
+              comparisonPoints={dashboard.zeroReturnPensionProjection}
               palette={colorClasses.violet}
             />
             <ProjectionCard
@@ -83,6 +85,7 @@ export function Dashboard() {
               amount={dashboard.liquidWealth}
               subtitle="Liquid and accessible wealth"
               points={dashboard.savingsInvestmentProjection}
+              comparisonPoints={dashboard.zeroReturnSavingsInvestmentProjection}
               palette={colorClasses.emerald}
             />
           </div>

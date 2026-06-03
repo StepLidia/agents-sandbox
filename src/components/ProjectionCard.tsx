@@ -16,6 +16,7 @@ export function ProjectionCard({
   amount,
   subtitle,
   points,
+  comparisonPoints,
   palette,
 }: {
   title: string;
@@ -23,6 +24,7 @@ export function ProjectionCard({
   amount: number;
   subtitle: string;
   points: ProjectionPoint[];
+  comparisonPoints?: ProjectionPoint[];
   palette: ChartPalette;
 }) {
   return (
@@ -35,14 +37,22 @@ export function ProjectionCard({
         {currency(amount)} <span className="text-xs text-slate-800">CHF</span>
       </p>
       <p className="text-xs text-slate-600">{subtitle}</p>
-      <ProjectionChart points={points} palette={palette} />
+      <ProjectionChart points={points} comparisonPoints={comparisonPoints} palette={palette} />
     </section>
   );
 }
 
-function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palette: ChartPalette }) {
+function ProjectionChart({
+  points,
+  comparisonPoints = [],
+  palette,
+}: {
+  points: ProjectionPoint[];
+  comparisonPoints?: ProjectionPoint[];
+  palette: ChartPalette;
+}) {
   const maxYear = Math.max(points.at(-1)?.year ?? 30, 1);
-  const rawMaxValue = Math.max(...points.map(({ value }) => value), 1);
+  const rawMaxValue = Math.max(...points.map(({ value }) => value), ...comparisonPoints.map(({ value }) => value), 1);
   const ticks = buildValueTicks(rawMaxValue);
   const maxValue = ticks.at(-1) ?? rawMaxValue;
   const yearTicks = buildYearTicks(maxYear);
@@ -50,10 +60,11 @@ function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palet
   const chartData = points.map((point) => ({
     year: point.year,
     value: Math.round(point.value),
+    zeroReturnValue: Math.round(comparisonPoints.find(({ year }) => year === point.year)?.value ?? 0),
   }));
 
   return (
-    <div className="mt-2 h-[188px] w-full">
+    <div className="mt-2 h-47 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 14, right: 12, bottom: 6, left: -10 }}>
           <defs>
@@ -101,6 +112,22 @@ function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palet
             strokeWidth={3}
             type="monotone"
           />
+          {comparisonPoints.length > 0 && (
+            <Area
+              activeDot={{ r: 4, fill: '#64748b', stroke: 'white', strokeWidth: 2 }}
+              dataKey="zeroReturnValue"
+              dot={false}
+              fill="transparent"
+              isAnimationActive={false}
+              stroke="#64748b"
+              strokeDasharray="5 5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeOpacity={0.78}
+              strokeWidth={2}
+              type="monotone"
+            />
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>
@@ -109,12 +136,13 @@ function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palet
 
 type ProjectionTooltipProps = {
   active?: boolean;
-  payload?: Array<{ value?: number }>;
+  payload?: Array<{ dataKey?: string; value?: number }>;
   label?: number | string;
 };
 
 function ProjectionTooltip({ active, payload, label }: ProjectionTooltipProps) {
-  const value = payload?.[0]?.value;
+  const value = payload?.find(({ dataKey }) => dataKey === 'value')?.value;
+  const zeroReturnValue = payload?.find(({ dataKey }) => dataKey === 'zeroReturnValue')?.value;
 
   if (!active || typeof value !== 'number') {
     return null;
@@ -123,6 +151,9 @@ function ProjectionTooltip({ active, payload, label }: ProjectionTooltipProps) {
   return (
     <div className="-translate-y-3 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-xs shadow-xl shadow-slate-400/20 backdrop-blur-xl">
       <p className="font-bold text-slate-950">{currency(value)} CHF</p>
+      {typeof zeroReturnValue === 'number' && (
+        <p className="mt-1 text-slate-600">0% return: {currency(zeroReturnValue)} CHF</p>
+      )}
       <p className="mt-0.5 text-slate-600">Year {label}</p>
     </div>
   );

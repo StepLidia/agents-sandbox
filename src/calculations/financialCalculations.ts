@@ -84,6 +84,10 @@ export function calculateAsset(asset: FinancialAsset, projectionYears = asset.ye
   };
 }
 
+function buildZeroReturnProjection(asset: FinancialAsset, projectionYears: number) {
+  return buildProjection(asset.amount, 0, projectionYears, asset.monthlyContribution);
+}
+
 export function calculateDashboard(rawAssets: FinancialAsset[], income: IncomePlan, projectionYears = 30) {
   const contributionById = Object.fromEntries(rawAssets.map((asset) => [asset.id, asset.monthlyContribution])) as Record<
     AssetKind,
@@ -104,13 +108,29 @@ export function calculateDashboard(rawAssets: FinancialAsset[], income: IncomePl
     otherExpenses: derivedOtherExpenses,
   };
   const calculatedAssets = rawAssets.map((asset) => calculateAsset(asset, projectionYears));
+  const zeroReturnProjections = rawAssets.map((asset) => buildZeroReturnProjection(asset, projectionYears));
   const savingsAsset = rawAssets.find(({ id }) => id === 'savings') ?? rawAssets[0];
   const investmentAsset = rawAssets.find(({ id }) => id === 'investments') ?? rawAssets[1];
   const savingsInvestments = calculatedAssets.filter(({ id }) => id === 'savings' || id === 'investments');
   const pensionAssets = calculatedAssets.filter(({ id }) => id === 'pillar2' || id === 'pillar3');
+  const savingsInvestmentIds: AssetKind[] = ['savings', 'investments'];
+  const pensionIds: AssetKind[] = ['pillar2', 'pillar3'];
   const savingsInvestmentProjection = combineProjections(savingsInvestments.map(({ projection }) => projection));
   const pensionProjection = combineProjections(pensionAssets.map(({ projection }) => projection));
   const totalProjection = combineProjections(calculatedAssets.map(({ projection }) => projection));
+  const zeroReturnSavingsInvestmentProjection = combineProjections(
+    rawAssets
+      .map((asset, index) => ({ asset, projection: zeroReturnProjections[index] }))
+      .filter(({ asset }) => savingsInvestmentIds.includes(asset.id))
+      .map(({ projection }) => projection),
+  );
+  const zeroReturnPensionProjection = combineProjections(
+    rawAssets
+      .map((asset, index) => ({ asset, projection: zeroReturnProjections[index] }))
+      .filter(({ asset }) => pensionIds.includes(asset.id))
+      .map(({ projection }) => projection),
+  );
+  const zeroReturnTotalProjection = combineProjections(zeroReturnProjections);
   const totalWealth = Math.round(totalProjection.at(-1)?.value ?? 0);
   const pensionWealth = Math.round(pensionProjection.at(-1)?.value ?? 0);
   const liquidWealth = Math.round(savingsInvestmentProjection.at(-1)?.value ?? 0);
@@ -176,6 +196,9 @@ export function calculateDashboard(rawAssets: FinancialAsset[], income: IncomePl
     totalProjection,
     pensionProjection,
     savingsInvestmentProjection,
+    zeroReturnTotalProjection,
+    zeroReturnPensionProjection,
+    zeroReturnSavingsInvestmentProjection,
     futureBuildingPercent,
     insightAmounts,
     income: derivedIncome,
