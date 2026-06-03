@@ -5,7 +5,7 @@ export function Header() {
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-semibold tracking-normal text-slate-950">Overview</h1>
-        <p className="mt-1 text-sm text-slate-700">Plan today. Live better tomorrow.</p>
+        <p className="mt-1 text-sm text-slate-700">State of your financial situation.</p>
       </div>
       <div className="flex items-center gap-2">
         <button className="glass-control font-semibold">

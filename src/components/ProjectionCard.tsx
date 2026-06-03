@@ -1,4 +1,3 @@
-import { CircleHelp } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -31,7 +30,6 @@ export function ProjectionCard({
       <div className="flex items-center gap-2">
         <h2 className="text-sm font-bold">{title}</h2>
         {note && <span className="text-xs text-slate-600">({note})</span>}
-        <CircleHelp className="h-4 w-4 text-slate-500" />
       </div>
       <p className={`mt-1 text-lg font-bold ${palette.text}`}>
         {currency(amount)} <span className="text-xs text-slate-800">CHF</span>

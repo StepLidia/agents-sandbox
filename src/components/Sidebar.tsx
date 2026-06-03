@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react';
-import { BarChart3, Layers3, LineChart, PiggyBank, SlidersHorizontal, Target } from 'lucide-react';
+import { BarChart3, Footprints, Layers3, LineChart, PiggyBank, SlidersHorizontal, Target } from 'lucide-react';
 
 const navItems: Array<[string, LucideIcon]> = [
   ['Overview', BarChart3],
@@ -18,7 +18,7 @@ export function Sidebar() {
           <BarChart3 className="h-6 w-6" />
         </div>
         <div>
-          <p className="text-2xl font-semibold tracking-normal">Swiss</p>
+          <p className="text-2xl font-semibold tracking-normal">Growly</p>
           <p className="text-xs text-slate-600">Financial Calculator</p>
         </div>
       </div>
@@ -36,9 +36,9 @@ export function Sidebar() {
           </button>
         ))}
       </nav>
-      <div className="glass-panel mt-auto p-4 text-center">
+      <div className="glass-panel mt-10 p-4 text-center">
         <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-blue-500/10 text-blue-600">
-          <Target className="h-6 w-6" />
+          <Footprints className="h-6 w-6" />
         </div>
         <p className="mt-4 text-sm leading-6 text-slate-900">Small steps today create freedom tomorrow.</p>
         <svg viewBox="0 0 180 58" className="mt-3 h-14 w-full text-violet-500">
