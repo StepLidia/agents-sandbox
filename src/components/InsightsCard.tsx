@@ -2,7 +2,7 @@ import { ChevronRight, Sparkles } from 'lucide-react';
 
 export function InsightsCard() {
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center gap-3">
         <div className="grid h-9 w-9 place-items-center rounded-2xl bg-blue-500/10 text-blue-600">
           <Sparkles className="h-5 w-5" />
@@ -14,7 +14,7 @@ export function InsightsCard() {
         <li>Higher investment returns can add meaningful upside over 30 years.</li>
         <li>3rd pillar contributions can provide valuable tax benefits.</li>
       </ul>
-      <button className="mt-4 flex h-10 w-full items-center justify-between rounded-lg bg-white/35 px-4 text-sm font-bold text-slate-800 shadow-inner">
+      <button className="mt-auto flex h-10 w-full items-center justify-between rounded-lg bg-white/35 px-4 text-sm font-bold text-slate-800 shadow-inner">
         View Detailed Breakdown
         <ChevronRight className="h-5 w-5" />
       </button>

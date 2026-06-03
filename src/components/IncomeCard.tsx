@@ -4,16 +4,19 @@ import { currency, type IncomePlan } from '../finance';
 export function IncomeCard({
   income,
   futureBuildingPercent,
+  onChange,
 }: {
   income: IncomePlan;
   futureBuildingPercent: number;
+  onChange: (field: keyof IncomePlan, value: number) => void;
 }) {
-  const savingsPercent = (income.savingsContribution / income.monthlyNetIncome) * 100;
-  const investmentPercent = (income.investmentContribution / income.monthlyNetIncome) * 100;
-  const expensePercent = (income.otherExpenses / income.monthlyNetIncome) * 100;
+  const monthlyNetIncome = Math.max(0, income.monthlyNetIncome);
+  const savingsPercent = monthlyNetIncome === 0 ? 0 : (income.savingsContribution / monthlyNetIncome) * 100;
+  const investmentPercent = monthlyNetIncome === 0 ? 0 : (income.investmentContribution / monthlyNetIncome) * 100;
+  const expensePercent = monthlyNetIncome === 0 ? 0 : (income.otherExpenses / monthlyNetIncome) * 100;
 
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center gap-2">
         <div className="grid h-8 w-8 place-items-center rounded-xl bg-blue-500/10 text-blue-600">
           <WalletCards className="h-4 w-4" />
@@ -23,7 +26,11 @@ export function IncomeCard({
       <div className="mt-4 grid items-center gap-5 md:grid-cols-[190px_1fr]">
         <div>
           <SmallLabel>Monthly Net Income (CHF)</SmallLabel>
-          <p className="mt-1 text-lg font-extrabold">{currency(income.monthlyNetIncome)}</p>
+          <CurrencyInput
+            value={income.monthlyNetIncome}
+            className="mt-2 h-11 text-lg"
+            onChange={(value) => onChange('monthlyNetIncome', value)}
+          />
           <IncomeDonut
             income={income.monthlyNetIncome}
             savingsPercent={savingsPercent}
@@ -34,9 +41,27 @@ export function IncomeCard({
         <div>
           <SmallLabel>Allocation</SmallLabel>
           <div className="mt-2 overflow-hidden rounded-lg border border-white/55 bg-white/22">
-            <AllocationRow color="bg-blue-600" label="To Savings Account" amount={income.savingsContribution} percent={savingsPercent} />
-            <AllocationRow color="bg-violet-600" label="To Investments" amount={income.investmentContribution} percent={investmentPercent} />
-            <AllocationRow color="bg-slate-400" label="Other Expenses" amount={income.otherExpenses} percent={expensePercent} />
+            <AllocationRow
+              color="bg-blue-600"
+              label="To Savings Account"
+              amount={income.savingsContribution}
+              percent={savingsPercent}
+              onChange={(value) => onChange('savingsContribution', value)}
+            />
+            <AllocationRow
+              color="bg-violet-600"
+              label="To Investments"
+              amount={income.investmentContribution}
+              percent={investmentPercent}
+              onChange={(value) => onChange('investmentContribution', value)}
+            />
+            <AllocationRow
+              color="bg-slate-400"
+              label="Other Expenses"
+              amount={income.otherExpenses}
+              percent={expensePercent}
+              onChange={(value) => onChange('otherExpenses', value)}
+            />
           </div>
           <div className="mt-3 flex items-center gap-3 rounded-lg border border-blue-200/50 bg-blue-500/8 px-4 py-3 text-sm font-bold text-blue-800">
             <Clock3 className="h-4 w-4 shrink-0" />
@@ -61,9 +86,12 @@ function IncomeDonut({
 }) {
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
-  const savingsLength = (savingsPercent / 100) * circumference;
-  const investmentLength = (investmentPercent / 100) * circumference;
-  const expenseLength = (expensePercent / 100) * circumference;
+  const safeSavingsPercent = Math.max(0, Math.min(100, savingsPercent));
+  const safeInvestmentPercent = Math.max(0, Math.min(100 - safeSavingsPercent, investmentPercent));
+  const safeExpensePercent = Math.max(0, Math.min(100 - safeSavingsPercent - safeInvestmentPercent, expensePercent));
+  const savingsLength = (safeSavingsPercent / 100) * circumference;
+  const investmentLength = (safeInvestmentPercent / 100) * circumference;
+  const expenseLength = (safeExpensePercent / 100) * circumference;
   const savingsOffset = 0;
   const investmentOffset = -savingsLength;
   const expenseOffset = -(savingsLength + investmentLength);
@@ -118,19 +146,52 @@ function IncomeDonut({
   );
 }
 
-function AllocationRow({ color, label, amount, percent }: { color: string; label: string; amount: number; percent: number }) {
+function AllocationRow({
+  color,
+  label,
+  amount,
+  percent,
+  onChange,
+}: {
+  color: string;
+  label: string;
+  amount: number;
+  percent: number;
+  onChange: (value: number) => void;
+}) {
   return (
     <div className="grid grid-cols-[1fr_112px_42px] items-center gap-3 border-b border-slate-300/35 px-4 py-3 last:border-b-0">
       <div className="flex min-w-0 items-center gap-3 text-xs font-semibold">
         <span className={`h-3 w-3 shrink-0 rounded-full ${color}`} />
         <span className="truncate">{label}</span>
       </div>
-      <span className="glass-input justify-between py-2 text-sm">
-        <strong>{currency(amount)}</strong>
-        CHF
-      </span>
+      <CurrencyInput value={amount} onChange={onChange} />
       <span className="text-right text-xs font-semibold text-slate-600">{percent.toFixed(1)}%</span>
     </div>
+  );
+}
+
+function CurrencyInput({
+  value,
+  className = '',
+  onChange,
+}: {
+  value: number;
+  className?: string;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <span className={`glass-input justify-between py-2 text-sm ${className}`}>
+      <input
+        className="w-full min-w-0 bg-transparent font-extrabold text-slate-950 outline-none"
+        min={0}
+        step={100}
+        type="number"
+        value={Number.isFinite(value) ? value : 0}
+        onChange={(event) => onChange(event.currentTarget.valueAsNumber || 0)}
+      />
+      <span className="text-xs font-bold text-slate-600">CHF</span>
+    </span>
   );
 }
 

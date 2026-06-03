@@ -1,5 +1,5 @@
-import { ShieldCheck } from 'lucide-react';
-import { calculateDashboard } from '../finance';
+import { useMemo, useState } from 'react';
+import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { colorClasses } from './colors';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
@@ -9,9 +9,21 @@ import { Sidebar } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
 
-const dashboard = calculateDashboard();
-
 export function Dashboard() {
+  const [assets, setAssets] = useState<FinancialAsset[]>(initialAssets);
+  const [income, setIncome] = useState<IncomePlan>(incomePlan);
+  const dashboard = useMemo(() => calculateDashboard(assets, income), [assets, income]);
+
+  function updateAsset(id: AssetKind, field: keyof Pick<FinancialAsset, 'amount' | 'annualReturn' | 'years'>, value: number) {
+    setAssets((currentAssets) =>
+      currentAssets.map((asset) => (asset.id === id ? { ...asset, [field]: value } : asset)),
+    );
+  }
+
+  function updateIncome(field: keyof IncomePlan, value: number) {
+    setIncome((currentIncome) => ({ ...currentIncome, [field]: value }));
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.23),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(124,58,237,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(148,163,184,.24),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
@@ -21,21 +33,25 @@ export function Dashboard() {
           <Header />
           <div className="mt-4 grid gap-3 xl:grid-cols-4">
             {dashboard.assets.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} />
+              <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
             ))}
           </div>
-          <div className="mt-3 grid gap-3 xl:grid-cols-4">
-            <div className="xl:col-span-2">
-              <IncomeCard income={dashboard.income} futureBuildingPercent={dashboard.futureBuildingPercent} />
+          <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-4">
+            <div className="h-full xl:col-span-2">
+              <IncomeCard
+                income={dashboard.income}
+                futureBuildingPercent={dashboard.futureBuildingPercent}
+                onChange={updateIncome}
+              />
             </div>
-            <div>
+            <div className="h-full">
               <SummaryCard
                 totalWealth={dashboard.totalWealth}
                 pensionWealth={dashboard.pensionWealth}
                 liquidWealth={dashboard.liquidWealth}
               />
             </div>
-            <div>
+            <div className="h-full">
               <InsightsCard />
             </div>
           </div>

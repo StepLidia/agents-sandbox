@@ -69,7 +69,7 @@ export const incomePlan: IncomePlan = {
 };
 
 export function futureValue(principal: number, annualReturnPercent: number, years: number): number {
-  return principal * (1 + annualReturnPercent / 100) ** years;
+  return Math.max(0, principal) * (1 + annualReturnPercent / 100) ** Math.max(0, years);
 }
 
 export function buildProjection(
@@ -77,7 +77,9 @@ export function buildProjection(
   annualReturnPercent: number,
   years: number,
 ): ProjectionPoint[] {
-  return Array.from({ length: years + 1 }, (_, year) => ({
+  const safeYears = Math.max(0, Math.round(years));
+
+  return Array.from({ length: safeYears + 1 }, (_, year) => ({
     year,
     value: futureValue(principal, annualReturnPercent, year),
   }));
@@ -113,8 +115,9 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
   const totalWealth = Math.round(totalProjection.at(-1)?.value ?? 0);
   const pensionWealth = Math.round(pensionProjection.at(-1)?.value ?? 0);
   const liquidWealth = Math.round(savingsInvestmentProjection.at(-1)?.value ?? 0);
+  const monthlyNetIncome = Math.max(0, income.monthlyNetIncome);
   const futureBuildingPercent =
-    ((income.savingsContribution + income.investmentContribution) / income.monthlyNetIncome) * 100;
+    monthlyNetIncome === 0 ? 0 : ((income.savingsContribution + income.investmentContribution) / monthlyNetIncome) * 100;
 
   return {
     assets: calculatedAssets,
