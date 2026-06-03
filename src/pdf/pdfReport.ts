@@ -239,7 +239,8 @@ type StatementRow = {
 };
 
 function drawStatementTitle(context: PdfContext, title: string) {
-  ensureSpace(context, 12);
+  ensureSpace(context, 16);
+  context.y += 4;
   context.pdf.setFont('helvetica', 'bold');
   context.pdf.setFontSize(10.5);
   context.pdf.setTextColor(20, 20, 20);
@@ -308,7 +309,6 @@ function ensureSpace(context: PdfContext, neededHeight: number, afterPageBreak?:
     return;
   }
 
-  addFooter(context);
   context.pdf.addPage();
   context.page += 1;
   context.y = page.top;

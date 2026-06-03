@@ -19,7 +19,7 @@ export function InsightsCard({
       <ul className="mt-4 list-disc space-y-3 pl-5 text-sm leading-6 text-slate-800 marker:text-blue-600">
         <li>You're building a solid financial foundation.</li>
         <li>
-          <InsightValue>+200 CHF</InsightValue> in investments per month will generate additional{' '}
+          <InsightValue>+200 CHF</InsightValue> in investments per month may generate additional{' '}
           <InsightValue>+{currency(insightAmounts.extraInvestmentContributionValue)} CHF</InsightValue> in {projectionYears} years.
         </li>
         <li>

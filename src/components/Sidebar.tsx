@@ -1,9 +1,9 @@
 import type { LucideIcon } from 'lucide-react';
-import { BarChart3, Footprints, UserRoundPen } from 'lucide-react';
+import { BarChart3, CircleUserRound, Footprints } from 'lucide-react';
 
 const navItems: Array<[string, LucideIcon]> = [
   ['Overview', BarChart3],
-  ['Contact', UserRoundPen],
+  ['Contact', CircleUserRound],
 ];
 
 export function Sidebar() {
