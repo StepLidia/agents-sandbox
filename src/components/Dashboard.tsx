@@ -56,7 +56,7 @@ export function Dashboard() {
               />
             </div>
             <div className="h-full">
-              <InsightsCard />
+              <InsightsCard insightAmounts={dashboard.insightAmounts} />
             </div>
           </div>
           <div className="mt-3 grid gap-3 xl:grid-cols-3">

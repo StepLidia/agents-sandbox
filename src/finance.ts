@@ -24,6 +24,12 @@ export type IncomePlan = {
   otherExpenses: number;
 };
 
+export type InsightAmounts = {
+  extraInvestmentContributionValue: number;
+  favourableMarketReturnValue: number;
+  savingsToInvestmentValue: number;
+};
+
 export const assets: FinancialAsset[] = [
   {
     id: 'savings',
@@ -31,7 +37,7 @@ export const assets: FinancialAsset[] = [
     subtitle: 'Liquid reserve',
     amount: 25000,
     monthlyContribution: 1000,
-    annualReturn: 1.2,
+    annualReturn: 0.0,
     years: 30,
     color: 'blue',
   },
@@ -41,7 +47,7 @@ export const assets: FinancialAsset[] = [
     subtitle: 'Securities portfolio',
     amount: 40000,
     monthlyContribution: 1500,
-    annualReturn: 5.5,
+    annualReturn: 3.0,
     years: 30,
     color: 'coral',
   },
@@ -51,7 +57,7 @@ export const assets: FinancialAsset[] = [
     subtitle: 'Pension fund',
     amount: 85000,
     monthlyContribution: 260,
-    annualReturn: 2.25,
+    annualReturn: 1.25,
     years: 30,
     color: 'emerald',
   },
@@ -61,7 +67,7 @@ export const assets: FinancialAsset[] = [
     subtitle: 'Private retirement',
     amount: 15000,
     monthlyContribution: 604,
-    annualReturn: 3,
+    annualReturn: 2,
     years: 30,
     color: 'cyan',
   },
@@ -148,6 +154,8 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
     otherExpenses: derivedOtherExpenses,
   };
   const calculatedAssets = rawAssets.map(calculateAsset);
+  const savingsAsset = rawAssets.find(({ id }) => id === 'savings') ?? assets[0];
+  const investmentAsset = rawAssets.find(({ id }) => id === 'investments') ?? assets[1];
   const savingsInvestments = calculatedAssets.filter(({ id }) => id === 'savings' || id === 'investments');
   const pensionAssets = calculatedAssets.filter(({ id }) => id === 'pillar2' || id === 'pillar3');
   const savingsInvestmentProjection = combineProjections(savingsInvestments.map(({ projection }) => projection));
@@ -163,6 +171,27 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
       : ((derivedIncome.savingsContribution + derivedIncome.investmentContribution + derivedIncome.pillar3Contribution) /
         monthlyNetIncome) *
       100;
+  const insightAmounts: InsightAmounts = {
+    extraInvestmentContributionValue: Math.round(futureValue(0, investmentAsset.annualReturn, 30, 200)),
+    favourableMarketReturnValue: Math.round(
+      futureValue(
+        investmentAsset.amount,
+        investmentAsset.annualReturn + 1,
+        30,
+        investmentAsset.monthlyContribution,
+      ) -
+        futureValue(
+          investmentAsset.amount,
+          investmentAsset.annualReturn,
+          30,
+          investmentAsset.monthlyContribution,
+        ),
+    ),
+    savingsToInvestmentValue: Math.round(
+      futureValue(10000, investmentAsset.annualReturn, 30) -
+        futureValue(10000, savingsAsset.annualReturn, 30),
+    ),
+  };
 
   return {
     assets: calculatedAssets,
@@ -173,6 +202,7 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
     pensionProjection,
     savingsInvestmentProjection,
     futureBuildingPercent,
+    insightAmounts,
     income: derivedIncome,
   };
 }
