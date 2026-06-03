@@ -1,10 +1,12 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
+import { exportDashboardPdf } from '../pdf/exportDashboardPdf';
 import { colorClasses } from './colors';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
 import { ProjectionCard } from './ProjectionCard';
+import { PdfReport } from './PdfReport';
 import { Sidebar } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
@@ -13,6 +15,8 @@ export function Dashboard() {
   const [assets, setAssets] = useState<FinancialAsset[]>(initialAssets);
   const [income, setIncome] = useState<IncomePlan>(incomePlan);
   const [projectionYears, setProjectionYears] = useState(30);
+  const [isExporting, setIsExporting] = useState(false);
+  const reportRef = useRef<HTMLElement>(null);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   function updateAsset(
@@ -29,13 +33,26 @@ export function Dashboard() {
     setIncome((currentIncome) => ({ ...currentIncome, [field]: value }));
   }
 
+  async function handleExportPdf() {
+    if (!reportRef.current || isExporting) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportDashboardPdf(reportRef.current);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_1fr]">
         <Sidebar />
         <section className="px-4 py-4 sm:px-5 xl:px-6">
-          <Header />
+          <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
           <div className="mt-4 grid gap-3 xl:grid-cols-4">
             {dashboard.assets.map((asset) => (
               <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
@@ -89,6 +106,11 @@ export function Dashboard() {
               palette={colorClasses.emerald}
             />
           </div>
+        </section>
+      </div>
+      <div className="fixed -left-2500 top-0 w-235" aria-hidden="true">
+        <section ref={reportRef}>
+          <PdfReport dashboard={dashboard} projectionYears={projectionYears} />
         </section>
       </div>
     </main>
