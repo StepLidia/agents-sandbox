@@ -48,7 +48,6 @@ export function generateFinancialReportPdf(reportData: FinancialReportData) {
   drawInputAssumptions(context, reportData);
   drawAllocation(context, reportData.income);
   drawKeyInsights(context, reportData);
-  drawProjectionTables(context, reportData);
   drawCharts(context, reportData);
   drawDisclaimer(context);
   finalizePageNumbers(context);
@@ -59,61 +58,59 @@ export function generateFinancialReportPdf(reportData: FinancialReportData) {
 function drawCoverHeader(context: PdfContext) {
   const { pdf } = context;
 
-  pdf.setTextColor(35, 35, 35);
+  pdf.setTextColor(10, 10, 10);
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(20);
-  pdf.text('Growly Financial Projection Report', page.marginX, context.y);
-  context.y += 8;
+  pdf.setFontSize(15);
+  pdf.text('GROWLY FINANCIAL PROJECTION REPORT', page.width / 2, context.y, { align: 'center' });
+  context.y += 7;
 
   pdf.setFont('helvetica', 'normal');
   pdf.setFontSize(10);
-  pdf.setTextColor(90, 90, 90);
-  pdf.text(`Generated ${formatDisplayDate(context.generatedAt)}`, page.marginX, context.y);
-  context.y += 12;
-  drawDivider(context);
+  pdf.setTextColor(25, 25, 25);
+  pdf.text('Statement of Projected Wealth', page.width / 2, context.y, { align: 'center' });
+  context.y += 5;
+  pdf.setFontSize(8.5);
+  pdf.text(`Generated ${formatDisplayDate(context.generatedAt)}`, page.width / 2, context.y, { align: 'center' });
+  context.y += 9;
 }
 
 function drawSummary(context: PdfContext, data: FinancialReportData) {
-  drawSectionTitle(context, 'Summary');
-  drawKeyValueGrid(context, [
-    ['Total current wealth', formatMoney(data.totalCurrentWealth)],
-    ['Total projected wealth', formatMoney(data.totalWealth)],
-    ['Projection period', `${data.projectionYears} years`],
-    ['Monthly savings / investment allocation', formatMoney(monthlyFutureAllocation(data.income))],
+  drawStatementTitle(context, 'Summary');
+  drawStatementRows(context, [
+    { label: 'Total current wealth', value: formatMoney(data.totalCurrentWealth), bold: true },
+    { label: 'Monthly savings / investment allocation', value: formatMoney(monthlyFutureAllocation(data.income)) },
+    { label: 'Projection period', value: `${data.projectionYears} years` },
+    { label: 'Total projected wealth', value: formatMoney(data.totalWealth), bold: true, rule: 'double' },
   ]);
 }
 
 function drawInputAssumptions(context: PdfContext, data: FinancialReportData) {
-  drawSectionTitle(context, 'Input Assumptions');
-  const rows = data.assets.map((asset) => [
-    asset.label,
-    formatMoney(asset.amount),
-    formatMoney(asset.monthlyContribution),
-    `${asset.annualReturn.toFixed(2)}%`,
-    `${asset.years} years`,
+  drawStatementTitle(context, 'Input Assumptions');
+  const rows = data.assets.flatMap((asset) => [
+    { label: `${asset.label} current amount`, value: formatMoney(asset.amount), bold: asset.id === 'savings' },
+    {
+      label: `${asset.label} monthly ${asset.id === 'pillar2' ? 'saving part' : 'contribution'}`,
+      value: formatMoney(asset.monthlyContribution),
+    },
+    { label: `${asset.label} expected yearly return`, value: `${asset.annualReturn.toFixed(2)}%`, rule: 'light' as const },
   ]);
 
-  drawTable(context, ['Account', 'Current', 'Monthly', 'Return', 'Period'], rows, [48, 34, 34, 28, 28]);
+  drawStatementRows(context, rows);
 }
 
 function drawAllocation(context: PdfContext, income: IncomePlan) {
-  drawSectionTitle(context, 'Monthly Disposable Income Allocation');
-  drawTable(
-    context,
-    ['Category', 'Amount', 'Share'],
-    [
-      ['Monthly net income', formatMoney(income.monthlyNetIncome), '100.0%'],
-      ['To Savings Account', formatMoney(income.savingsContribution), percent(income.savingsContribution, income.monthlyNetIncome)],
-      ['To Investments', formatMoney(income.investmentContribution), percent(income.investmentContribution, income.monthlyNetIncome)],
-      ['3rd Pillar', formatMoney(income.pillar3Contribution), percent(income.pillar3Contribution, income.monthlyNetIncome)],
-      ['Expenses', formatMoney(income.otherExpenses), percent(income.otherExpenses, income.monthlyNetIncome)],
-    ],
-    [80, 52, 34],
-  );
+  drawStatementTitle(context, 'Monthly Disposable Income Allocation');
+  drawStatementRows(context, [
+    { label: 'Monthly net income', value: formatMoney(income.monthlyNetIncome), sideNote: '100.0%', bold: true },
+    { label: 'To Savings Account', value: formatMoney(income.savingsContribution), sideNote: percent(income.savingsContribution, income.monthlyNetIncome) },
+    { label: 'To Investments', value: formatMoney(income.investmentContribution), sideNote: percent(income.investmentContribution, income.monthlyNetIncome) },
+    { label: '3rd Pillar', value: formatMoney(income.pillar3Contribution), sideNote: percent(income.pillar3Contribution, income.monthlyNetIncome) },
+    { label: 'Expenses', value: formatMoney(income.otherExpenses), sideNote: percent(income.otherExpenses, income.monthlyNetIncome), rule: 'light' },
+  ]);
 }
 
 function drawKeyInsights(context: PdfContext, data: FinancialReportData) {
-  drawSectionTitle(context, 'Key Insights');
+  drawStatementTitle(context, 'Key Insights');
   const insights = [
     'You are building a solid financial foundation.',
     `+200 CHF in investments per month may generate an additional ${formatMoney(data.insightAmounts.extraInvestmentContributionValue)} in ${data.projectionYears} years.`,
@@ -133,24 +130,11 @@ function drawKeyInsights(context: PdfContext, data: FinancialReportData) {
     context.y += lines.length * 5 + 2;
   }
 
-  context.y += 2;
-}
-
-function drawProjectionTables(context: PdfContext, data: FinancialReportData) {
-  drawSectionTitle(context, 'Projection Tables');
-  drawProjectionTable(context, 'Total wealth by year', data.totalProjection);
-  drawProjectionTable(context, 'Pension wealth by year', data.pensionProjection);
-  drawProjectionTable(context, 'Savings + investments by year', data.savingsInvestmentProjection);
-}
-
-function drawProjectionTable(context: PdfContext, title: string, points: ProjectionPoint[]) {
-  drawSubsectionTitle(context, title);
-  const rows = points.map((point) => [String(point.year), formatMoney(point.value)]);
-  drawTable(context, ['Year', 'Projected value'], rows, [40, 70], { compact: true });
+  context.y += 20;
 }
 
 function drawCharts(context: PdfContext, data: FinancialReportData) {
-  drawSectionTitle(context, 'Projection Charts');
+  drawStatementTitle(context, 'Projection Charts');
   drawLineChart(context, 'Total Wealth projection', data.totalProjection, data.zeroReturnTotalProjection);
   drawLineChart(context, 'Pension Wealth projection', data.pensionProjection, data.zeroReturnPensionProjection);
   drawLineChart(context, 'Savings + Investments projection', data.savingsInvestmentProjection, data.zeroReturnSavingsInvestmentProjection);
@@ -246,14 +230,60 @@ function drawSeries(
   context.pdf.setLineDashPattern([], 0);
 }
 
-function drawSectionTitle(context: PdfContext, title: string) {
-  ensureSpace(context, 14);
+type StatementRow = {
+  label: string;
+  value: string;
+  sideNote?: string;
+  bold?: boolean;
+  rule?: 'light' | 'single' | 'double';
+};
+
+function drawStatementTitle(context: PdfContext, title: string) {
+  ensureSpace(context, 12);
   context.pdf.setFont('helvetica', 'bold');
-  context.pdf.setFontSize(13);
-  context.pdf.setTextColor(45, 45, 45);
-  context.pdf.text(title, page.marginX, context.y);
+  context.pdf.setFontSize(10.5);
+  context.pdf.setTextColor(20, 20, 20);
+  context.pdf.text(title, page.width / 2, context.y, { align: 'center' });
+  context.y += 4;
+  context.pdf.setDrawColor(30, 30, 30);
+  context.pdf.setLineWidth(0.35);
+  context.pdf.line(page.marginX, context.y, page.width - page.marginX, context.y);
+  context.y += 4;
+}
+
+function drawStatementRows(context: PdfContext, rows: StatementRow[]) {
+  const valueX = page.width - page.marginX - 28;
+  const sideNoteX = page.width - page.marginX;
+  const rowHeight = 6.2;
+
+  for (const row of rows) {
+    ensureSpace(context, rowHeight + 3);
+
+    context.pdf.setFont('helvetica', row.bold ? 'bold' : 'normal');
+    context.pdf.setFontSize(9);
+    context.pdf.setTextColor(20, 20, 20);
+    context.pdf.text(row.label, page.marginX + 1, context.y);
+    context.pdf.text(row.value, valueX, context.y, { align: 'right' });
+
+    if (row.sideNote) {
+      context.pdf.text(row.sideNote, sideNoteX, context.y, { align: 'right' });
+    }
+
+    if (row.rule) {
+      const y = context.y + 1.5;
+      context.pdf.setDrawColor(row.rule === 'light' ? 160 : 25, row.rule === 'light' ? 160 : 25, row.rule === 'light' ? 160 : 25);
+      context.pdf.setLineWidth(row.rule === 'light' ? 0.2 : 0.4);
+      context.pdf.line(page.marginX, y, page.width - page.marginX, y);
+
+      if (row.rule === 'double') {
+        context.pdf.line(page.marginX, y + 1.5, page.width - page.marginX, y + 1.5);
+      }
+    }
+
+    context.y += rowHeight;
+  }
+
   context.y += 5;
-  drawDivider(context);
 }
 
 function drawSubsectionTitle(context: PdfContext, title: string) {
@@ -265,94 +295,8 @@ function drawSubsectionTitle(context: PdfContext, title: string) {
   context.y += 5;
 }
 
-function drawDivider(context: PdfContext) {
-  context.pdf.setDrawColor(190, 190, 190);
-  context.pdf.setLineWidth(0.3);
-  context.pdf.line(page.marginX, context.y, page.width - page.marginX, context.y);
-  context.y += 7;
-}
-
-function drawKeyValueGrid(context: PdfContext, rows: Array<[string, string]>) {
-  const columnWidth = 86;
-  const rowHeight = 16;
-
-  for (let index = 0; index < rows.length; index += 1) {
-    const column = index % 2;
-    const row = Math.floor(index / 2);
-    const x = page.marginX + column * (columnWidth + 6);
-    const y = context.y + row * (rowHeight + 4);
-
-    context.pdf.setFillColor(245, 245, 245);
-    context.pdf.setDrawColor(210, 210, 210);
-    context.pdf.rect(x, y, columnWidth, rowHeight, 'FD');
-    context.pdf.setFont('helvetica', 'normal');
-    context.pdf.setFontSize(8);
-    context.pdf.setTextColor(95, 95, 95);
-    context.pdf.text(rows[index][0], x + 3, y + 5);
-    context.pdf.setFont('helvetica', 'bold');
-    context.pdf.setFontSize(10);
-    context.pdf.setTextColor(35, 35, 35);
-    context.pdf.text(rows[index][1], x + 3, y + 12);
-  }
-
-  context.y += Math.ceil(rows.length / 2) * (rowHeight + 4) + 4;
-}
-
-function drawTable(
-  context: PdfContext,
-  headers: string[],
-  rows: string[][],
-  widths: number[],
-  options: { compact?: boolean } = {},
-) {
-  const rowHeight = options.compact ? 6 : 8;
-  const headerHeight = 8;
-  const tableWidth = widths.reduce((sum, width) => sum + width, 0);
-
-  ensureSpace(context, headerHeight + rowHeight + 4);
-  drawTableHeader(context, headers, widths, tableWidth, headerHeight);
-
-  for (const row of rows) {
-    ensureSpace(context, rowHeight + page.bottom, () => drawTableHeader(context, headers, widths, tableWidth, headerHeight));
-    let x = page.marginX;
-
-    context.pdf.setFillColor(255, 255, 255);
-    context.pdf.setDrawColor(225, 225, 225);
-    context.pdf.rect(page.marginX, context.y, tableWidth, rowHeight, 'S');
-    context.pdf.setFont('helvetica', 'normal');
-    context.pdf.setFontSize(options.compact ? 7.5 : 8.5);
-    context.pdf.setTextColor(45, 45, 45);
-
-    row.forEach((cell, index) => {
-      context.pdf.text(cell, x + 2, context.y + rowHeight - 2.2);
-      x += widths[index];
-    });
-
-    context.y += rowHeight;
-  }
-
-  context.y += 6;
-}
-
-function drawTableHeader(context: PdfContext, headers: string[], widths: number[], tableWidth: number, headerHeight: number) {
-  context.pdf.setFillColor(238, 238, 238);
-  context.pdf.setDrawColor(205, 205, 205);
-  context.pdf.rect(page.marginX, context.y, tableWidth, headerHeight, 'FD');
-  context.pdf.setFont('helvetica', 'bold');
-  context.pdf.setFontSize(8);
-  context.pdf.setTextColor(55, 55, 55);
-
-  let x = page.marginX;
-  headers.forEach((header, index) => {
-    context.pdf.text(header, x + 2, context.y + 5.3);
-    x += widths[index];
-  });
-
-  context.y += headerHeight;
-}
-
 function drawDisclaimer(context: PdfContext) {
-  drawSectionTitle(context, 'Disclaimer');
+  drawStatementTitle(context, 'Disclaimer');
   context.pdf.setFont('helvetica', 'normal');
   context.pdf.setFontSize(9);
   context.pdf.setTextColor(70, 70, 70);
