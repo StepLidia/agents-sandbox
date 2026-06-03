@@ -1,4 +1,13 @@
 import { CircleHelp } from 'lucide-react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { currency, type ProjectionPoint } from '../finance';
 import type { ChartPalette } from './colors';
 
@@ -34,48 +43,90 @@ export function ProjectionCard({
 }
 
 function ProjectionChart({ points, palette }: { points: ProjectionPoint[]; palette: ChartPalette }) {
-  const width = 520;
-  const height = 188;
-  const padding = { top: 18, right: 18, bottom: 30, left: 48 };
   const maxYear = Math.max(points.at(-1)?.year ?? 30, 1);
   const rawMaxValue = Math.max(...points.map(({ value }) => value), 1);
   const ticks = buildValueTicks(rawMaxValue);
   const maxValue = ticks.at(-1) ?? rawMaxValue;
-  const xScale = (year: number) => padding.left + (year / maxYear) * (width - padding.left - padding.right);
-  const yScale = (value: number) => padding.top + (1 - value / maxValue) * (height - padding.top - padding.bottom);
-  const line = points.map((point) => `${xScale(point.year)},${yScale(point.value)}`).join(' ');
-  const area = `${padding.left},${height - padding.bottom} ${line} ${xScale(maxYear)},${height - padding.bottom}`;
+  const yearTicks = buildYearTicks(maxYear);
+  const gradientId = `projection-gradient-${palette.stroke.replace('#', '')}`;
+  const chartData = points.map((point) => ({
+    year: point.year,
+    value: Math.round(point.value),
+  }));
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="mt-2 aspect-[2.75/1] w-full overflow-visible">
-      {ticks.map((tick) => (
-        <g key={tick}>
-          <line x1={padding.left} x2={width - padding.right} y1={yScale(tick)} y2={yScale(tick)} stroke="rgba(100,116,139,.2)" />
-          <text x={4} y={yScale(tick) + 4} className="fill-slate-700 text-[10px]">
-            {formatAxisValue(tick)}
-          </text>
-        </g>
-      ))}
-      {buildYearTicks(maxYear).map((year) => (
-        <text key={year} x={xScale(year)} y={height - 7} textAnchor="middle" className="fill-slate-700 text-[11px]">
-          {year}
-        </text>
-      ))}
-      <polygon points={area} fill={palette.fill} />
-      <polyline points={line} fill="none" stroke={palette.stroke} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      {points.filter((point) => point.year % 3 === 0).map((point) => (
-        <circle key={point.year} cx={xScale(point.year)} cy={yScale(point.value)} r="3.2" fill={palette.stroke} stroke="white" strokeWidth="1.4" />
-      ))}
-      <g transform={`translate(${xScale(maxYear) - 29} ${yScale(points.at(-1)?.value ?? 0) - 31})`}>
-        <rect width="50" height="23" rx="5" fill={palette.stroke} />
-        <text x="25" y="15" textAnchor="middle" className="fill-white text-[10px] font-bold">
-          {currency(points.at(-1)?.value ?? 0, true)}
-        </text>
-      </g>
-      <text x={width / 2} y={height + 12} textAnchor="middle" className="fill-slate-800 text-[11px]">
-        Years
-      </text>
-    </svg>
+    <div className="mt-2 h-[188px] w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={chartData} margin={{ top: 14, right: 12, bottom: 6, left: -10 }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={palette.stroke} stopOpacity={0.24} />
+              <stop offset="48%" stopColor={palette.stroke} stopOpacity={0.11} />
+              <stop offset="100%" stopColor={palette.stroke} stopOpacity={0.01} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid stroke="rgba(100,116,139,.18)" strokeDasharray="0" vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="year"
+            domain={[0, maxYear]}
+            interval="preserveStartEnd"
+            tick={{ fill: '#475569', fontSize: 11 }}
+            tickLine={false}
+            ticks={yearTicks}
+            type="number"
+          />
+          <YAxis
+            axisLine={false}
+            domain={[0, maxValue]}
+            tick={{ fill: '#475569', fontSize: 10 }}
+            tickFormatter={formatAxisValue}
+            tickLine={false}
+            ticks={ticks}
+            width={48}
+          />
+          <Tooltip
+            content={<ProjectionTooltip />}
+            cursor={{ stroke: palette.stroke, strokeDasharray: '3 5', strokeOpacity: 0.45, strokeWidth: 1.5 }}
+            isAnimationActive={false}
+            wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+          />
+          <Area
+            activeDot={{ r: 5, fill: palette.stroke, stroke: 'white', strokeWidth: 2 }}
+            dataKey="value"
+            dot={false}
+            fill={`url(#${gradientId})`}
+            isAnimationActive={false}
+            stroke={palette.stroke}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            type="monotone"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+type ProjectionTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ value?: number }>;
+  label?: number | string;
+};
+
+function ProjectionTooltip({ active, payload, label }: ProjectionTooltipProps) {
+  const value = payload?.[0]?.value;
+
+  if (!active || typeof value !== 'number') {
+    return null;
+  }
+
+  return (
+    <div className="-translate-y-3 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-xs shadow-xl shadow-slate-400/20 backdrop-blur-xl">
+      <p className="font-bold text-slate-950">{currency(value)} CHF</p>
+      <p className="mt-0.5 text-slate-600">Year {label}</p>
+    </div>
   );
 }
 
