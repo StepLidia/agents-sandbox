@@ -123,18 +123,19 @@ export function combineProjections(series: ProjectionPoint[][]): ProjectionPoint
   }));
 }
 
-export function calculateAsset(asset: FinancialAsset) {
-  const projection = buildProjection(asset.amount, asset.annualReturn, asset.years, asset.monthlyContribution);
-  const value = futureValue(asset.amount, asset.annualReturn, asset.years, asset.monthlyContribution);
+export function calculateAsset(asset: FinancialAsset, projectionYears = asset.years) {
+  const projection = buildProjection(asset.amount, asset.annualReturn, projectionYears, asset.monthlyContribution);
+  const value = futureValue(asset.amount, asset.annualReturn, projectionYears, asset.monthlyContribution);
 
   return {
     ...asset,
+    years: projectionYears,
     projection,
     futureValue: Math.round(value),
   };
 }
 
-export function calculateDashboard(rawAssets = assets, income = incomePlan) {
+export function calculateDashboard(rawAssets = assets, income = incomePlan, projectionYears = 30) {
   const contributionById = Object.fromEntries(rawAssets.map((asset) => [asset.id, asset.monthlyContribution])) as Record<
     AssetKind,
     number
@@ -153,7 +154,7 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
     pillar3Contribution,
     otherExpenses: derivedOtherExpenses,
   };
-  const calculatedAssets = rawAssets.map(calculateAsset);
+  const calculatedAssets = rawAssets.map((asset) => calculateAsset(asset, projectionYears));
   const savingsAsset = rawAssets.find(({ id }) => id === 'savings') ?? assets[0];
   const investmentAsset = rawAssets.find(({ id }) => id === 'investments') ?? assets[1];
   const savingsInvestments = calculatedAssets.filter(({ id }) => id === 'savings' || id === 'investments');
@@ -172,24 +173,24 @@ export function calculateDashboard(rawAssets = assets, income = incomePlan) {
         monthlyNetIncome) *
       100;
   const insightAmounts: InsightAmounts = {
-    extraInvestmentContributionValue: Math.round(futureValue(0, investmentAsset.annualReturn, 30, 200)),
+    extraInvestmentContributionValue: Math.round(futureValue(0, investmentAsset.annualReturn, projectionYears, 200)),
     favourableMarketReturnValue: Math.round(
       futureValue(
         investmentAsset.amount,
         investmentAsset.annualReturn + 1,
-        30,
+        projectionYears,
         investmentAsset.monthlyContribution,
       ) -
       futureValue(
         investmentAsset.amount,
         investmentAsset.annualReturn,
-        30,
+        projectionYears,
         investmentAsset.monthlyContribution,
       ),
     ),
     savingsToInvestmentValue: Math.round(
-      futureValue(10000, investmentAsset.annualReturn, 30) -
-      futureValue(10000, savingsAsset.annualReturn, 30),
+      futureValue(10000, investmentAsset.annualReturn, projectionYears) -
+      futureValue(10000, savingsAsset.annualReturn, projectionYears),
     ),
   };
 

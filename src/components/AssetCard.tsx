@@ -12,7 +12,7 @@ export function AssetCard({
   asset: Asset;
   onChange: (
     id: AssetKind,
-    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn' | 'years'>,
+    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn'>,
     value: number,
   ) => void;
 }) {
@@ -76,14 +76,7 @@ export function AssetCard({
           step={0.05}
           onChange={(value) => onChange(asset.id, 'annualReturn', value)}
         />
-        <EditableField
-          label="Years"
-          value={asset.years}
-          suffix="years"
-          min={0}
-          step={1}
-          onChange={(value) => onChange(asset.id, 'years', value)}
-        />
+        <ReadonlyField label="Years" value={asset.years} suffix="years" />
       </div>
       <div className="mt-4 border-t border-slate-300/45 pt-4">
         <div className="flex min-h-7 items-center justify-between gap-3">
@@ -98,6 +91,20 @@ export function AssetCard({
         </div>
       </div>
     </article>
+  );
+}
+
+function ReadonlyField({ label, value, suffix }: { label: string; value: number; suffix: string }) {
+  return (
+    <div className="grid grid-cols-[1fr_112px] items-center gap-3">
+      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
+        <span className="truncate">{label}</span>
+      </span>
+      <span className="glass-input flex justify-between py-2 text-[14px] font-normal text-slate-700">
+        <span>{value}</span>
+        <span className="text-sm font-normal text-slate-600">{suffix}</span>
+      </span>
+    </div>
   );
 }
 
@@ -124,10 +131,10 @@ function EditableField({
         <span className="truncate">{label}</span>
         {labelExtra}
       </span>
-      <span className="glass-input flex justify-between py-2">
+      <span className="glass-input flex justify-between py-2 text-[14px]">
         <input
           aria-label={label}
-          className="w-full min-w-0 bg-transparent font-bold text-slate-950 outline-none"
+          className="w-full min-w-0 bg-transparent font-normal text-slate-950 outline-none"
           min={min}
           step={step}
           type="number"

@@ -2,12 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import { BarChart3, Footprints, Layers3, LineChart, PiggyBank, SlidersHorizontal, Target } from 'lucide-react';
 
 const navItems: Array<[string, LucideIcon]> = [
-  ['Overview', BarChart3],
-  ['Inputs', SlidersHorizontal],
-  ['Projections', LineChart],
-  ['Breakdown', PiggyBank],
-  ['Goals', Target],
-  ['Assets', Layers3],
+  ['Overview', BarChart3]
 ];
 
 export function Sidebar() {

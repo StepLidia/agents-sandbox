@@ -7,15 +7,17 @@ export function SummaryCard({
   totalWealth,
   pensionWealth,
   liquidWealth,
+  projectionYears,
 }: {
   totalWealth: number;
   pensionWealth: number;
   liquidWealth: number;
+  projectionYears: number;
 }) {
   return (
     <section className="glass-panel flex h-full flex-col p-4">
       <h2 className="text-sm font-bold">
-        Summary <span className="font-medium text-slate-600">(in 30 years)</span>
+        Summary <span className="font-medium text-slate-600">(in {projectionYears} years)</span>
       </h2>
       <div className="mt-3 flex flex-1 flex-col gap-2">
         <SummaryRow icon={Coins} label="Total Wealth" amount={totalWealth} hint="All assets combined" color="blue" />

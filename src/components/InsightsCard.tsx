@@ -1,7 +1,13 @@
 import { Lightbulb } from 'lucide-react';
 import { currency, type InsightAmounts } from '../finance';
 
-export function InsightsCard({ insightAmounts }: { insightAmounts: InsightAmounts }) {
+export function InsightsCard({
+  insightAmounts,
+  projectionYears,
+}: {
+  insightAmounts: InsightAmounts;
+  projectionYears: number;
+}) {
   return (
     <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center gap-3">
@@ -14,15 +20,16 @@ export function InsightsCard({ insightAmounts }: { insightAmounts: InsightAmount
         <li>You're building a solid financial foundation.</li>
         <li>
           <InsightValue>+200 CHF</InsightValue> in investments per month will generate additional{' '}
-          <InsightValue>+{currency(insightAmounts.extraInvestmentContributionValue)} CHF</InsightValue> in 30 years.
+          <InsightValue>+{currency(insightAmounts.extraInvestmentContributionValue)} CHF</InsightValue> in {projectionYears} years.
         </li>
         <li>
           If markets are favourable, <InsightValue>+1%</InsightValue> in returns on your investments will generate{' '}
-          <InsightValue>+{currency(insightAmounts.favourableMarketReturnValue)} CHF</InsightValue> in 30 years.
+          <InsightValue>+{currency(insightAmounts.favourableMarketReturnValue)} CHF</InsightValue> in {projectionYears} years.
         </li>
         <li>
-          If you invested <InsightValue>10,000 CHF</InsightValue> from your savings account, your would add
-          <InsightValue>+{currency(insightAmounts.savingsToInvestmentValue)} CHF</InsightValue> to your total wealth in 30 years.
+          If you invested <InsightValue>10,000 CHF</InsightValue> from your savings account, you would add{' '}
+          <InsightValue>+{currency(insightAmounts.savingsToInvestmentValue)} CHF</InsightValue> to your total wealth in{' '}
+          {projectionYears} years.
         </li>
       </ul>
     </section>

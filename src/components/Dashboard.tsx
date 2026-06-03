@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { colorClasses } from './colors';
 import { Header } from './Header';
@@ -12,11 +12,12 @@ import { AssetCard } from './AssetCard';
 export function Dashboard() {
   const [assets, setAssets] = useState<FinancialAsset[]>(initialAssets);
   const [income, setIncome] = useState<IncomePlan>(incomePlan);
-  const dashboard = useMemo(() => calculateDashboard(assets, income), [assets, income]);
+  const [projectionYears, setProjectionYears] = useState(30);
+  const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   function updateAsset(
     id: AssetKind,
-    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn' | 'years'>,
+    field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn'>,
     value: number,
   ) {
     setAssets((currentAssets) =>
@@ -53,12 +54,14 @@ export function Dashboard() {
                 totalWealth={dashboard.totalWealth}
                 pensionWealth={dashboard.pensionWealth}
                 liquidWealth={dashboard.liquidWealth}
+                projectionYears={projectionYears}
               />
             </div>
             <div className="h-full">
-              <InsightsCard insightAmounts={dashboard.insightAmounts} />
+              <InsightsCard insightAmounts={dashboard.insightAmounts} projectionYears={projectionYears} />
             </div>
           </div>
+          <YearsSlider value={projectionYears} onChange={setProjectionYears} />
           <div className="mt-3 grid gap-3 xl:grid-cols-3">
             <ProjectionCard
               title="Total Wealth Over Time"
@@ -86,5 +89,37 @@ export function Dashboard() {
         </section>
       </div>
     </main>
+  );
+}
+
+function YearsSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const percent = (value / 40) * 100;
+
+  return (
+    <section className="glass-panel mt-3 px-5 py-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex min-w-32 items-baseline justify-between gap-3 sm:block">
+          <p className="text-sm font-bold text-slate-900">Years</p>
+          <p className="mt-1 text-sm text-slate-600">
+            <span className="font-extrabold text-slate-950">{value}</span> years
+          </p>
+        </div>
+        <div className="flex flex-1 items-center gap-4">
+          <span className="text-xs font-bold text-slate-500">0</span>
+          <input
+            aria-label="Projection years"
+            className="years-slider"
+            max={40}
+            min={0}
+            step={1}
+            style={{ '--slider-progress': `${percent}%` } as CSSProperties}
+            type="range"
+            value={value}
+            onChange={(event) => onChange(Number(event.currentTarget.value))}
+          />
+          <span className="text-xs font-bold text-slate-500">40</span>
+        </div>
+      </div>
+    </section>
   );
 }
