@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Building2, CircleHelp, Goal, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
 import { currency, type AssetKind, type calculateDashboard, type FinancialAsset } from '../finance';
-import { colorClasses } from './colors';
+import { colorClasses } from '../constants/colors';
 
 type Asset = ReturnType<typeof calculateDashboard>['assets'][number];
 

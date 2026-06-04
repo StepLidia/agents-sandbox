@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
-import { colorClasses } from './colors';
+import { colorClasses } from '../constants/colors';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';

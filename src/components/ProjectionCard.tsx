@@ -8,7 +8,7 @@ import {
   YAxis,
 } from 'recharts';
 import { currency, type ProjectionPoint } from '../finance';
-import type { ChartPalette } from './colors';
+import type { ChartPalette } from '../constants/colors';
 
 export function ProjectionCard({
   title,

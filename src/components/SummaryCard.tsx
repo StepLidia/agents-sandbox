@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { Coins, LineChart, PiggyBank } from 'lucide-react';
 import { currency, type FinancialAsset } from '../finance';
-import { colorClasses } from './colors';
+import { colorClasses } from '../constants/colors';
 
 export function SummaryCard({
   totalWealth,
