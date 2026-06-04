@@ -39,7 +39,7 @@ export const assets: FinancialAsset[] = [
     label: 'BVG (2nd Pillar)',
     subtitle: 'Pension fund',
     amount: 85000,
-    monthlyContribution: 260,
+    monthlyContribution: 400,
     annualReturn: 1.25,
     years: 30,
     color: 'emerald',

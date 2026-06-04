@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { colorClasses } from '../constants/colors';
@@ -11,13 +11,26 @@ import { Sidebar, type DashboardView } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
 
+const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
+
+type SavedDashboardInputs = {
+  assets?: Partial<Record<AssetKind, Partial<Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn'>>>>;
+  income?: Partial<Pick<IncomePlan, 'monthlyNetIncome'>>;
+  projectionYears?: number;
+};
+
 export function Dashboard() {
-  const [assets, setAssets] = useState<FinancialAsset[]>(initialAssets);
-  const [income, setIncome] = useState<IncomePlan>(incomePlan);
-  const [projectionYears, setProjectionYears] = useState(30);
+  const savedInputs = useMemo(readSavedDashboardInputs, []);
+  const [assets, setAssets] = useState<FinancialAsset[]>(() => mergeSavedAssets(savedInputs.assets));
+  const [income, setIncome] = useState<IncomePlan>(() => mergeSavedIncome(savedInputs.income));
+  const [projectionYears, setProjectionYears] = useState(() => getSavedNumber(savedInputs.projectionYears, 30));
   const [isExporting, setIsExporting] = useState(false);
   const [activeView, setActiveView] = useState<DashboardView>('overview');
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
+
+  useEffect(() => {
+    saveDashboardInputs({ assets, income, projectionYears });
+  }, [assets, income, projectionYears]);
 
   function updateAsset(
     id: AssetKind,
@@ -142,6 +155,73 @@ export function Dashboard() {
       </div>
     </main>
   );
+}
+
+function readSavedDashboardInputs(): SavedDashboardInputs {
+  try {
+    const savedValue = window.localStorage.getItem(DASHBOARD_STORAGE_KEY);
+    return savedValue ? JSON.parse(savedValue) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveDashboardInputs({
+  assets,
+  income,
+  projectionYears,
+}: {
+  assets: FinancialAsset[];
+  income: IncomePlan;
+  projectionYears: number;
+}) {
+  try {
+    window.localStorage.setItem(
+      DASHBOARD_STORAGE_KEY,
+      JSON.stringify({
+        assets: Object.fromEntries(
+          assets.map((asset) => [
+            asset.id,
+            {
+              amount: asset.amount,
+              monthlyContribution: asset.monthlyContribution,
+              annualReturn: asset.annualReturn,
+            },
+          ]),
+        ),
+        income: {
+          monthlyNetIncome: income.monthlyNetIncome,
+        },
+        projectionYears,
+      } satisfies SavedDashboardInputs),
+    );
+  } catch {
+    // Ignore storage failures so the calculator remains usable in private or restricted browser modes.
+  }
+}
+
+function mergeSavedAssets(savedAssets: SavedDashboardInputs['assets']) {
+  return initialAssets.map((asset) => {
+    const savedAsset = savedAssets?.[asset.id];
+
+    return {
+      ...asset,
+      amount: getSavedNumber(savedAsset?.amount, asset.amount),
+      monthlyContribution: getSavedNumber(savedAsset?.monthlyContribution, asset.monthlyContribution),
+      annualReturn: getSavedNumber(savedAsset?.annualReturn, asset.annualReturn),
+    };
+  });
+}
+
+function mergeSavedIncome(savedIncome: SavedDashboardInputs['income']) {
+  return {
+    ...incomePlan,
+    monthlyNetIncome: getSavedNumber(savedIncome?.monthlyNetIncome, incomePlan.monthlyNetIncome),
+  };
+}
+
+function getSavedNumber(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
 function Footer() {
