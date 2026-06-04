@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Building2, CircleHelp, Goal, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
 import { currency, type AssetKind, type calculateDashboard, type FinancialAsset } from '../finance';
 import { colorClasses } from '../constants/colors';
@@ -19,24 +19,7 @@ export function AssetCard({
   const Icon =
     asset.id === 'savings' ? Landmark : asset.id === 'investments' ? TrendingUp : asset.id === 'pillar2' ? ShieldCheck : Building2;
   const colors = colorClasses[asset.color];
-  const [isSavingPartHintOpen, setIsSavingPartHintOpen] = useState(false);
-  const savingPartHintRef = useRef<HTMLSpanElement>(null);
   const isPillar2 = asset.id === 'pillar2';
-
-  useEffect(() => {
-    if (!isSavingPartHintOpen) {
-      return;
-    }
-
-    function handlePointerDown(event: PointerEvent) {
-      if (!savingPartHintRef.current?.contains(event.target as Node)) {
-        setIsSavingPartHintOpen(false);
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [isSavingPartHintOpen]);
 
   return (
     <article className="glass-panel p-4">
@@ -62,20 +45,22 @@ export function AssetCard({
           label={isPillar2 ? 'Monthly saving part' : 'Monthly Contribution'}
           labelExtra={
             isPillar2 ? (
-              <span ref={savingPartHintRef} className="relative">
+              <span className="group relative">
                 <button
                   type="button"
                   className="grid h-5 w-5 place-items-center rounded-full text-slate-500 transition hover:bg-white/50 hover:text-blue-700"
                   aria-label="Show monthly saving part hint"
-                  onClick={() => setIsSavingPartHintOpen((isOpen) => !isOpen)}
+                  aria-describedby="monthly-saving-part-hint"
                 >
                   <CircleHelp className="h-4 w-4" />
                 </button>
-                {isSavingPartHintOpen && (
-                  <span className="absolute left-0 top-6 z-20 w-56 rounded-lg border border-white/60 bg-white/85 p-3 text-xs font-medium leading-5 text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl">
-                    You can find this value in your most recent annual pension fund statement.
-                  </span>
-                )}
+                <span
+                  id="monthly-saving-part-hint"
+                  role="tooltip"
+                  className="pointer-events-none absolute left-0 top-6 z-20 w-56 rounded-lg border border-white/60 bg-white/85 p-3 text-xs font-medium leading-5 text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                >
+                  You can find this value in your most recent annual pension fund statement.
+                </span>
               </span>
             ) : undefined
           }
