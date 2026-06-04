@@ -66,7 +66,7 @@ export function Dashboard() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_1fr]">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <section className="px-4 py-4 sm:px-5 xl:px-6">
+        <section className="flex min-h-screen flex-col px-4 py-4 sm:px-5 xl:px-6">
           {activeView === 'overview' ? (
             <>
               <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
@@ -137,9 +137,26 @@ export function Dashboard() {
               </div>
             </>
           )}
+          <Footer />
         </section>
       </div>
     </main>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="mt-auto pt-6 pb-2 text-center text-xs font-medium text-slate-600">
+      <span>&copy; </span>
+      <a
+        className="text-slate-700 underline decoration-slate-400/60 underline-offset-2 transition hover:text-cyan-800"
+        href="https://steplidia.pages.dev"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Lidia Stepanova
+      </a>
+    </footer>
   );
 }
 
