@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Building2, CircleHelp, Goal, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
 import { currency, type AssetKind, type calculateDashboard, type FinancialAsset } from '../finance';
 import { colorClasses } from '../constants/colors';
@@ -126,6 +126,26 @@ function EditableField({
   step: number;
   onChange: (value: number) => void;
 }) {
+  const [draftValue, setDraftValue] = useState(() => formatEditableValue(value));
+
+  useEffect(() => {
+    setDraftValue(formatEditableValue(value));
+  }, [value]);
+
+  function handleChange(rawValue: string) {
+    setDraftValue(rawValue);
+
+    if (rawValue === '' || rawValue === '-' || rawValue === '.' || rawValue === '-.') {
+      return;
+    }
+
+    const nextValue = Number(rawValue);
+
+    if (Number.isFinite(nextValue)) {
+      onChange(nextValue);
+    }
+  }
+
   return (
     <div className="grid grid-cols-[1fr_112px] items-center gap-3">
       <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
@@ -139,11 +159,15 @@ function EditableField({
           min={min}
           step={step}
           type="number"
-          value={Number.isFinite(value) ? value : 0}
-          onChange={(event) => onChange(event.currentTarget.valueAsNumber || 0)}
+          value={draftValue}
+          onChange={(event) => handleChange(event.currentTarget.value)}
         />
         <span className="text-slate-600">{suffix}</span>
       </span>
     </div>
   );
+}
+
+function formatEditableValue(value: number) {
+  return Number.isFinite(value) ? String(value) : '0';
 }

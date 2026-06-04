@@ -71,6 +71,10 @@ describe('financial calculations', () => {
     expect(futureValue(1000, 0, 3, 100)).toBeCloseTo(4600, 3);
   });
 
+  it('handles negative yearly return', () => {
+    expect(futureValue(1000, -5, 3)).toBeCloseTo(857.375, 3);
+  });
+
   it('handles zero years', () => {
     expect(futureValue(1000, 5, 0, 100)).toBeCloseTo(1000, 3);
   });
