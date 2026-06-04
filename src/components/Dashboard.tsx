@@ -132,7 +132,7 @@ export function Dashboard() {
                 showActions={false}
                 onExportPdf={handleExportPdf}
               />
-              <div className="mt-4 max-w-2xl">
+              <div className="mt-6 max-w-2xl">
                 <ContactContent />
               </div>
             </>
