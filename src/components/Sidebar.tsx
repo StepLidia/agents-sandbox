@@ -1,12 +1,13 @@
-import type { LucideIcon } from 'lucide-react';
 import { BarChart3, CircleUserRound, Footprints } from 'lucide-react';
 
-const navItems: Array<[string, LucideIcon]> = [
-  ['Overview', BarChart3],
-  ['Contact', CircleUserRound],
-];
+export type DashboardView = 'overview' | 'contact';
 
-export function Sidebar() {
+const navItems = [
+  { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'contact', label: 'Contact', icon: CircleUserRound },
+] satisfies Array<{ id: DashboardView; label: string; icon: typeof BarChart3 }>;
+
+export function Sidebar({ activeView, onViewChange }: { activeView: DashboardView; onViewChange: (view: DashboardView) => void }) {
   return (
     <aside className="glass-panel m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 lg:flex lg:rounded-none">
       <div className="flex items-center gap-3 px-2">
@@ -19,13 +20,15 @@ export function Sidebar() {
         </div>
       </div>
       <nav className="mt-8 space-y-1.5">
-        {navItems.map(([label, Icon], index) => (
+        {navItems.map(({ id, label, icon: Icon }) => (
           <button
             key={label}
-            className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${index === 0
+            className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${activeView === id
               ? 'border border-white/70 bg-blue-600/14 text-blue-700 shadow-inner'
               : 'text-slate-700 hover:bg-white/45'
               }`}
+            type="button"
+            onClick={() => onViewChange(id)}
           >
             <Icon className="h-5 w-5" />
             {label}

@@ -192,12 +192,12 @@ function AllocationRow({
 }) {
   return (
     <div className="grid grid-cols-[1fr_112px_42px] items-center gap-3 border-b border-slate-300/35 px-4 py-3 last:border-b-0">
-      <div className="flex min-w-0 items-center gap-3 text-xs font-semibold">
+      <div className="flex min-w-0 items-center gap-3 text-sm font-semibold">
         <span className={`h-3 w-3 shrink-0 rounded-full ${color}`} />
         <span className="truncate">{label}</span>
       </div>
       {readOnly ? <CurrencyValue value={amount} /> : <CurrencyInput value={amount} onChange={onChange ?? (() => undefined)} />}
-      <span className="text-right text-xs font-semibold text-slate-600">{percent.toFixed(1)}%</span>
+      <span className="text-right text-sm font-semibold text-slate-600">{percent.toFixed(1)}%</span>
     </div>
   );
 }
@@ -206,7 +206,7 @@ function CurrencyValue({ value }: { value: number }) {
   return (
     <span className="flex min-w-0 items-center justify-between gap-3 py-2 text-sm font-normal text-slate-700">
       <span className="min-w-0 truncate">{currency(value)}</span>
-      <span className="text-xs font-normal text-slate-600">CHF</span>
+      <span className="text-sm font-normal text-slate-600">CHF</span>
     </span>
   );
 }

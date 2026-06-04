@@ -1,34 +1,48 @@
 import { useState } from 'react';
 import { CircleHelp, Download } from 'lucide-react';
 
-export function Header({ isExporting = false, onExportPdf }: { isExporting?: boolean; onExportPdf: () => void }) {
+export function Header({
+  isExporting = false,
+  onExportPdf,
+  showActions = true,
+  subtitle = 'State of your financial situation',
+  title = 'Overview',
+}: {
+  isExporting?: boolean;
+  onExportPdf: () => void;
+  showActions?: boolean;
+  subtitle?: string;
+  title?: string;
+}) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-3xl font-semibold tracking-normal text-slate-950">Overview</h1>
-        <p className="mt-1 text-sm text-slate-700">State of your financial situation</p>
+        <h1 className="text-3xl font-semibold tracking-normal text-slate-950">{title}</h1>
+        <p className="mt-1 text-sm text-slate-700">{subtitle}</p>
       </div>
-      <div className="flex items-center gap-2" data-pdf-exclude="true">
-        <button className="glass-control export-button font-semibold" disabled={isExporting} onClick={onExportPdf}>
-          <Download className="h-4 w-4" />
-          {isExporting ? 'Exporting...' : 'Export PDF'}
-        </button>
-        <div className="relative">
-          <button
-            className="glass-icon"
-            aria-controls="header-help-tooltip"
-            aria-expanded={isHelpOpen}
-            aria-label="Help"
-            type="button"
-            onClick={() => setIsHelpOpen((isOpen) => !isOpen)}
-          >
-            <CircleHelp className="h-5 w-5" />
+      {showActions && (
+        <div className="flex items-center gap-2" data-pdf-exclude="true">
+          <button className="glass-control export-button font-semibold" disabled={isExporting} onClick={onExportPdf}>
+            <Download className="h-4 w-4" />
+            {isExporting ? 'Exporting...' : 'Export PDF'}
           </button>
-          {isHelpOpen && <HelpTooltip />}
+          <div className="relative">
+            <button
+              className="glass-icon"
+              aria-controls="header-help-tooltip"
+              aria-expanded={isHelpOpen}
+              aria-label="Help"
+              type="button"
+              onClick={() => setIsHelpOpen((isOpen) => !isOpen)}
+            >
+              <CircleHelp className="h-5 w-5" />
+            </button>
+            {isHelpOpen && <HelpTooltip />}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
@@ -51,7 +65,7 @@ function HelpTooltip() {
         </p>
         <p className="mt-2">
           For individuals permanently leaving Switzerland, withdrawal options depend on nationality and destination
-          country. Citizens of non-EU/EFTA countries are eligible to withdraw part of their pension assets when leaving
+          country. Citizens of non-EU/EFTA countries are eligible under certain conditions to withdraw part of their pension assets when leaving
           Switzerland permanently.
         </p>
         <MoreInfo href="https://www.ahv-iv.ch" />
@@ -83,7 +97,7 @@ function HelpTooltip() {
           Savings can be held in cash accounts or invested through securities-based solutions, potentially increasing
           long-term growth opportunities.
         </p>
-        <MoreInfo href="https://www.admin.ch" />
+        <MoreInfo href="https://finpension.ch/en/3a" />
       </section>
 
       <section className="mt-5 border-t border-slate-200 pt-5">
@@ -117,7 +131,7 @@ function MoreInfo({ href }: { href: string }) {
   return (
     <p className="mt-3 font-medium">
       More information:{' '}
-      <a className="text-cyan-700 underline decoration-cyan-700/40 underline-offset-2 hover:text-cyan-900" href={href}>
+      <a className="text-cyan-700 underline decoration-cyan-700/40 underline-offset-2 hover:text-cyan-900" href={href} target="_blank" rel="noopener noreferrer">
         {href}
       </a>
     </p>

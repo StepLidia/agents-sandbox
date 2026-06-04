@@ -2,11 +2,12 @@ import { useMemo, useState, type CSSProperties } from 'react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { colorClasses } from '../constants/colors';
+import { ContactContent } from './ContactCard';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
 import { ProjectionCard } from './ProjectionCard';
-import { Sidebar } from './Sidebar';
+import { Sidebar, type DashboardView } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
 
@@ -15,6 +16,7 @@ export function Dashboard() {
   const [income, setIncome] = useState<IncomePlan>(incomePlan);
   const [projectionYears, setProjectionYears] = useState(30);
   const [isExporting, setIsExporting] = useState(false);
+  const [activeView, setActiveView] = useState<DashboardView>('overview');
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   function updateAsset(
@@ -63,62 +65,78 @@ export function Dashboard() {
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_1fr]">
-        <Sidebar />
+        <Sidebar activeView={activeView} onViewChange={setActiveView} />
         <section className="px-4 py-4 sm:px-5 xl:px-6">
-          <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
-          <div className="mt-4 grid gap-3 xl:grid-cols-4">
-            {dashboard.assets.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
-            ))}
-          </div>
-          <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-4">
-            <div className="h-full xl:col-span-2">
-              <IncomeCard
-                income={dashboard.income}
-                futureBuildingPercent={dashboard.futureBuildingPercent}
-                onChange={updateIncome}
+          {activeView === 'overview' ? (
+            <>
+              <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
+              <div className="mt-4 grid gap-3 xl:grid-cols-4">
+                {dashboard.assets.map((asset) => (
+                  <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
+                ))}
+              </div>
+              <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-4">
+                <div className="h-full xl:col-span-2">
+                  <IncomeCard
+                    income={dashboard.income}
+                    futureBuildingPercent={dashboard.futureBuildingPercent}
+                    onChange={updateIncome}
+                  />
+                </div>
+                <div className="h-full">
+                  <SummaryCard
+                    totalWealth={dashboard.totalWealth}
+                    pensionWealth={dashboard.pensionWealth}
+                    liquidWealth={dashboard.liquidWealth}
+                    projectionYears={projectionYears}
+                  />
+                </div>
+                <div className="h-full">
+                  <InsightsCard insightAmounts={dashboard.insightAmounts} projectionYears={projectionYears} />
+                </div>
+              </div>
+              <YearsSlider value={projectionYears} onChange={setProjectionYears} />
+              <div className="mt-3 grid gap-3 xl:grid-cols-3">
+                <ProjectionCard
+                  title="Total Wealth Over Time"
+                  amount={dashboard.totalWealth}
+                  subtitle="All accounts combined"
+                  points={dashboard.totalProjection}
+                  comparisonPoints={dashboard.zeroReturnTotalProjection}
+                  palette={colorClasses.blue}
+                />
+                <ProjectionCard
+                  title="Pension Wealth"
+                  note="2nd + 3rd Pillar"
+                  amount={dashboard.pensionWealth}
+                  subtitle="Future pension capital"
+                  points={dashboard.pensionProjection}
+                  comparisonPoints={dashboard.zeroReturnPensionProjection}
+                  palette={colorClasses.violet}
+                />
+                <ProjectionCard
+                  title="Savings + Investments"
+                  amount={dashboard.liquidWealth}
+                  subtitle="Liquid and accessible wealth"
+                  points={dashboard.savingsInvestmentProjection}
+                  comparisonPoints={dashboard.zeroReturnSavingsInvestmentProjection}
+                  palette={colorClasses.emerald}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <Header
+                title="Contact"
+                subtitle="Form for your inquiries"
+                showActions={false}
+                onExportPdf={handleExportPdf}
               />
-            </div>
-            <div className="h-full">
-              <SummaryCard
-                totalWealth={dashboard.totalWealth}
-                pensionWealth={dashboard.pensionWealth}
-                liquidWealth={dashboard.liquidWealth}
-                projectionYears={projectionYears}
-              />
-            </div>
-            <div className="h-full">
-              <InsightsCard insightAmounts={dashboard.insightAmounts} projectionYears={projectionYears} />
-            </div>
-          </div>
-          <YearsSlider value={projectionYears} onChange={setProjectionYears} />
-          <div className="mt-3 grid gap-3 xl:grid-cols-3">
-            <ProjectionCard
-              title="Total Wealth Over Time"
-              amount={dashboard.totalWealth}
-              subtitle="All accounts combined"
-              points={dashboard.totalProjection}
-              comparisonPoints={dashboard.zeroReturnTotalProjection}
-              palette={colorClasses.blue}
-            />
-            <ProjectionCard
-              title="Pension Wealth"
-              note="2nd + 3rd Pillar"
-              amount={dashboard.pensionWealth}
-              subtitle="Future pension capital"
-              points={dashboard.pensionProjection}
-              comparisonPoints={dashboard.zeroReturnPensionProjection}
-              palette={colorClasses.violet}
-            />
-            <ProjectionCard
-              title="Savings + Investments"
-              amount={dashboard.liquidWealth}
-              subtitle="Liquid and accessible wealth"
-              points={dashboard.savingsInvestmentProjection}
-              comparisonPoints={dashboard.zeroReturnSavingsInvestmentProjection}
-              palette={colorClasses.emerald}
-            />
-          </div>
+              <div className="mt-4 max-w-2xl">
+                <ContactContent />
+              </div>
+            </>
+          )}
         </section>
       </div>
     </main>
