@@ -1,9 +1,10 @@
-import { BarChart3, CircleUserRound, Footprints, X } from 'lucide-react';
+import { BarChart3, CircleUserRound, Footprints, ReceiptText, X } from 'lucide-react';
 
-export type DashboardView = 'overview' | 'contact';
+export type DashboardView = 'overview' | 'expenses' | 'contact';
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: BarChart3 },
+  { id: 'expenses', label: 'Expenses', icon: ReceiptText },
   { id: 'contact', label: 'Contact', icon: CircleUserRound },
 ] satisfies Array<{ id: DashboardView; label: string; icon: typeof BarChart3 }>;
 

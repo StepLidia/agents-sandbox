@@ -4,6 +4,7 @@ import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { colorClasses } from '../constants/colors';
 import { ContactContent } from './ContactCard';
+import { ExpensesPage } from './ExpensesPage';
 import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
@@ -153,6 +154,8 @@ export function Dashboard() {
                 />
               </div>
             </>
+          ) : activeView === 'expenses' ? (
+            <ExpensesPage monthlyIncome={dashboard.income.monthlyNetIncome} />
           ) : (
             <>
               <Header
