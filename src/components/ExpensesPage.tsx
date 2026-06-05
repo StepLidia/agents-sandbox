@@ -134,7 +134,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
               />
             ))}
           </div>
-          <div className="mt-3 flex items-center justify-between border-t border-slate-300/45 pt-3 text-sm font-bold">
+          <div className="mt-3 flex items-center justify-between pt-3 text-sm font-bold">
             <span>Total Expenses</span>
             <span>{currency(totalExpenses)} CHF</span>
           </div>
@@ -285,7 +285,7 @@ function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
   const columns = chunkCategories(categories, 9);
 
   return (
-    <div className="grid grid-flow-col auto-cols-max items-start gap-x-3 gap-y-2.5">
+    <div className="grid grid-flow-col auto-cols-max items-start justify-center gap-x-5 gap-y-2.5">
       {columns.map((columnCategories, columnIndex) => (
         <div key={columnIndex} className="flex flex-col gap-2.5">
           {columnCategories.map((category) => (
