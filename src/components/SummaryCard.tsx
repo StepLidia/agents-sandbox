@@ -44,7 +44,7 @@ function SummaryRow({
   const colors = colorClasses[color];
 
   return (
-    <div className="flex flex-1 items-center gap-3 rounded-lg border border-white/55 bg-white/28 p-3 shadow-inner">
+    <div className="flex flex-1 items-center gap-3 rounded-lg border border-slate-300/30 bg-white/25 p-3 shadow-inner">
       <div className={`grid h-11 w-11 place-items-center rounded-2xl ${colors.bg} ${colors.text}`}>
         <Icon className="h-6 w-6" />
       </div>

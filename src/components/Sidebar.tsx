@@ -74,7 +74,7 @@ function SidebarContent({ activeView, onViewChange }: SidebarProps) {
           <button
             key={label}
             className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${activeView === id
-              ? 'border border-white/70 bg-blue-600/14 text-blue-700 shadow-inner'
+              ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
               : 'text-slate-700 hover:bg-white/45'
               }`}
             type="button"

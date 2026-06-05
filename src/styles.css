@@ -74,32 +74,20 @@ input[type="number"]::-webkit-inner-spin-button {
 
 .glass-panel {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 14px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.18)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(226, 232, 240, 0.14)),
     radial-gradient(circle at 12% 0%, rgba(96, 165, 250, 0.16), transparent 34%),
     radial-gradient(circle at 96% 14%, rgba(56, 189, 248, 0.13), transparent 31%),
     rgba(236, 242, 250, 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.68),
-    inset 0 -1px 0 rgba(148, 163, 184, 0.1),
     0 18px 50px rgba(80, 99, 130, 0.12);
   backdrop-filter: blur(28px) saturate(1.18);
 }
 
 .glass-panel-square {
   border-radius: 0;
-}
-
-.glass-panel::before {
-  pointer-events: none;
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.24), transparent 38%, rgba(255, 255, 255, 0.08));
-  opacity: 0.86;
 }
 
 .glass-panel > * {
@@ -112,14 +100,14 @@ input[type="number"]::-webkit-inner-spin-button {
   min-height: 40px;
   align-items: center;
   gap: 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 11px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.18)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(226, 232, 240, 0.14)),
     rgba(232, 239, 249, 0.28);
   padding: 0.45rem 0.8rem;
   color: rgb(30, 41, 59);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 28px rgba(80, 99, 130, 0.12);
+  box-shadow: 0 10px 28px rgba(80, 99, 130, 0.12);
 }
 
 .export-button {
@@ -161,13 +149,13 @@ input[type="number"]::-webkit-inner-spin-button {
   height: 40px;
   width: 40px;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 999px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(226, 232, 240, 0.14)),
     rgba(232, 239, 249, 0.28);
   color: rgb(51, 65, 85);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 10px 28px rgba(80, 99, 130, 0.12);
+  box-shadow: 0 10px 28px rgba(80, 99, 130, 0.12);
 }
 
 .glass-input {
@@ -175,14 +163,14 @@ input[type="number"]::-webkit-inner-spin-button {
   min-width: 0;
   align-items: center;
   gap: 0.65rem;
-  border: 1px solid rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.17)),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(226, 232, 240, 0.14)),
     rgba(241, 245, 249, 0.18);
   padding: 0.62rem 0.75rem;
   color: rgb(15, 23, 42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: 0 8px 20px rgba(80, 99, 130, 0.08);
   transition:
     border-color 160ms ease,
     box-shadow 160ms ease,
@@ -196,7 +184,6 @@ input[type="number"]::-webkit-inner-spin-button {
     linear-gradient(105deg, rgba(203, 213, 225, 0.22), transparent 52%, rgba(165, 243, 252, 0.1)),
     rgba(241, 245, 249, 0.22);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -1px 0 rgba(14, 116, 144, 0.08),
     0 0 0 3px rgba(14, 116, 144, 0.08),
     0 8px 20px rgba(80, 99, 130, 0.08);

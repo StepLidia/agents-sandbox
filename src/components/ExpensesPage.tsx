@@ -285,7 +285,7 @@ function ExpensesHeader({
         </button>
         <span className="group relative">
           <button
-            className="grid h-10 w-10 place-items-center rounded-full border border-white/60 bg-white/35 text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,.78),0_10px_28px_rgba(80,99,130,.12)] transition hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            className="grid h-10 w-10 place-items-center rounded-full border border-slate-300/30 bg-white/25 text-slate-500 shadow-lg shadow-slate-400/10 transition hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
             aria-label={`Reset ${expenseMonth.label} expenses`}
             aria-describedby="delete-month-data-tooltip"
             type="button"
@@ -320,7 +320,7 @@ function MonthPicker({
   return (
     <div
       id="expenses-month-picker"
-      className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-white/60 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+      className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
     >
       <div className="flex items-center justify-between">
         <button
@@ -558,7 +558,7 @@ function AddCategoryRow({
   if (!draftCategory) {
     return (
       <button
-        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/60 bg-white/35 text-sm font-bold text-slate-500 transition hover:bg-white/55"
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-300/30 bg-white/30 text-sm font-bold text-slate-500 transition hover:bg-white/55"
         type="button"
         onClick={onAdd}
       >

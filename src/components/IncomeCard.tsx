@@ -43,7 +43,7 @@ export function IncomeCard({
         </div>
         <div>
           <SmallLabel>Allocation</SmallLabel>
-          <div className="mt-2 overflow-hidden rounded-lg border border-white/55 bg-white/22">
+          <div className="mt-2 overflow-hidden rounded-lg border border-slate-300/30 bg-white/20">
             <AllocationRow
               color="bg-blue-600"
               label="To Savings Account"

@@ -53,7 +53,7 @@ function HelpTooltip() {
       id="header-help-tooltip"
       role="dialog"
       aria-label="Pension and investing information"
-      className="absolute right-0 top-12 z-30 max-h-[min(70vh,720px)] w-[min(calc(100vw-2rem),34rem)] overflow-y-auto rounded-lg border border-white/60 bg-white/95 p-5 text-sm leading-6 text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+      className="absolute right-0 top-12 z-30 max-h-[min(70vh,720px)] w-[min(calc(100vw-2rem),34rem)] overflow-y-auto rounded-lg border border-slate-300/30 bg-white/95 p-5 text-sm leading-6 text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
     >
       <section>
         <h2 className="text-base font-bold text-slate-950">AHV (1st Pillar)</h2>
