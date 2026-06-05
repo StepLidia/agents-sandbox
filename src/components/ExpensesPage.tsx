@@ -6,6 +6,8 @@ import {
   ArrowUp,
   CalendarDays,
   ChartLine,
+  ChevronLeft,
+  ChevronRight,
   Home,
   PiggyBank,
   Star,
@@ -31,6 +33,7 @@ type ExpenseCategory = {
 type ExpenseMonth = {
   key: string;
   label: string;
+  shortLabel: string;
 };
 
 type SavedExpensesByMonth = {
@@ -52,7 +55,7 @@ const defaultCategories: ExpenseCategory[] = [
 ];
 
 export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
-  const expenseMonth = useMemo(getCurrentExpenseMonth, []);
+  const [expenseMonth, setExpenseMonth] = useState(getCurrentExpenseMonth);
   const shouldSkipNextSave = useRef(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>(() => readSavedExpenses(expenseMonth.key));
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
@@ -91,6 +94,12 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
     setCategories(defaultCategories);
   }
 
+  function selectExpenseMonth(nextMonth: ExpenseMonth) {
+    setExpenseMonth(nextMonth);
+    setDraftCategory(null);
+    setCategories(readSavedExpenses(nextMonth.key));
+  }
+
   function addCategory() {
     setDraftCategory({ name: '', value: 0 });
   }
@@ -121,7 +130,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
   return (
     <>
-      <ExpensesHeader monthLabel={expenseMonth.label} onResetMonth={resetCurrentMonth} />
+      <ExpensesHeader expenseMonth={expenseMonth} onMonthChange={selectExpenseMonth} onResetMonth={resetCurrentMonth} />
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={WalletCards}
@@ -215,7 +224,17 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   );
 }
 
-function ExpensesHeader({ monthLabel, onResetMonth }: { monthLabel: string; onResetMonth: () => void }) {
+function ExpensesHeader({
+  expenseMonth,
+  onMonthChange,
+  onResetMonth,
+}: {
+  expenseMonth: ExpenseMonth;
+  onMonthChange: (month: ExpenseMonth) => void;
+  onResetMonth: () => void;
+}) {
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -223,17 +242,34 @@ function ExpensesHeader({ monthLabel, onResetMonth }: { monthLabel: string; onRe
         <p className="mt-1 text-sm text-slate-700">Track your spending. Understand your habits. Take control.</p>
       </div>
       <div className="flex items-center gap-2">
-        <button className="glass-control export-button font-semibold" type="button">
-          <CalendarDays className="h-4 w-4" />
-          {monthLabel}
-        </button>
+        <div className="relative">
+          <button
+            className="glass-control export-button font-semibold"
+            aria-controls="expenses-month-picker"
+            aria-expanded={isMonthPickerOpen}
+            type="button"
+            onClick={() => setIsMonthPickerOpen((isOpen) => !isOpen)}
+          >
+            <CalendarDays className="h-4 w-4" />
+            {expenseMonth.label}
+          </button>
+          {isMonthPickerOpen && (
+            <MonthPicker
+              expenseMonth={expenseMonth}
+              onMonthChange={(month) => {
+                onMonthChange(month);
+                setIsMonthPickerOpen(false);
+              }}
+            />
+          )}
+        </div>
         <button className="glass-icon h-10 w-10" aria-label="View expense trend" type="button">
           <ChartLine className="h-4 w-4" />
         </button>
         <span className="group relative">
           <button
             className="grid h-10 w-10 place-items-center rounded-full border border-white/60 bg-white/35 text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,.78),0_10px_28px_rgba(80,99,130,.12)] transition hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
-            aria-label={`Reset ${monthLabel} expenses`}
+            aria-label={`Reset ${expenseMonth.label} expenses`}
             aria-describedby="delete-month-data-tooltip"
             type="button"
             onClick={onResetMonth}
@@ -250,6 +286,65 @@ function ExpensesHeader({ monthLabel, onResetMonth }: { monthLabel: string; onRe
         </span>
       </div>
     </header>
+  );
+}
+
+function MonthPicker({
+  expenseMonth,
+  onMonthChange,
+}: {
+  expenseMonth: ExpenseMonth;
+  onMonthChange: (month: ExpenseMonth) => void;
+}) {
+  const [visibleYear, setVisibleYear] = useState(() => Number(expenseMonth.key.slice(0, 4)));
+  const selectedMonth = Number(expenseMonth.key.slice(5, 7));
+  const months = Array.from({ length: 12 }, (_, index) => buildExpenseMonth(visibleYear, index));
+
+  return (
+    <div
+      id="expenses-month-picker"
+      className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-white/60 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+    >
+      <div className="flex items-center justify-between">
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
+          aria-label="Previous year"
+          type="button"
+          onClick={() => setVisibleYear((year) => year - 1)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <p className="text-sm font-bold text-slate-950">{visibleYear}</p>
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
+          aria-label="Next year"
+          type="button"
+          onClick={() => setVisibleYear((year) => year + 1)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {months.map((month) => {
+          const isSelected = visibleYear === Number(expenseMonth.key.slice(0, 4)) && selectedMonth === Number(month.key.slice(5, 7));
+
+          return (
+            <button
+              key={month.key}
+              className={`h-9 rounded-lg text-sm font-semibold transition ${
+                isSelected
+                  ? 'bg-blue-600/14 text-blue-700 shadow-inner'
+                  : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
+              }`}
+              type="button"
+              onClick={() => onMonthChange(month)}
+            >
+              {month.shortLabel}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -798,14 +893,21 @@ function buildCategoryId(label: string) {
 
 function getCurrentExpenseMonth(): ExpenseMonth {
   const currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth() + 1;
+
+  return buildExpenseMonth(currentDate.getFullYear(), currentDate.getMonth());
+}
+
+function buildExpenseMonth(year: number, monthIndex: number): ExpenseMonth {
+  const date = new Date(year, monthIndex, 1);
 
   return {
-    key: `${year}-${String(month).padStart(2, '0')}`,
-    label: currentDate.toLocaleDateString('en-US', {
+    key: `${year}-${String(monthIndex + 1).padStart(2, '0')}`,
+    label: date.toLocaleDateString('en-US', {
       month: 'long',
       year: 'numeric',
+    }),
+    shortLabel: date.toLocaleDateString('en-US', {
+      month: 'short',
     }),
   };
 }
