@@ -230,14 +230,24 @@ function ExpensesHeader({ monthLabel, onResetMonth }: { monthLabel: string; onRe
         <button className="glass-icon h-10 w-10" aria-label="View expense trend" type="button">
           <ChartLine className="h-4 w-4" />
         </button>
-        <button
-          className="glass-icon h-10 w-10 transition hover:text-red-600"
-          aria-label={`Reset ${monthLabel} expenses`}
-          type="button"
-          onClick={onResetMonth}
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <span className="group relative">
+          <button
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/60 bg-white/35 text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,.78),0_10px_28px_rgba(80,99,130,.12)] transition hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            aria-label={`Reset ${monthLabel} expenses`}
+            aria-describedby="delete-month-data-tooltip"
+            type="button"
+            onClick={onResetMonth}
+          >
+            <Trash2 className="h-4 w-4 text-current" />
+          </button>
+          <span
+            id="delete-month-data-tooltip"
+            role="tooltip"
+            className="pointer-events-none absolute right-0 top-12 z-50 w-44 rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+          >
+            Delete this month data
+          </span>
+        </span>
       </div>
     </header>
   );
