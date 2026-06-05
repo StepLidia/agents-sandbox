@@ -16,6 +16,7 @@ import {
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
+import { InsightValue } from './InsightValue';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
@@ -569,16 +570,16 @@ function ExpenseInsights({
       <h2 className="text-sm font-bold text-slate-950">Insights</h2>
       <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4 text-sm leading-5 text-slate-800">
         <InsightItem color="bg-violet-500/12 text-violet-600" icon={Home}>
-          Rent represents {Math.round(getPercent(rent, totalExpenses))}% of your total monthly expenses.
+          Rent represents <InsightValue>{Math.round(getPercent(rent, totalExpenses))}%</InsightValue> of your total monthly expenses.
         </InsightItem>
         <InsightItem color="bg-amber-500/12 text-amber-500" icon={Star}>
-          Food spending exceeds insurance costs by {currency(Math.max(food - insurance, 0))} CHF.
+          Food spending exceeds insurance costs by <InsightValue>{currency(Math.max(food - insurance, 0))} CHF</InsightValue>.
         </InsightItem>
         <InsightItem color="bg-cyan-500/12 text-cyan-600" icon={WalletCards}>
-          Reducing subscriptions by 50% could save you {currency(subscriptions / 2)} CHF per month.
+          Reducing subscriptions by <InsightValue>50%</InsightValue> could save you <InsightValue>{currency(subscriptions / 2)} CHF</InsightValue> per month.
         </InsightItem>
         <InsightItem color="bg-emerald-500/12 text-emerald-600" icon={PiggyBank}>
-          Your current savings rate is {Math.round(getPercent(savingsPotential, monthlyIncome))}%, keep it up!
+          Your current savings rate is <InsightValue>{Math.round(getPercent(savingsPotential, monthlyIncome))}%</InsightValue>, keep it up!
         </InsightItem>
       </div>
     </section>

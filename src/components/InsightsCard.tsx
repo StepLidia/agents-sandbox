@@ -1,5 +1,6 @@
 import { Lightbulb } from 'lucide-react';
 import { currency, type InsightAmounts } from '../finance';
+import { InsightValue } from './InsightValue';
 
 export function InsightsCard({
   insightAmounts,
@@ -34,8 +35,4 @@ export function InsightsCard({
       </ul>
     </section>
   );
-}
-
-function InsightValue({ children }: { children: React.ReactNode }) {
-  return <span className="font-extrabold text-slate-950">{children}</span>;
 }
