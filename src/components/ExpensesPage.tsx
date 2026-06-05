@@ -29,6 +29,15 @@ type ExpenseCategory = {
   kind: 'essential' | 'lifestyle';
 };
 
+type ExpenseMonth = {
+  key: string;
+  label: string;
+};
+
+type SavedExpensesByMonth = {
+  months: Record<string, ExpenseCategory[]>;
+};
+
 const defaultCategories: ExpenseCategory[] = [
   { id: 'rent', label: 'Rent', value: 1600, color: '#2563eb', kind: 'essential' },
   { id: 'food', label: 'Food', value: 700, color: '#42ba85', kind: 'essential' },
@@ -44,7 +53,8 @@ const defaultCategories: ExpenseCategory[] = [
 ];
 
 export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
-  const [categories, setCategories] = useState<ExpenseCategory[]>(readSavedExpenses);
+  const expenseMonth = useMemo(getCurrentExpenseMonth, []);
+  const [categories, setCategories] = useState<ExpenseCategory[]>(() => readSavedExpenses(expenseMonth.key));
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
   const totalExpenses = useMemo(() => categories.reduce((sum, category) => sum + category.value, 0), [categories]);
   const essentialExpenses = useMemo(
@@ -56,8 +66,8 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   const topDrivers = [...categories].sort((first, second) => second.value - first.value).slice(0, 3);
 
   useEffect(() => {
-    saveExpenses(categories);
-  }, [categories]);
+    saveExpenses(expenseMonth.key, categories);
+  }, [categories, expenseMonth.key]);
 
   function updateCategory(id: string, value: number) {
     setCategories((currentCategories) =>
@@ -99,7 +109,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
   return (
     <>
-      <ExpensesHeader />
+      <ExpensesHeader monthLabel={expenseMonth.label} />
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={WalletCards}
@@ -193,7 +203,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   );
 }
 
-function ExpensesHeader() {
+function ExpensesHeader({ monthLabel }: { monthLabel: string }) {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -203,7 +213,7 @@ function ExpensesHeader() {
       <div className="flex items-center gap-2">
         <button className="glass-control export-button font-semibold" type="button">
           <CalendarDays className="h-4 w-4" />
-          May 2025
+          {monthLabel}
         </button>
         <button className="glass-icon h-10 w-10" aria-label="View expense trend" type="button">
           <ChartLine className="h-4 w-4" />
@@ -620,21 +630,31 @@ function ExpenseTooltip({ active, payload, totalExpenses }: ExpenseTooltipProps)
   );
 }
 
-function readSavedExpenses() {
+function readSavedExpenses(monthKey: string) {
   try {
     const savedValue = window.localStorage.getItem(EXPENSES_STORAGE_KEY);
-    const savedCategories = savedValue ? JSON.parse(savedValue) : [];
+    const savedExpenses = savedValue ? JSON.parse(savedValue) : undefined;
+    const savedCategories = getSavedCategoriesForMonth(savedExpenses, monthKey);
 
-    if (!Array.isArray(savedCategories)) {
+    if (!savedCategories) {
       return defaultCategories;
     }
 
+    return mergeSavedExpenseCategories(savedCategories);
+  } catch {
+    return defaultCategories;
+  }
+}
+
+function mergeSavedExpenseCategories(savedCategories: unknown[]) {
+  try {
     const defaultCategoryIds = new Set(defaultCategories.map(({ id }) => id));
     const mergedDefaultCategories = defaultCategories.map((category) => {
-      const savedCategory = savedCategories.find((savedItem) => savedItem?.id === category.id);
-      const savedValue = typeof savedCategory?.value === 'number' && Number.isFinite(savedCategory.value)
-        ? savedCategory.value
-        : category.value;
+      const savedCategory = savedCategories.find(
+        (savedItem): savedItem is Pick<ExpenseCategory, 'id' | 'value'> =>
+          isSavedExpenseValue(savedItem) && savedItem.id === category.id,
+      );
+      const savedValue = savedCategory?.value ?? category.value;
 
       return { ...category, value: savedValue };
     });
@@ -648,12 +668,55 @@ function readSavedExpenses() {
   }
 }
 
-function saveExpenses(categories: ExpenseCategory[]) {
+function saveExpenses(monthKey: string, categories: ExpenseCategory[]) {
   try {
-    window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(categories));
+    const savedValue = window.localStorage.getItem(EXPENSES_STORAGE_KEY);
+    const savedExpenses = savedValue ? JSON.parse(savedValue) : undefined;
+    const expensesByMonth = normalizeSavedExpenses(savedExpenses, monthKey);
+
+    expensesByMonth.months[monthKey] = categories;
+    window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expensesByMonth));
   } catch {
     // Ignore storage failures so editing remains available in restricted browser modes.
   }
+}
+
+function getSavedCategoriesForMonth(savedExpenses: unknown, monthKey: string) {
+  if (Array.isArray(savedExpenses)) {
+    return savedExpenses;
+  }
+
+  if (isSavedExpensesByMonth(savedExpenses)) {
+    return savedExpenses.months[monthKey];
+  }
+
+  return undefined;
+}
+
+function normalizeSavedExpenses(savedExpenses: unknown, monthKey: string): SavedExpensesByMonth {
+  if (isSavedExpensesByMonth(savedExpenses)) {
+    return savedExpenses;
+  }
+
+  if (Array.isArray(savedExpenses)) {
+    return {
+      months: {
+        [monthKey]: mergeSavedExpenseCategories(savedExpenses),
+      },
+    };
+  }
+
+  return { months: {} };
+}
+
+function isSavedExpensesByMonth(value: unknown): value is SavedExpensesByMonth {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const savedExpenses = value as Partial<SavedExpensesByMonth>;
+
+  return Boolean(savedExpenses.months) && typeof savedExpenses.months === 'object' && !Array.isArray(savedExpenses.months);
 }
 
 function isSavedExpenseCategory(value: unknown): value is ExpenseCategory {
@@ -673,6 +736,16 @@ function isSavedExpenseCategory(value: unknown): value is ExpenseCategory {
   );
 }
 
+function isSavedExpenseValue(value: unknown): value is Pick<ExpenseCategory, 'id' | 'value'> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const category = value as Partial<ExpenseCategory>;
+
+  return typeof category.id === 'string' && typeof category.value === 'number' && Number.isFinite(category.value);
+}
+
 function buildCategoryId(label: string) {
   const normalizedLabel = label
     .trim()
@@ -681,6 +754,20 @@ function buildCategoryId(label: string) {
     .replace(/^-|-$/g, '');
 
   return `${normalizedLabel || 'category'}-${Date.now()}`;
+}
+
+function getCurrentExpenseMonth(): ExpenseMonth {
+  const currentDate = new Date();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1;
+
+  return {
+    key: `${year}-${String(month).padStart(2, '0')}`,
+    label: currentDate.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    }),
+  };
 }
 
 function getRandomCategoryColor() {
