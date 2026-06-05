@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { Menu } from 'lucide-react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { colorClasses } from '../constants/colors';
@@ -7,7 +8,7 @@ import { Header } from './Header';
 import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
 import { ProjectionCard } from './ProjectionCard';
-import { Sidebar, type DashboardView } from './Sidebar';
+import { MobileSidebarDrawer, Sidebar, type DashboardView } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
 
@@ -26,6 +27,7 @@ export function Dashboard() {
   const [projectionYears, setProjectionYears] = useState(() => getSavedNumber(savedInputs.projectionYears, 30));
   const [isExporting, setIsExporting] = useState(false);
   const [activeView, setActiveView] = useState<DashboardView>('overview');
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   useEffect(() => {
@@ -77,9 +79,23 @@ export function Dashboard() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
-      <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[232px_1fr]">
+      <button
+        aria-label="Open navigation"
+        className="glass-panel fixed left-4 top-4 z-30 grid h-11 w-11 place-items-center rounded-lg text-slate-800 shadow-lg md:hidden"
+        type="button"
+        onClick={() => setIsMobileNavOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      <MobileSidebarDrawer
+        activeView={activeView}
+        isOpen={isMobileNavOpen}
+        onClose={() => setIsMobileNavOpen(false)}
+        onViewChange={setActiveView}
+      />
+      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[232px_1fr]">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <section className="flex min-h-screen flex-col px-4 py-4 sm:px-5 xl:px-6">
+        <section className="flex min-h-screen flex-col px-4 pb-4 pt-10 sm:px-5 md:py-4 xl:px-6">
           {activeView === 'overview' ? (
             <>
               <Header isExporting={isExporting} onExportPdf={handleExportPdf} />

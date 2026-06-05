@@ -1,4 +1,4 @@
-import { BarChart3, CircleUserRound, Footprints } from 'lucide-react';
+import { BarChart3, CircleUserRound, Footprints, X } from 'lucide-react';
 
 export type DashboardView = 'overview' | 'contact';
 
@@ -7,9 +7,58 @@ const navItems = [
   { id: 'contact', label: 'Contact', icon: CircleUserRound },
 ] satisfies Array<{ id: DashboardView; label: string; icon: typeof BarChart3 }>;
 
-export function Sidebar({ activeView, onViewChange }: { activeView: DashboardView; onViewChange: (view: DashboardView) => void }) {
+type SidebarProps = {
+  activeView: DashboardView;
+  onViewChange: (view: DashboardView) => void;
+};
+
+type MobileSidebarDrawerProps = SidebarProps & {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
-    <aside className="glass-panel m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 lg:flex lg:rounded-none">
+    <aside className="glass-panel m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 md:flex md:rounded-none">
+      <SidebarContent activeView={activeView} onViewChange={onViewChange} />
+    </aside>
+  );
+}
+
+export function MobileSidebarDrawer({ activeView, isOpen, onClose, onViewChange }: MobileSidebarDrawerProps) {
+  function handleViewChange(view: DashboardView) {
+    onViewChange(view);
+    onClose();
+  }
+
+  return (
+    <div className={`fixed inset-0 z-40 md:hidden ${isOpen ? '' : 'pointer-events-none'}`}>
+      <button
+        aria-label="Close navigation"
+        className={`absolute inset-0 bg-slate-950/35 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        type="button"
+        onClick={onClose}
+      />
+      <aside
+        className={`glass-panel fixed inset-y-0 left-0 flex w-[min(18rem,calc(100vw-3rem))] flex-col rounded-none border-y-0 border-l-0 px-4 py-5 shadow-2xl transition-transform duration-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <button
+          aria-label="Close navigation"
+          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-lg text-slate-700 transition hover:bg-white/45"
+          type="button"
+          onClick={onClose}
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <SidebarContent activeView={activeView} onViewChange={handleViewChange} />
+      </aside>
+    </div>
+  );
+}
+
+function SidebarContent({ activeView, onViewChange }: SidebarProps) {
+  return (
+    <>
       <div className="flex items-center gap-3 px-2">
         <div className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-600/25">
           <BarChart3 className="h-6 w-6" />
@@ -44,6 +93,6 @@ export function Sidebar({ activeView, onViewChange }: { activeView: DashboardVie
           <path d="M2 50 C24 35,30 62,48 45 S78 42,90 33 S124 8,142 24 S165 31,178 14" fill="none" stroke="currentColor" strokeWidth="2" />
         </svg>
       </div>
-    </aside>
+    </>
   );
 }
