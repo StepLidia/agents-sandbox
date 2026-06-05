@@ -113,17 +113,17 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
       </div>
 
       <div className="mt-3 grid gap-3 xl:grid-cols-2">
-        <section className="glass-panel flex min-h-0 flex-col p-4">
+        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-[25rem]">
           <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
-          <div className="mt-4 grid flex-1 place-content-center items-center gap-8 md:grid-cols-[minmax(24rem,30rem)_12rem]">
+          <div className="mt-3 grid flex-1 place-content-center items-center gap-5 md:grid-cols-[minmax(16rem,20rem)_9rem]">
             <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
             <CategoryLegend categories={categories} />
           </div>
         </section>
 
-        <section className="glass-panel p-4">
+        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-[25rem]">
           <h2 className="text-sm font-bold text-slate-950">Category Breakdown</h2>
-          <div className="mt-4 space-y-2">
+          <div className="mt-3 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-2">
             {categories.map((category) => (
               <ExpenseBreakdownRow
                 key={category.id}
@@ -134,7 +134,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
               />
             ))}
           </div>
-          <div className="mt-4 flex items-center justify-between pt-2 text-sm font-bold">
+          <div className="mt-3 flex items-center justify-between border-t border-slate-300/45 pt-3 text-sm font-bold">
             <span>Total Expenses</span>
             <span>{currency(totalExpenses)} CHF</span>
           </div>
@@ -225,7 +225,7 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
   const gradientPrefix = useId().replaceAll(':', '');
 
   return (
-    <div className="relative h-96 min-h-96">
+    <div className="relative h-64 min-h-64 md:h-72 md:min-h-72">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <defs>
@@ -267,10 +267,10 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center">
         <div>
-          <p className="text-4xl font-bold text-slate-950">
-            {currency(totalExpenses)} <span className="text-base">CHF</span>
+          <p className="text-3xl font-bold text-slate-950">
+            {currency(totalExpenses)} <span className="text-sm">CHF</span>
           </p>
-          <p className="mt-2 text-base text-slate-700">Monthly Expenses</p>
+          <p className="mt-2 text-sm text-slate-700">Monthly Expenses</p>
         </div>
       </div>
     </div>
@@ -283,10 +283,10 @@ function ExpenseSector(props: PieSectorShapeProps & { fill: string }) {
 
 function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
   return (
-    <div className="flex flex-col justify-center gap-4">
+    <div className="flex flex-col justify-center gap-2.5">
       {categories.map((category) => (
-        <div key={category.id} className="flex items-center gap-3 text-base text-slate-700">
-          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
+        <div key={category.id} className="flex items-center gap-3 text-sm text-slate-700">
+          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
           <span>{category.label}</span>
         </div>
       ))}
@@ -329,7 +329,7 @@ function ExpenseBreakdownRow({
         </label>
         <span className="text-right font-semibold text-slate-600">{percent.toFixed(1)}%</span>
       </div>
-      <div className="mt-1 h-px bg-slate-300/60">
+      <div className="mt-0.5 h-px bg-slate-300/60">
         <div className="h-px" style={{ width: barWidth, backgroundColor: category.color }} />
       </div>
     </div>
