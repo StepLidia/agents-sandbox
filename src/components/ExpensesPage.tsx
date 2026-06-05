@@ -1,13 +1,13 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import {
   Plus,
+  Trash2,
   ArrowDown,
   ArrowUp,
   CalendarDays,
   ChartLine,
   Download,
   Home,
-  MoreVertical,
   PiggyBank,
   Star,
   TrendingUp,
@@ -62,6 +62,10 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
     setCategories((currentCategories) =>
       currentCategories.map((category) => (category.id === id ? { ...category, value: Math.max(0, value) } : category)),
     );
+  }
+
+  function deleteCategory(id: string) {
+    setCategories((currentCategories) => currentCategories.filter((category) => category.id !== id));
   }
 
   function addCategory() {
@@ -161,6 +165,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
                 percent={getPercent(category.value, totalExpenses)}
                 totalExpenses={totalExpenses}
                 onChange={updateCategory}
+                onDelete={deleteCategory}
               />
             ))}
           </div>
@@ -349,21 +354,31 @@ function ExpenseBreakdownRow({
   percent,
   totalExpenses,
   onChange,
+  onDelete,
 }: {
   category: ExpenseCategory;
   percent: number;
   totalExpenses: number;
   onChange: (id: string, value: number) => void;
+  onDelete: (id: string) => void;
 }) {
   const barWidth = totalExpenses > 0 ? `${Math.max(3, percent)}%` : '0%';
   const { inputValue, onInputChange } = useEditableNumber(category.value, (value) => onChange(category.id, value));
 
   return (
-    <div>
+    <div className="group">
       <div className="grid grid-cols-[1fr_7.5rem_4rem] items-center gap-3 text-sm">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
           <span className="truncate text-slate-700">{category.label}</span>
+          <button
+            aria-label={`Delete ${category.label}`}
+            className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 opacity-0 transition hover:bg-red-500/10 hover:text-red-600 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 group-hover:opacity-100 group-focus-within:opacity-100"
+            type="button"
+            onClick={() => onDelete(category.id)}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
         <label className="glass-input h-8 justify-end px-2 py-1 text-right text-slate-950">
           <input
@@ -516,7 +531,6 @@ function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]
     <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-950">Top 3 Cost Drivers</h2>
-        <MoreVertical className="h-4 w-4 text-slate-400" />
       </div>
       <div className="mt-5 flex flex-1 flex-col justify-evenly divide-y divide-slate-300/50">
         {drivers.map((category, index) => (
@@ -573,7 +587,7 @@ function ExpenseInsights({
 
 function InsightItem({ children, color, icon: Icon }: { children: ReactNode; color: string; icon: typeof Home }) {
   return (
-    <div className="flex items-start gap-3">
+    <div className="flex items-center gap-3">
       <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${color}`}>
         <Icon className="h-4 w-4" />
       </span>
