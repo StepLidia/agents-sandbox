@@ -2,6 +2,7 @@ import { type ReactNode } from 'react';
 import { Building2, CircleHelp, Goal, Info, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
 import { currency, type AssetKind, type calculateDashboard, type FinancialAsset } from '../finance';
 import { colorClasses } from '../constants/colors';
+import { tooltipClasses } from '../constants/tooltipStyles';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 
 type Asset = ReturnType<typeof calculateDashboard>['assets'][number];
@@ -58,7 +59,7 @@ export function AssetCard({
                 <span
                   id="monthly-saving-part-hint"
                   role="tooltip"
-                  className="pointer-events-none absolute left-0 top-6 z-20 w-56 rounded-lg border border-white/60 bg-white/85 p-3 text-xs font-medium leading-5 text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                  className={tooltipClasses('left-0 top-6 w-56 p-3 leading-5')}
                 >
                   You can find this value in your most recent annual pension fund statement.
                 </span>
@@ -97,7 +98,7 @@ export function AssetCard({
               <span
                 id="future-value-hint"
                 role="tooltip"
-                className="pointer-events-none absolute left-0 top-6 z-50 w-48 rounded-lg border border-white/60 bg-white/90 p-3 text-xs font-medium leading-5 text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+                className={tooltipClasses('left-0 top-6 w-48 p-3 leading-5')}
               >
                 Using yearly compounding
               </span>

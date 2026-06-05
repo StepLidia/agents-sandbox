@@ -16,6 +16,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
+import { tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 import { InsightValue } from './InsightValue';
@@ -295,7 +296,7 @@ function ExpensesHeader({
           <span
             id="delete-month-data-tooltip"
             role="tooltip"
-            className="pointer-events-none absolute right-0 top-12 z-50 w-max whitespace-nowrap rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+            className={tooltipClasses('right-0 top-12 w-max whitespace-nowrap px-3 py-2')}
           >
             Delete selected month data
           </span>
@@ -748,7 +749,7 @@ function ExpenseTooltip({ active, payload, totalExpenses }: ExpenseTooltipProps)
   }
 
   return (
-    <div className="rounded-lg border border-white/70 bg-white/90 px-3 py-2 text-xs shadow-xl shadow-slate-400/20 backdrop-blur-xl">
+    <div className={tooltipContentClasses('px-3 py-2')}>
       <p className="font-bold text-slate-950">{category.label}</p>
       <p className="mt-1 text-slate-600">
         {currency(category.value)} CHF - {getPercent(category.value, totalExpenses).toFixed(1)}%

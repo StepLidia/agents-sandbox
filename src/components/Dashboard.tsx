@@ -12,6 +12,7 @@ import { ProjectionCard } from './ProjectionCard';
 import { MobileSidebarDrawer, Sidebar, type DashboardView } from './Sidebar';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
+import { tooltipClasses } from '../constants/tooltipStyles';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
 
@@ -245,7 +246,7 @@ function getSavedNumber(value: unknown, fallback: number) {
 
 function Footer() {
   return (
-    <footer className="mt-auto pt-6 pb-2 text-center text-xs font-medium text-slate-600">
+    <footer className="mt-auto flex flex-wrap items-center justify-center gap-2 pt-6 pb-2 text-center text-xs font-medium text-slate-600">
       <span>&copy; </span>
       <a
         className="text-slate-700 underline decoration-slate-400/60 underline-offset-2 transition hover:text-cyan-800"
@@ -255,6 +256,23 @@ function Footer() {
       >
         Lidia Stepanova
       </a>
+      <span className="text-slate-400">·</span>
+      <span className="group relative">
+        <button
+          className="text-slate-700 underline decoration-slate-400/60 underline-offset-2 transition hover:text-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-700/20"
+          aria-describedby="privacy-tooltip"
+          type="button"
+        >
+          Privacy
+        </button>
+        <span
+          id="privacy-tooltip"
+          role="tooltip"
+          className={tooltipClasses('bottom-6 left-1/2 w-72 -translate-x-1/2 px-3 py-2 text-left leading-5')}
+        >
+          All data is stored locally in your browser and is not sent anywhere. Clearing site browser data will remove saved calculations.
+        </span>
+      </span>
     </footer>
   );
 }

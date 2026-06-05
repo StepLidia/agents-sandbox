@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { currency, type ProjectionPoint } from '../finance';
 import type { ChartPalette } from '../constants/colors';
+import { tooltipContentClasses } from '../constants/tooltipStyles';
 
 export function ProjectionCard({
   title,
@@ -149,7 +150,7 @@ function ProjectionTooltip({ active, payload, label }: ProjectionTooltipProps) {
   }
 
   return (
-    <div className="-translate-y-3 rounded-lg border border-white/70 bg-white/80 px-3 py-2 text-xs shadow-xl shadow-slate-400/20 backdrop-blur-xl">
+    <div className={tooltipContentClasses('-translate-y-3 px-3 py-2')}>
       <p className="font-bold text-slate-950">{currency(value)} CHF</p>
       {typeof zeroReturnValue === 'number' && (
         <p className="mt-1 text-slate-600">0% return: {currency(zeroReturnValue)} CHF</p>
