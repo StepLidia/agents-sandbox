@@ -281,7 +281,7 @@ function ExpensesHeader({
           <span
             id="delete-month-data-tooltip"
             role="tooltip"
-            className="pointer-events-none absolute right-0 top-12 z-50 w-44 rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+            className="pointer-events-none absolute right-0 top-12 z-50 w-max whitespace-nowrap rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
           >
             Delete selected month data
           </span>
@@ -334,8 +334,8 @@ function MonthPicker({
             <button
               key={month.key}
               className={`h-9 rounded-lg text-sm font-semibold transition ${isSelected
-                  ? 'bg-blue-600/14 text-blue-700 shadow-inner'
-                  : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
+                ? 'bg-blue-600/14 text-blue-700 shadow-inner'
+                : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
                 }`}
               type="button"
               onClick={() => onMonthChange(month)}
@@ -465,7 +465,7 @@ function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
       {columns.map((columnCategories, columnIndex) => (
         <div key={columnIndex} className="flex flex-col gap-2.5">
           {columnCategories.map((category) => (
-            <div key={category.id} className="flex items-center gap-2 text-xs text-slate-700 sm:gap-3 sm:text-sm">
+            <div key={category.id} className="flex items-center gap-2 text-xs font-medium text-slate-700 sm:gap-3 sm:text-sm">
               <span className="h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5" style={{ backgroundColor: category.color }} />
               <span className="whitespace-nowrap">{category.label}</span>
             </div>
@@ -504,7 +504,7 @@ function ExpenseBreakdownRow({
       <div className="grid grid-cols-[1fr_7.5rem_4rem] items-center gap-3 text-sm">
         <div className="flex min-w-0 items-center gap-2">
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
-          <span className="truncate text-slate-700">{category.label}</span>
+          <span className="truncate font-medium text-slate-700">{category.label}</span>
           <button
             aria-label={`Delete ${category.label}`}
             className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-400 opacity-0 transition hover:bg-red-500/10 hover:text-red-600 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-red-500/20 group-hover:opacity-100 group-focus-within:opacity-100"
