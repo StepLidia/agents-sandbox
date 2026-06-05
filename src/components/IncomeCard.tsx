@@ -1,5 +1,6 @@
 import { Clock3, Wallet } from 'lucide-react';
 import { currency, type IncomePlan } from '../finance';
+import { useEditableNumber } from '../hooks/useEditableNumber';
 
 export function IncomeCard({
   income,
@@ -220,6 +221,8 @@ function CurrencyInput({
   className?: string;
   onChange: (value: number) => void;
 }) {
+  const { inputValue, onInputChange } = useEditableNumber(value, onChange);
+
   return (
     <span className={`glass-input justify-between py-2 text-sm ${className}`}>
       <input
@@ -227,8 +230,8 @@ function CurrencyInput({
         min={0}
         step={100}
         type="number"
-        value={Number.isFinite(value) ? value : 0}
-        onChange={(event) => onChange(event.currentTarget.valueAsNumber || 0)}
+        value={inputValue}
+        onChange={(event) => onInputChange(event.currentTarget.value)}
       />
       <span className="text-xs font-bold text-slate-600">CHF</span>
     </span>

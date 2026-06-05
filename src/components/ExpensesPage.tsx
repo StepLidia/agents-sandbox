@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
 import { currency } from '../finance';
+import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
@@ -258,6 +259,7 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
             )}
           />
           <Tooltip
+            isAnimationActive={false}
             content={<ExpenseTooltip totalExpenses={totalExpenses} />}
             wrapperStyle={{ outline: 'none', pointerEvents: 'none', zIndex: 50 }}
           />
@@ -304,6 +306,7 @@ function ExpenseBreakdownRow({
   onChange: (id: string, value: number) => void;
 }) {
   const barWidth = totalExpenses > 0 ? `${Math.max(3, percent)}%` : '0%';
+  const { inputValue, onInputChange } = useEditableNumber(category.value, (value) => onChange(category.id, value));
 
   return (
     <div>
@@ -319,12 +322,12 @@ function ExpenseBreakdownRow({
             min={0}
             step={10}
             type="number"
-            value={category.value}
-            onChange={(event) => onChange(category.id, Number(event.currentTarget.value))}
+            value={inputValue}
+            onChange={(event) => onInputChange(event.currentTarget.value)}
           />
-          <span className="text-sm font-semibold text-slate-600">CHF</span>
+          <span className="text-sm text-slate-600">CHF</span>
         </label>
-        <span className="text-right text-slate-600">{percent.toFixed(1)}%</span>
+        <span className="text-right font-semibold text-slate-600">{percent.toFixed(1)}%</span>
       </div>
       <div className="mt-1 h-px bg-slate-300/60">
         <div className="h-px" style={{ width: barWidth, backgroundColor: category.color }} />
@@ -404,7 +407,7 @@ function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]
             </span>
             <span className="truncate font-semibold text-slate-700">{category.label}</span>
             <span className="text-right font-bold text-slate-950">{currency(category.value)} CHF</span>
-            <span className="text-right text-slate-600">{getPercent(category.value, totalExpenses).toFixed(1)}%</span>
+            <span className="text-right font-semibold text-slate-600">{getPercent(category.value, totalExpenses).toFixed(1)}%</span>
           </div>
         ))}
       </div>
