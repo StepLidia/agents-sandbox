@@ -5,6 +5,7 @@ import {
   ArrowDown,
   ArrowUp,
   CalendarDays,
+  ChevronDown,
   ChartLine,
   ChevronLeft,
   ChevronRight,
@@ -252,6 +253,7 @@ function ExpensesHeader({
           >
             <CalendarDays className="h-4 w-4" />
             {expenseMonth.label}
+            <ChevronDown className={`h-4 w-4 transition-transform ${isMonthPickerOpen ? 'rotate-180' : ''}`} />
           </button>
           {isMonthPickerOpen && (
             <MonthPicker
@@ -281,7 +283,7 @@ function ExpensesHeader({
             role="tooltip"
             className="pointer-events-none absolute right-0 top-12 z-50 w-44 rounded-lg border border-white/60 bg-white/90 px-3 py-2 text-xs font-medium text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
           >
-            Delete this month data
+            Delete selected month data
           </span>
         </span>
       </div>
@@ -331,11 +333,10 @@ function MonthPicker({
           return (
             <button
               key={month.key}
-              className={`h-9 rounded-lg text-sm font-semibold transition ${
-                isSelected
+              className={`h-9 rounded-lg text-sm font-semibold transition ${isSelected
                   ? 'bg-blue-600/14 text-blue-700 shadow-inner'
                   : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
-              }`}
+                }`}
               type="button"
               onClick={() => onMonthChange(month)}
             >
