@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   Plus,
   Trash2,
@@ -6,7 +6,6 @@ import {
   ArrowUp,
   CalendarDays,
   ChartLine,
-  Download,
   Home,
   PiggyBank,
   Star,
@@ -54,6 +53,7 @@ const defaultCategories: ExpenseCategory[] = [
 
 export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
   const expenseMonth = useMemo(getCurrentExpenseMonth, []);
+  const shouldSkipNextSave = useRef(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>(() => readSavedExpenses(expenseMonth.key));
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
   const totalExpenses = useMemo(() => categories.reduce((sum, category) => sum + category.value, 0), [categories]);
@@ -66,6 +66,11 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   const topDrivers = [...categories].sort((first, second) => second.value - first.value).slice(0, 3);
 
   useEffect(() => {
+    if (shouldSkipNextSave.current) {
+      shouldSkipNextSave.current = false;
+      return;
+    }
+
     saveExpenses(expenseMonth.key, categories);
   }, [categories, expenseMonth.key]);
 
@@ -77,6 +82,13 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
   function deleteCategory(id: string) {
     setCategories((currentCategories) => currentCategories.filter((category) => category.id !== id));
+  }
+
+  function resetCurrentMonth() {
+    deleteSavedExpensesMonth(expenseMonth.key);
+    shouldSkipNextSave.current = true;
+    setDraftCategory(null);
+    setCategories(defaultCategories);
   }
 
   function addCategory() {
@@ -109,7 +121,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
   return (
     <>
-      <ExpensesHeader monthLabel={expenseMonth.label} />
+      <ExpensesHeader monthLabel={expenseMonth.label} onResetMonth={resetCurrentMonth} />
       <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={WalletCards}
@@ -203,7 +215,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   );
 }
 
-function ExpensesHeader({ monthLabel }: { monthLabel: string }) {
+function ExpensesHeader({ monthLabel, onResetMonth }: { monthLabel: string; onResetMonth: () => void }) {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -218,8 +230,13 @@ function ExpensesHeader({ monthLabel }: { monthLabel: string }) {
         <button className="glass-icon h-10 w-10" aria-label="View expense trend" type="button">
           <ChartLine className="h-4 w-4" />
         </button>
-        <button className="glass-icon h-10 w-10" aria-label="Download expenses" type="button">
-          <Download className="h-4 w-4" />
+        <button
+          className="glass-icon h-10 w-10 transition hover:text-red-600"
+          aria-label={`Reset ${monthLabel} expenses`}
+          type="button"
+          onClick={onResetMonth}
+        >
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
     </header>
@@ -678,6 +695,19 @@ function saveExpenses(monthKey: string, categories: ExpenseCategory[]) {
     window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expensesByMonth));
   } catch {
     // Ignore storage failures so editing remains available in restricted browser modes.
+  }
+}
+
+function deleteSavedExpensesMonth(monthKey: string) {
+  try {
+    const savedValue = window.localStorage.getItem(EXPENSES_STORAGE_KEY);
+    const savedExpenses = savedValue ? JSON.parse(savedValue) : undefined;
+    const expensesByMonth = normalizeSavedExpenses(savedExpenses, monthKey);
+
+    delete expensesByMonth.months[monthKey];
+    window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(expensesByMonth));
+  } catch {
+    // Ignore storage failures; the visible page state still resets to defaults.
   }
 }
 
