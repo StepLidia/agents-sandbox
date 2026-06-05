@@ -559,7 +559,7 @@ function AddCategoryRow({
   if (!draftCategory) {
     return (
       <button
-        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-500/30 bg-slate-200/30 text-sm font-bold text-slate-500 transition hover:bg-slate-300/55"
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-500/30 bg-slate-200/30 text-sm font-bold text-slate-500 transition hover:bg-slate-200/65"
         type="button"
         onClick={onAdd}
       >
