@@ -115,7 +115,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
       <div className="mt-3 grid gap-3 xl:grid-cols-2">
         <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-[25rem]">
           <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
-          <div className="mt-3 grid flex-1 place-content-center items-center gap-5 md:grid-cols-[minmax(16rem,20rem)_9rem]">
+          <div className="mt-3 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,14rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(12rem,18rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(16rem,20rem)_minmax(9rem,20rem)] md:gap-10">
             <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
             <CategoryLegend categories={categories} />
           </div>
@@ -225,7 +225,7 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
   const gradientPrefix = useId().replaceAll(':', '');
 
   return (
-    <div className="relative h-64 min-h-64 md:h-72 md:min-h-72">
+    <div className="relative h-44 min-h-44 sm:h-56 sm:min-h-56 md:h-72 md:min-h-72">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <defs>
@@ -267,10 +267,10 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center">
         <div>
-          <p className="text-3xl font-bold text-slate-950">
-            {currency(totalExpenses)} <span className="text-sm">CHF</span>
+          <p className="text-sm font-bold text-slate-950 sm:text-3xl">
+            {currency(totalExpenses)} <span className="text-xs sm:text-sm">CHF</span>
           </p>
-          <p className="mt-2 text-sm text-slate-700">Monthly Expenses</p>
+          <p className="mt-1.5 text-xs text-slate-700 sm:mt-2 sm:text-sm">Monthly Expenses</p>
         </div>
       </div>
     </div>
@@ -282,15 +282,28 @@ function ExpenseSector(props: PieSectorShapeProps & { fill: string }) {
 }
 
 function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
+  const columns = chunkCategories(categories, 9);
+
   return (
-    <div className="flex flex-col justify-center gap-2.5">
-      {categories.map((category) => (
-        <div key={category.id} className="flex items-center gap-3 text-sm text-slate-700">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-          <span>{category.label}</span>
+    <div className="grid grid-flow-col auto-cols-max items-start gap-x-3 gap-y-2.5">
+      {columns.map((columnCategories, columnIndex) => (
+        <div key={columnIndex} className="flex flex-col gap-2.5">
+          {columnCategories.map((category) => (
+            <div key={category.id} className="flex items-center gap-2 text-xs text-slate-700 sm:gap-3 sm:text-sm">
+              <span className="h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5" style={{ backgroundColor: category.color }} />
+              <span className="whitespace-nowrap">{category.label}</span>
+            </div>
+          ))}
         </div>
       ))}
     </div>
+  );
+}
+
+function chunkCategories(categories: ExpenseCategory[], maxPerColumn: number) {
+  return Array.from(
+    { length: Math.ceil(categories.length / maxPerColumn) },
+    (_, index) => categories.slice(index * maxPerColumn, (index + 1) * maxPerColumn),
   );
 }
 
