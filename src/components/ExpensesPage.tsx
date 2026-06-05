@@ -348,11 +348,11 @@ function IncomeVsExpenses({
     <section className="glass-panel flex h-full flex-col p-4">
       <h2 className="text-sm font-bold text-slate-950">Income vs Expenses</h2>
       <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4">
-        <ProgressRow color="bg-blue-600" label="Monthly Income" max={monthlyIncome} value={monthlyIncome} />
-        <ProgressRow color="bg-red-500" label="Total Expenses" max={monthlyIncome} value={totalExpenses} />
-        <ProgressRow color="bg-emerald-500" label="Remaining" max={monthlyIncome} value={savingsPotential} />
+        <ProgressRow color="bg-blue-500/75" label="Monthly Income" max={monthlyIncome} value={monthlyIncome} />
+        <ProgressRow color="bg-rose-500/70" label="Total Expenses" max={monthlyIncome} value={totalExpenses} />
+        <ProgressRow color="bg-emerald-500/70" label="Remaining" max={monthlyIncome} value={savingsPotential} />
       </div>
-      <div className="mt-5 flex items-center gap-4 rounded-lg border border-blue-200/70 bg-blue-50/30 p-4">
+      <div className="mt-5 flex items-center gap-4 rounded-lg border border-blue-200/70 bg-green-50/30 p-4">
         <div className="grid h-10 w-10 place-items-center rounded-lg bg-emerald-500/12 text-emerald-600">
           <ChartLine className="h-5 w-5" />
         </div>
@@ -374,7 +374,7 @@ function ProgressRow({ color, label, max, value }: { color: string; label: strin
     <div className="grid grid-cols-[1fr_5.5rem] items-center gap-3 text-sm">
       <div>
         <p className="text-slate-700">{label}</p>
-        <div className="mt-2 h-1.5 rounded-full bg-slate-200">
+        <div className="mt-2 h-1.5 rounded-full bg-slate-300/40">
           <div className={`h-1.5 rounded-full ${color}`} style={{ width }} />
         </div>
       </div>
@@ -384,7 +384,11 @@ function ProgressRow({ color, label, max, value }: { color: string; label: strin
 }
 
 function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]; totalExpenses: number }) {
-  const rankColors = ['bg-blue-600', 'bg-emerald-500', 'bg-amber-500'];
+  const rankColors = [
+    'bg-blue-500/12 text-blue-600',
+    'bg-emerald-500/12 text-emerald-600',
+    'bg-amber-500/14 text-amber-600',
+  ];
 
   return (
     <section className="glass-panel flex h-full flex-col p-4">
@@ -394,11 +398,11 @@ function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]
       </div>
       <div className="mt-5 flex flex-1 flex-col justify-evenly divide-y divide-slate-300/50">
         {drivers.map((category, index) => (
-          <div key={category.id} className="grid grid-cols-[2.5rem_1fr_6rem_4rem] items-center gap-2 py-4 text-sm">
-            <span className={`grid h-7 w-7 place-items-center rounded-full ${rankColors[index]} text-xs font-bold text-white`}>
+          <div key={category.id} className="grid grid-cols-[2.5rem_1fr_6rem_4rem] items-center gap-3 py-4 text-sm">
+            <span className={`grid h-10 w-10 place-items-center rounded-full ${rankColors[index]} text-sm font-bold`}>
               {index + 1}
             </span>
-            <span className="truncate text-slate-700">{category.label}</span>
+            <span className="truncate font-semibold text-slate-700">{category.label}</span>
             <span className="text-right font-bold text-slate-950">{currency(category.value)} CHF</span>
             <span className="text-right text-slate-600">{getPercent(category.value, totalExpenses).toFixed(1)}%</span>
           </div>
