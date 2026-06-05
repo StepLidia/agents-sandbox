@@ -41,6 +41,18 @@ type SavedExpensesByMonth = {
   months: Record<string, ExpenseCategory[]>;
 };
 
+type MetricCardProps = {
+  icon: typeof WalletCards;
+  iconClassName: string;
+  title: string;
+  amount: number;
+  helper: string;
+  helperClassName: string;
+  trend: string;
+  trendDirection: 'up' | 'down';
+  trendTone: 'good' | 'bad';
+};
+
 const defaultCategories: ExpenseCategory[] = [
   { id: 'rent', label: 'Rent', value: 1600, color: '#2563eb', kind: 'essential' },
   { id: 'food', label: 'Food', value: 700, color: '#42ba85', kind: 'essential' },
@@ -68,6 +80,16 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   const lifestyleExpenses = totalExpenses - essentialExpenses;
   const savingsPotential = Math.max(monthlyIncome - totalExpenses, 0);
   const topDrivers = [...categories].sort((first, second) => second.value - first.value).slice(0, 3);
+  const previousMonth = useMemo(() => getPreviousExpenseMonth(expenseMonth), [expenseMonth]);
+  const previousCategories = useMemo(() => readSavedExpenses(previousMonth.key), [previousMonth.key]);
+  const previousMetrics = useMemo(
+    () => calculateExpenseMetrics(previousCategories, monthlyIncome),
+    [monthlyIncome, previousCategories],
+  );
+  const totalExpensesTrend = buildMetricTrend(totalExpenses, previousMetrics.totalExpenses, 'lower');
+  const essentialExpensesTrend = buildMetricTrend(essentialExpenses, previousMetrics.essentialExpenses, 'lower');
+  const lifestyleExpensesTrend = buildMetricTrend(lifestyleExpenses, previousMetrics.lifestyleExpenses, 'lower');
+  const savingsPotentialTrend = buildMetricTrend(savingsPotential, previousMetrics.savingsPotential, 'higher');
 
   useEffect(() => {
     if (shouldSkipNextSave.current) {
@@ -140,9 +162,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           amount={totalExpenses}
           helper={`${formatPercent(totalExpenses, monthlyIncome)} of net income`}
           helperClassName="text-blue-600"
-          trend="6.2%"
-          trendDirection="up"
-          trendTone="bad"
+          {...totalExpensesTrend}
         />
         <MetricCard
           icon={Home}
@@ -151,9 +171,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           amount={essentialExpenses}
           helper={`${formatPercent(essentialExpenses, totalExpenses)} of total expenses`}
           helperClassName="text-emerald-600"
-          trend="3.8%"
-          trendDirection="up"
-          trendTone="bad"
+          {...essentialExpensesTrend}
         />
         <MetricCard
           icon={Star}
@@ -162,9 +180,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           amount={lifestyleExpenses}
           helper={`${formatPercent(lifestyleExpenses, totalExpenses)} of total expenses`}
           helperClassName="text-amber-500"
-          trend="12.5%"
-          trendDirection="down"
-          trendTone="good"
+          {...lifestyleExpensesTrend}
         />
         <MetricCard
           icon={TrendingUp}
@@ -173,9 +189,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           amount={savingsPotential}
           helper={`${formatPercent(savingsPotential, monthlyIncome)} of net income`}
           helperClassName="text-violet-600"
-          trend="14.3%"
-          trendDirection="up"
-          trendTone="good"
+          {...savingsPotentialTrend}
         />
       </div>
 
@@ -359,17 +373,7 @@ function MetricCard({
   trend,
   trendDirection,
   trendTone,
-}: {
-  icon: typeof WalletCards;
-  iconClassName: string;
-  title: string;
-  amount: number;
-  helper: string;
-  helperClassName: string;
-  trend: string;
-  trendDirection: 'up' | 'down';
-  trendTone: 'good' | 'bad';
-}) {
+}: MetricCardProps) {
   const TrendIcon = trendDirection === 'up' ? ArrowUp : ArrowDown;
 
   return (
@@ -911,6 +915,41 @@ function buildExpenseMonth(year: number, monthIndex: number): ExpenseMonth {
       month: 'short',
     }),
   };
+}
+
+function getPreviousExpenseMonth(expenseMonth: ExpenseMonth) {
+  const [year, month] = expenseMonth.key.split('-').map(Number);
+
+  return buildExpenseMonth(year, month - 2);
+}
+
+function calculateExpenseMetrics(categories: ExpenseCategory[], monthlyIncome: number) {
+  const totalExpenses = categories.reduce((sum, category) => sum + category.value, 0);
+  const essentialExpenses = categories
+    .filter(({ kind }) => kind === 'essential')
+    .reduce((sum, category) => sum + category.value, 0);
+  const lifestyleExpenses = totalExpenses - essentialExpenses;
+  const savingsPotential = Math.max(monthlyIncome - totalExpenses, 0);
+
+  return {
+    totalExpenses,
+    essentialExpenses,
+    lifestyleExpenses,
+    savingsPotential,
+  };
+}
+
+function buildMetricTrend(currentValue: number, previousValue: number, betterWhen: 'higher' | 'lower') {
+  const difference = currentValue - previousValue;
+  const percentChange = previousValue === 0 ? (currentValue === 0 ? 0 : 100) : (Math.abs(difference) / previousValue) * 100;
+  const trendDirection = difference >= 0 ? 'up' : 'down';
+  const isGood = betterWhen === 'higher' ? difference >= 0 : difference <= 0;
+
+  return {
+    trend: `${percentChange.toFixed(1)}%`,
+    trendDirection,
+    trendTone: isGood ? 'good' : 'bad',
+  } satisfies Pick<MetricCardProps, 'trend' | 'trendDirection' | 'trendTone'>;
 }
 
 function getRandomCategoryColor() {
