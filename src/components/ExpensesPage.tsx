@@ -708,7 +708,7 @@ function ExpenseInsights({
       <h2 className="text-sm font-bold text-slate-950">Insights</h2>
       <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4 text-sm leading-5 text-slate-800">
         <InsightItem color="bg-violet-500/12 text-violet-600" icon={Home}>
-          Rent represents <InsightValue>{Math.round(getPercent(rent, totalExpenses))}%</InsightValue> of your total monthly expenses.
+          Rent represents <InsightValue>{formatPercent(rent, totalExpenses)}</InsightValue> of your total monthly expenses.
         </InsightItem>
         <InsightItem color="bg-amber-500/12 text-amber-500" icon={Star}>
           Food spending exceeds insurance costs by <InsightValue>{currency(Math.max(food - insurance, 0))} CHF</InsightValue>.
@@ -717,7 +717,7 @@ function ExpenseInsights({
           Reducing subscriptions by <InsightValue>50%</InsightValue> could save you <InsightValue>{currency(subscriptions / 2)} CHF</InsightValue> per month.
         </InsightItem>
         <InsightItem color="bg-emerald-500/12 text-emerald-600" icon={PiggyBank}>
-          Your current savings rate is <InsightValue>{Math.round(getPercent(savingsPotential, monthlyIncome))}%</InsightValue>, keep it up!
+          Your current savings rate is <InsightValue>{formatPercent(savingsPotential, monthlyIncome)}</InsightValue>, keep it up!
         </InsightItem>
       </div>
     </section>
