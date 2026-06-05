@@ -19,7 +19,7 @@ type MobileSidebarDrawerProps = SidebarProps & {
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   return (
-    <aside className="glass-panel m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 md:flex md:rounded-none">
+    <aside className="glass-panel glass-panel-square m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 md:flex">
       <SidebarContent activeView={activeView} onViewChange={onViewChange} />
     </aside>
   );
@@ -35,16 +35,16 @@ export function MobileSidebarDrawer({ activeView, isOpen, onClose, onViewChange 
     <div className={`fixed inset-0 z-40 md:hidden ${isOpen ? '' : 'pointer-events-none'}`}>
       <button
         aria-label="Close navigation"
-        className={`absolute inset-0 bg-slate-950/35 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-slate-950/50 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         type="button"
         onClick={onClose}
       />
       <aside
-        className={`glass-panel fixed inset-y-0 left-0 flex w-[min(18rem,calc(100vw-3rem))] flex-col rounded-none border-y-0 border-l-0 px-4 py-5 shadow-2xl transition-transform duration-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`glass-panel glass-panel-square fixed inset-y-0 left-0 flex w-[min(18rem,calc(100vw-3rem))] flex-col border-y-0 border-l-0 px-4 py-5 shadow-2xl transition-transform duration-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <button
           aria-label="Close navigation"
-          className="absolute right-4 top-4 grid h-10 w-10 place-items-center rounded-lg text-slate-700 transition hover:bg-white/45"
+          className="absolute right-4 grid h-10 w-10 place-items-center rounded-lg text-slate-700 transition hover:bg-white/45"
           type="button"
           onClick={onClose}
         >
