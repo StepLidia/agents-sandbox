@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { CircleHelp, Download } from 'lucide-react';
+import { buttonClasses } from '../constants/buttonStyles';
 
 export function Header({
   isExporting = false,
@@ -24,13 +25,13 @@ export function Header({
       </div>
       {showActions && (
         <div className="flex items-center gap-2" data-pdf-exclude="true">
-          <button className="glass-control export-button font-semibold" disabled={isExporting} onClick={onExportPdf}>
+          <button className={buttonClasses()} disabled={isExporting} onClick={onExportPdf}>
             <Download className="h-4 w-4" />
             {isExporting ? 'Exporting...' : 'Export PDF'}
           </button>
           <div className="relative">
             <button
-              className="glass-icon"
+              className={buttonClasses({ size: 'icon' })}
               aria-controls="header-help-tooltip"
               aria-expanded={isHelpOpen}
               aria-label="Help"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { buttonClasses } from '../constants/buttonStyles';
 
 export function ContactContent() {
   const [result, setResult] = useState("");
@@ -85,7 +86,7 @@ export function ContactContent() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="glass-control export-button font-semibold disabled:cursor-not-allowed"
+        className={buttonClasses({ className: 'disabled:cursor-not-allowed' })}
       >
         {isSubmitting ? 'Sending...' : 'Send message'}
       </button>

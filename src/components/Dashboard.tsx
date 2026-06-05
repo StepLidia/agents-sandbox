@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Menu } from 'lucide-react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
+import { buttonClasses } from '../constants/buttonStyles';
 import { colorClasses } from '../constants/colors';
 import { ContactContent } from './ContactCard';
 import { ExpensesPage } from './ExpensesPage';
@@ -83,7 +84,7 @@ export function Dashboard() {
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
       <button
         aria-label="Open navigation"
-        className="glass-panel fixed left-4 top-4 z-30 grid h-11 w-11 place-items-center rounded-lg text-slate-800 shadow-lg md:hidden"
+        className={buttonClasses({ className: 'fixed left-4 top-4 z-30 md:hidden', size: 'icon' })}
         type="button"
         onClick={() => setIsMobileNavOpen(true)}
       >

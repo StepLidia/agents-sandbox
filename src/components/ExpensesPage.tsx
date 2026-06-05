@@ -16,6 +16,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
+import { buttonClasses } from '../constants/buttonStyles';
 import { tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
@@ -260,7 +261,7 @@ function ExpensesHeader({
       <div className="flex items-center gap-2">
         <div className="relative">
           <button
-            className="glass-control export-button font-semibold"
+            className={buttonClasses()}
             aria-controls="expenses-month-picker"
             aria-expanded={isMonthPickerOpen}
             type="button"
@@ -280,12 +281,12 @@ function ExpensesHeader({
             />
           )}
         </div>
-        <button className="glass-icon h-10 w-10" aria-label="View expense trend" type="button">
+        <button className={buttonClasses({ size: 'icon' })} aria-label="View expense trend" type="button">
           <ChartLine className="h-4 w-4" />
         </button>
         <span className="group relative">
           <button
-            className="grid h-10 w-10 place-items-center rounded-full border border-slate-300/30 bg-white/25 text-slate-500 shadow-lg shadow-slate-400/10 transition hover:bg-red-500/10 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+            className={buttonClasses({ size: 'icon', tone: 'danger' })}
             aria-label={`Reset ${expenseMonth.label} expenses`}
             aria-describedby="delete-month-data-tooltip"
             type="button"
@@ -558,7 +559,7 @@ function AddCategoryRow({
   if (!draftCategory) {
     return (
       <button
-        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-300/30 bg-white/30 text-sm font-bold text-slate-500 transition hover:bg-white/55"
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-slate-500/30 bg-slate-200/30 text-sm font-bold text-slate-500 transition hover:bg-slate-300/55"
         type="button"
         onClick={onAdd}
       >
