@@ -12,7 +12,7 @@ import {
   TrendingUp,
   WalletCards,
 } from 'lucide-react';
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
 import { currency } from '../finance';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
@@ -117,9 +117,6 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           <div className="mt-4 grid gap-4 md:grid-cols-[1fr_10rem]">
             <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
             <CategoryLegend categories={categories} />
-          </div>
-          <div className="mt-4 border-t border-slate-300/45 pt-3 text-xs text-slate-500">
-            Click a category value in the breakdown to edit your monthly spending.
           </div>
         </section>
 
@@ -253,16 +250,13 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
             nameKey="label"
             outerRadius="82%"
             paddingAngle={1}
-          >
-            {categories.map((category) => (
-              <Cell
-                key={category.id}
-                fill={`url(#${gradientPrefix}-${category.id})`}
-                stroke="rgba(255,255,255,.86)"
-                strokeWidth={2}
+            shape={(props, index) => (
+              <ExpenseSector
+                {...props}
+                fill={`url(#${gradientPrefix}-${categories[index]?.id ?? 'fallback'})`}
               />
-            ))}
-          </Pie>
+            )}
+          />
           <Tooltip
             content={<ExpenseTooltip totalExpenses={totalExpenses} />}
             wrapperStyle={{ outline: 'none', pointerEvents: 'none', zIndex: 50 }}
@@ -279,6 +273,10 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
       </div>
     </div>
   );
+}
+
+function ExpenseSector(props: PieSectorShapeProps & { fill: string }) {
+  return <Sector {...props} stroke="rgba(255,255,255,.86)" strokeWidth={2} />;
 }
 
 function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
