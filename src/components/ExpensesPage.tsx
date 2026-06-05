@@ -112,9 +112,9 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
       </div>
 
       <div className="mt-3 grid gap-3 xl:grid-cols-2">
-        <section className="glass-panel p-4">
+        <section className="glass-panel flex min-h-0 flex-col p-4">
           <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-[1fr_10rem]">
+          <div className="mt-4 grid flex-1 place-content-center items-center gap-8 md:grid-cols-[minmax(24rem,30rem)_12rem]">
             <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
             <CategoryLegend categories={categories} />
           </div>
@@ -140,7 +140,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
         </section>
       </div>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-3">
+      <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-3">
         <IncomeVsExpenses monthlyIncome={monthlyIncome} totalExpenses={totalExpenses} savingsPotential={savingsPotential} />
         <TopCostDrivers drivers={topDrivers} totalExpenses={totalExpenses} />
         <ExpenseInsights categories={categories} totalExpenses={totalExpenses} savingsPotential={savingsPotential} monthlyIncome={monthlyIncome} />
@@ -224,7 +224,7 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
   const gradientPrefix = useId().replaceAll(':', '');
 
   return (
-    <div className="relative h-80 min-h-80">
+    <div className="relative h-96 min-h-96">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <defs>
@@ -265,10 +265,10 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center">
         <div>
-          <p className="text-3xl font-bold text-slate-950">
-            {currency(totalExpenses)} <span className="text-sm">CHF</span>
+          <p className="text-4xl font-bold text-slate-950">
+            {currency(totalExpenses)} <span className="text-base">CHF</span>
           </p>
-          <p className="mt-2 text-sm text-slate-700">Monthly Expenses</p>
+          <p className="mt-2 text-base text-slate-700">Monthly Expenses</p>
         </div>
       </div>
     </div>
@@ -281,10 +281,10 @@ function ExpenseSector(props: PieSectorShapeProps & { fill: string }) {
 
 function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
   return (
-    <div className="flex flex-col justify-center gap-3">
+    <div className="flex flex-col justify-center gap-4">
       {categories.map((category) => (
-        <div key={category.id} className="flex items-center gap-3 text-sm text-slate-700">
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
+        <div key={category.id} className="flex items-center gap-3 text-base text-slate-700">
+          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: category.color }} />
           <span>{category.label}</span>
         </div>
       ))}
@@ -312,7 +312,7 @@ function ExpenseBreakdownRow({
           <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
           <span className="truncate text-slate-700">{category.label}</span>
         </div>
-        <label className="glass-input h-8 justify-end px-2 py-1 text-right font-bold text-slate-950">
+        <label className="glass-input h-8 justify-end px-2 py-1 text-right text-slate-950">
           <input
             aria-label={`${category.label} monthly expense`}
             className="w-full min-w-0 bg-transparent text-right outline-none"
@@ -322,7 +322,7 @@ function ExpenseBreakdownRow({
             value={category.value}
             onChange={(event) => onChange(category.id, Number(event.currentTarget.value))}
           />
-          <span className="text-xs text-slate-600">CHF</span>
+          <span className="text-sm font-semibold text-slate-600">CHF</span>
         </label>
         <span className="text-right text-slate-600">{percent.toFixed(1)}%</span>
       </div>
@@ -345,9 +345,9 @@ function IncomeVsExpenses({
   const savingsRate = getPercent(savingsPotential, monthlyIncome);
 
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel flex h-full flex-col p-4">
       <h2 className="text-sm font-bold text-slate-950">Income vs Expenses</h2>
-      <div className="mt-5 space-y-4">
+      <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4">
         <ProgressRow color="bg-blue-600" label="Monthly Income" max={monthlyIncome} value={monthlyIncome} />
         <ProgressRow color="bg-red-500" label="Total Expenses" max={monthlyIncome} value={totalExpenses} />
         <ProgressRow color="bg-emerald-500" label="Remaining" max={monthlyIncome} value={savingsPotential} />
@@ -384,16 +384,20 @@ function ProgressRow({ color, label, max, value }: { color: string; label: strin
 }
 
 function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]; totalExpenses: number }) {
+  const rankColors = ['bg-blue-600', 'bg-emerald-500', 'bg-amber-500'];
+
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel flex h-full flex-col p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-bold text-slate-950">Top 3 Cost Drivers</h2>
         <MoreVertical className="h-4 w-4 text-slate-400" />
       </div>
-      <div className="mt-5 divide-y divide-slate-300/50">
+      <div className="mt-5 flex flex-1 flex-col justify-evenly divide-y divide-slate-300/50">
         {drivers.map((category, index) => (
           <div key={category.id} className="grid grid-cols-[2.5rem_1fr_6rem_4rem] items-center gap-2 py-4 text-sm">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-blue-600 text-xs font-bold text-white">{index + 1}</span>
+            <span className={`grid h-7 w-7 place-items-center rounded-full ${rankColors[index]} text-xs font-bold text-white`}>
+              {index + 1}
+            </span>
             <span className="truncate text-slate-700">{category.label}</span>
             <span className="text-right font-bold text-slate-950">{currency(category.value)} CHF</span>
             <span className="text-right text-slate-600">{getPercent(category.value, totalExpenses).toFixed(1)}%</span>
@@ -421,9 +425,9 @@ function ExpenseInsights({
   const subscriptions = categories.find(({ id }) => id === 'subscriptions')?.value ?? 0;
 
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel flex h-full flex-col p-4">
       <h2 className="text-sm font-bold text-slate-950">Insights</h2>
-      <div className="mt-5 space-y-4 text-sm leading-5 text-slate-800">
+      <div className="mt-5 flex flex-1 flex-col justify-evenly gap-4 text-sm leading-5 text-slate-800">
         <InsightItem color="bg-violet-500/12 text-violet-600" icon={Home}>
           Rent represents {Math.round(getPercent(rent, totalExpenses))}% of your total monthly expenses.
         </InsightItem>
