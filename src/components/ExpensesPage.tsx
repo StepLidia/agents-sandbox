@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import {
+  Plus,
   ArrowDown,
   ArrowUp,
   CalendarDays,
@@ -41,8 +42,11 @@ const defaultCategories: ExpenseCategory[] = [
   { id: 'utilities', label: 'Utilities', value: 30, color: '#dbe3ef', kind: 'essential' },
 ];
 
+const newCategoryColors = ['#2563eb', '#42ba85', '#f59e0b', '#a78bfa', '#ff6b4a', '#22b8cf', '#d8a1c4', '#ddb44b'];
+
 export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
   const [categories, setCategories] = useState<ExpenseCategory[]>(readSavedExpenses);
+  const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
   const totalExpenses = useMemo(() => categories.reduce((sum, category) => sum + category.value, 0), [categories]);
   const essentialExpenses = useMemo(
     () => categories.filter(({ kind }) => kind === 'essential').reduce((sum, category) => sum + category.value, 0),
@@ -60,6 +64,34 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
     setCategories((currentCategories) =>
       currentCategories.map((category) => (category.id === id ? { ...category, value: Math.max(0, value) } : category)),
     );
+  }
+
+  function addCategory() {
+    setDraftCategory({ name: '', value: 0 });
+  }
+
+  function saveDraftCategory() {
+    if (!draftCategory) {
+      return;
+    }
+
+    const label = draftCategory.name.trim();
+
+    if (!label) {
+      return;
+    }
+
+    setCategories((currentCategories) => [
+      ...currentCategories,
+      {
+        id: buildCategoryId(label),
+        label,
+        value: Math.max(0, draftCategory.value),
+        color: newCategoryColors[currentCategories.length % newCategoryColors.length],
+        kind: 'lifestyle',
+      },
+    ]);
+    setDraftCategory(null);
   }
 
   return (
@@ -134,6 +166,13 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
               />
             ))}
           </div>
+          <AddCategoryRow
+            draftCategory={draftCategory}
+            onAdd={addCategory}
+            onNameChange={(name) => setDraftCategory((draft) => (draft ? { ...draft, name } : draft))}
+            onSave={saveDraftCategory}
+            onValueChange={(value) => setDraftCategory((draft) => (draft ? { ...draft, value } : draft))}
+          />
           <div className="mt-3 flex items-center justify-between pt-3 text-sm font-bold">
             <span>Total Expenses</span>
             <span>{currency(totalExpenses)} CHF</span>
@@ -349,6 +388,75 @@ function ExpenseBreakdownRow({
   );
 }
 
+function AddCategoryRow({
+  draftCategory,
+  onAdd,
+  onNameChange,
+  onSave,
+  onValueChange,
+}: {
+  draftCategory: { name: string; value: number } | null;
+  onAdd: () => void;
+  onNameChange: (name: string) => void;
+  onSave: () => void;
+  onValueChange: (value: number) => void;
+}) {
+  const { inputValue, onInputChange } = useEditableNumber(draftCategory?.value ?? 0, onValueChange);
+
+  if (!draftCategory) {
+    return (
+      <button
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/60 bg-white/35 text-sm font-bold text-blue-700 transition hover:bg-white/55"
+        type="button"
+        onClick={onAdd}
+      >
+        <Plus className="h-4 w-4" />
+        Add Category
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 grid grid-cols-[1fr_7.5rem_4rem] items-center gap-3 text-sm">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-slate-400" />
+        <input
+          autoFocus
+          aria-label="New category name"
+          className="glass-input h-8 w-full min-w-0 bg-transparent px-2 py-1 text-slate-950 outline-none"
+          placeholder="Category name"
+          type="text"
+          value={draftCategory.name}
+          onChange={(event) => onNameChange(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onSave();
+            }
+          }}
+        />
+      </div>
+      <label className="glass-input h-8 justify-end px-2 py-1 text-right text-slate-950">
+        <input
+          aria-label="New category monthly expense"
+          className="w-full min-w-0 bg-transparent text-right outline-none"
+          min={0}
+          step={10}
+          type="number"
+          value={inputValue}
+          onChange={(event) => onInputChange(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onSave();
+            }
+          }}
+        />
+        <span className="text-sm text-slate-600">CHF</span>
+      </label>
+      <span className="text-right font-semibold text-slate-500">New</span>
+    </div>
+  );
+}
+
 function IncomeVsExpenses({
   monthlyIncome,
   totalExpenses,
@@ -493,7 +601,7 @@ function ExpenseTooltip({ active, payload, totalExpenses }: ExpenseTooltipProps)
     <div className="rounded-lg border border-white/70 bg-white/90 px-3 py-2 text-xs shadow-xl shadow-slate-400/20 backdrop-blur-xl">
       <p className="font-bold text-slate-950">{category.label}</p>
       <p className="mt-1 text-slate-600">
-        {currency(category.value)} CHF · {getPercent(category.value, totalExpenses).toFixed(1)}%
+        {currency(category.value)} CHF - {getPercent(category.value, totalExpenses).toFixed(1)}%
       </p>
     </div>
   );
@@ -508,7 +616,8 @@ function readSavedExpenses() {
       return defaultCategories;
     }
 
-    return defaultCategories.map((category) => {
+    const defaultCategoryIds = new Set(defaultCategories.map(({ id }) => id));
+    const mergedDefaultCategories = defaultCategories.map((category) => {
       const savedCategory = savedCategories.find((savedItem) => savedItem?.id === category.id);
       const savedValue = typeof savedCategory?.value === 'number' && Number.isFinite(savedCategory.value)
         ? savedCategory.value
@@ -516,6 +625,11 @@ function readSavedExpenses() {
 
       return { ...category, value: savedValue };
     });
+    const savedCustomCategories = savedCategories
+      .filter((savedItem): savedItem is ExpenseCategory => isSavedExpenseCategory(savedItem) && !defaultCategoryIds.has(savedItem.id))
+      .map((category) => ({ ...category, value: Math.max(0, category.value) }));
+
+    return [...mergedDefaultCategories, ...savedCustomCategories];
   } catch {
     return defaultCategories;
   }
@@ -523,13 +637,37 @@ function readSavedExpenses() {
 
 function saveExpenses(categories: ExpenseCategory[]) {
   try {
-    window.localStorage.setItem(
-      EXPENSES_STORAGE_KEY,
-      JSON.stringify(categories.map(({ id, value }) => ({ id, value }))),
-    );
+    window.localStorage.setItem(EXPENSES_STORAGE_KEY, JSON.stringify(categories));
   } catch {
     // Ignore storage failures so editing remains available in restricted browser modes.
   }
+}
+
+function isSavedExpenseCategory(value: unknown): value is ExpenseCategory {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const category = value as Partial<ExpenseCategory>;
+
+  return (
+    typeof category.id === 'string' &&
+    typeof category.label === 'string' &&
+    typeof category.value === 'number' &&
+    Number.isFinite(category.value) &&
+    typeof category.color === 'string' &&
+    (category.kind === 'essential' || category.kind === 'lifestyle')
+  );
+}
+
+function buildCategoryId(label: string) {
+  const normalizedLabel = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  return `${normalizedLabel || 'category'}-${Date.now()}`;
 }
 
 function getPercent(value: number, total: number) {
