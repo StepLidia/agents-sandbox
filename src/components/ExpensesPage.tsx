@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   CalendarDays,
   ChartLine,
@@ -137,7 +136,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
               />
             ))}
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-slate-300/45 pt-4 text-sm font-bold">
+          <div className="mt-4 flex items-center justify-between pt-2 text-sm font-bold">
             <span>Total Expenses</span>
             <span>{currency(totalExpenses)} CHF</span>
           </div>
@@ -207,15 +206,15 @@ function MetricCard({
         </div>
         <div className="min-w-0">
           <h2 className="text-sm font-bold leading-5 text-slate-950">{title}</h2>
-          <p className="mt-6 text-3xl font-extrabold tracking-normal text-slate-950">
+          <p className="mt-6 text-3xl font-bold tracking-normal text-slate-950">
             {currency(amount)} <span className="text-sm font-bold">CHF</span>
           </p>
-          <p className={`mt-2 text-sm font-extrabold ${helperClassName}`}>{helper}</p>
+          <p className={`mt-2 text-sm font-bold ${helperClassName}`}>{helper}</p>
         </div>
       </div>
       <div className="mt-7 flex items-center justify-between text-sm">
         <span className="text-slate-600">vs last month</span>
-        <span className={`flex items-center gap-1 font-extrabold ${trendTone === 'good' ? 'text-emerald-600' : 'text-red-500'}`}>
+        <span className={`flex items-center gap-1 font-bold ${trendTone === 'good' ? 'text-emerald-600' : 'text-red-500'}`}>
           <TrendIcon className="h-4 w-4" />
           {trend}
         </span>
@@ -225,10 +224,27 @@ function MetricCard({
 }
 
 function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCategory[]; totalExpenses: number }) {
+  const gradientPrefix = useId().replaceAll(':', '');
+
   return (
     <div className="relative h-80 min-h-80">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
+          <defs>
+            {categories.map((category) => (
+              <linearGradient
+                key={category.id}
+                id={`${gradientPrefix}-${category.id}`}
+                x1="0"
+                x2="1"
+                y1="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={category.color} stopOpacity={0.38} />
+                <stop offset="100%" stopColor={category.color} stopOpacity={0.96} />
+              </linearGradient>
+            ))}
+          </defs>
           <Pie
             data={categories}
             dataKey="value"
@@ -239,15 +255,23 @@ function ExpenseDonut({ categories, totalExpenses }: { categories: ExpenseCatego
             paddingAngle={1}
           >
             {categories.map((category) => (
-              <Cell key={category.id} fill={category.color} stroke="rgba(255,255,255,.86)" strokeWidth={2} />
+              <Cell
+                key={category.id}
+                fill={`url(#${gradientPrefix}-${category.id})`}
+                stroke="rgba(255,255,255,.86)"
+                strokeWidth={2}
+              />
             ))}
           </Pie>
-          <Tooltip content={<ExpenseTooltip totalExpenses={totalExpenses} />} wrapperStyle={{ outline: 'none' }} />
+          <Tooltip
+            content={<ExpenseTooltip totalExpenses={totalExpenses} />}
+            wrapperStyle={{ outline: 'none', pointerEvents: 'none', zIndex: 50 }}
+          />
         </PieChart>
       </ResponsiveContainer>
-      <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+      <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center">
         <div>
-          <p className="text-3xl font-extrabold text-slate-950">
+          <p className="text-3xl font-bold text-slate-950">
             {currency(totalExpenses)} <span className="text-sm">CHF</span>
           </p>
           <p className="mt-2 text-sm text-slate-700">Monthly Expenses</p>
@@ -336,7 +360,7 @@ function IncomeVsExpenses({
         </div>
         <div>
           <p className="text-sm font-bold text-slate-700">Savings Rate</p>
-          <p className="text-lg font-extrabold text-emerald-600">
+          <p className="text-lg font-bold text-emerald-600">
             {savingsRate.toFixed(1)}% <span className="text-sm text-slate-950">of income</span>
           </p>
         </div>
@@ -378,10 +402,6 @@ function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]
           </div>
         ))}
       </div>
-      <button className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-blue-600/8 text-sm font-semibold text-blue-800 transition hover:bg-blue-600/12" type="button">
-        View all categories
-        <ArrowRight className="h-4 w-4" />
-      </button>
     </section>
   );
 }
