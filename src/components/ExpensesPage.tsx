@@ -42,8 +42,6 @@ const defaultCategories: ExpenseCategory[] = [
   { id: 'utilities', label: 'Utilities', value: 30, color: '#dbe3ef', kind: 'essential' },
 ];
 
-const newCategoryColors = ['#2563eb', '#42ba85', '#f59e0b', '#a78bfa', '#ff6b4a', '#22b8cf', '#d8a1c4', '#ddb44b'];
-
 export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
   const [categories, setCategories] = useState<ExpenseCategory[]>(readSavedExpenses);
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
@@ -87,7 +85,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
         id: buildCategoryId(label),
         label,
         value: Math.max(0, draftCategory.value),
-        color: newCategoryColors[currentCategories.length % newCategoryColors.length],
+        color: getRandomCategoryColor(),
         kind: 'lifestyle',
       },
     ]);
@@ -145,7 +143,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
       </div>
 
       <div className="mt-3 grid gap-3 xl:grid-cols-2">
-        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-[25rem]">
+        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
           <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
           <div className="mt-3 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,14rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(12rem,18rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(16rem,20rem)_minmax(9rem,20rem)] md:gap-10">
             <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
@@ -153,7 +151,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           </div>
         </section>
 
-        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-[25rem]">
+        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
           <h2 className="text-sm font-bold text-slate-950">Category Breakdown</h2>
           <div className="mt-3 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-2">
             {categories.map((category) => (
@@ -406,7 +404,7 @@ function AddCategoryRow({
   if (!draftCategory) {
     return (
       <button
-        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/60 bg-white/35 text-sm font-bold text-blue-700 transition hover:bg-white/55"
+        className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-white/60 bg-white/35 text-sm font-bold text-slate-500 transition hover:bg-white/55"
         type="button"
         onClick={onAdd}
       >
@@ -668,6 +666,38 @@ function buildCategoryId(label: string) {
     .replace(/^-|-$/g, '');
 
   return `${normalizedLabel || 'category'}-${Date.now()}`;
+}
+
+function getRandomCategoryColor() {
+  const hue = Math.floor(Math.random() * 360);
+  const saturation = 62 + Math.floor(Math.random() * 16);
+  const lightness = 48 + Math.floor(Math.random() * 10);
+
+  return hslToHex(hue, saturation, lightness);
+}
+
+function hslToHex(hue: number, saturation: number, lightness: number) {
+  const normalizedSaturation = saturation / 100;
+  const normalizedLightness = lightness / 100;
+  const chroma = (1 - Math.abs(2 * normalizedLightness - 1)) * normalizedSaturation;
+  const secondLargestComponent = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const lightnessAdjustment = normalizedLightness - chroma / 2;
+  const [red, green, blue] =
+    hue < 60
+      ? [chroma, secondLargestComponent, 0]
+      : hue < 120
+        ? [secondLargestComponent, chroma, 0]
+        : hue < 180
+          ? [0, chroma, secondLargestComponent]
+          : hue < 240
+            ? [0, secondLargestComponent, chroma]
+            : hue < 300
+              ? [secondLargestComponent, 0, chroma]
+              : [chroma, 0, secondLargestComponent];
+
+  return `#${[red, green, blue]
+    .map((color) => Math.round((color + lightnessAdjustment) * 255).toString(16).padStart(2, '0'))
+    .join('')}`;
 }
 
 function getPercent(value: number, total: number) {
