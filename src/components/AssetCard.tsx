@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Building2, CircleHelp, Goal, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Building2, CircleHelp, Goal, Info, Landmark, ShieldCheck, TrendingUp } from 'lucide-react';
 import { currency, type AssetKind, type calculateDashboard, type FinancialAsset } from '../finance';
 import { colorClasses } from '../constants/colors';
 
@@ -22,7 +22,7 @@ export function AssetCard({
   const isPillar2 = asset.id === 'pillar2';
 
   return (
-    <article className="glass-panel p-4">
+    <article className="glass-panel overflow-visible p-4 hover:z-30 focus-within:z-30">
       <div className="flex items-center gap-3">
         <div className={`grid h-10 w-10 place-items-center rounded-2xl border ${colors.border} ${colors.bg} ${colors.text}`}>
           <Icon className="h-5 w-5" />
@@ -84,6 +84,23 @@ export function AssetCard({
           <div className="flex items-center gap-2 text-xs font-bold">
             <Goal className={`h-4 w-4 ${colors.text}`} />
             Future Value
+            <span className="group relative">
+              <button
+                type="button"
+                className="grid h-5 w-5 place-items-center rounded-full text-slate-500 transition hover:bg-white/50 hover:text-blue-700"
+                aria-label="Show future value hint"
+                aria-describedby="future-value-hint"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+              <span
+                id="future-value-hint"
+                role="tooltip"
+                className="pointer-events-none absolute left-0 top-6 z-50 w-48 rounded-lg border border-white/60 bg-white/90 p-3 text-xs font-medium leading-5 text-slate-700 opacity-0 shadow-xl shadow-slate-400/20 backdrop-blur-xl transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
+              >
+                Using yearly compounding
+              </span>
+            </span>
           </div>
           <div className={`text-right text-xl font-bold leading-none ${colors.text}`}>
             {currency(asset.futureValue)}
