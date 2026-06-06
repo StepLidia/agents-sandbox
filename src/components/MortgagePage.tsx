@@ -13,7 +13,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import {
   calculateMortgageOverview,
   clampPercent,
@@ -29,21 +29,35 @@ const assetIconById: Record<string, LucideIcon> = {
   securities: TrendingUp,
 };
 
+const MAX_PROPERTY_PRICE = 3000000;
+const PROPERTY_PRICE_STEP = 10000;
+
 export function MortgagePage() {
-  const mortgage = useMemo(() => calculateMortgageOverview(defaultMortgageInputs), []);
+  const [propertyPrice, setPropertyPrice] = useState(defaultMortgageInputs.propertyPrice);
+  const mortgageInputs = useMemo(
+    () => ({
+      ...defaultMortgageInputs,
+      propertyPrice,
+    }),
+    [propertyPrice],
+  );
+  const mortgage = useMemo(() => calculateMortgageOverview(mortgageInputs), [mortgageInputs]);
   const topMetrics = [
     {
       icon: Percent,
       iconClassName: 'bg-emerald-500/10 text-emerald-600',
       label: 'Affordability Ratio',
       value: `${mortgage.affordabilityRatio.toFixed(1)}%`,
-      helper: `Well within the ${defaultMortgageInputs.maxAffordabilityRatio}% limit`,
+      helper:
+        mortgage.affordabilityRatio <= mortgageInputs.maxAffordabilityRatio
+          ? `Well within the ${mortgageInputs.maxAffordabilityRatio}% limit`
+          : `Above the ${mortgageInputs.maxAffordabilityRatio}% limit`,
     },
     {
       icon: ShieldCheck,
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: 'Stress Test Rate',
-      value: `${defaultMortgageInputs.annualInterestRate.toFixed(2)}%`,
+      value: `${mortgageInputs.annualInterestRate.toFixed(2)}%`,
       helper: 'Applied by banks',
     },
     {
@@ -51,7 +65,7 @@ export function MortgagePage() {
       iconClassName: 'bg-violet-500/10 text-violet-600',
       label: 'Loan-to-Value (LTV)',
       value: `${mortgage.loanToValueRatio.toFixed(0)}%`,
-      helper: `Within the ${defaultMortgageInputs.maxLoanToValueRatio}% limit`,
+      helper: `Within the ${mortgageInputs.maxLoanToValueRatio}% limit`,
     },
   ];
   const summaryCards = [
@@ -59,7 +73,7 @@ export function MortgagePage() {
       icon: Home,
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: 'Property Price',
-      value: `${currency(defaultMortgageInputs.propertyPrice)} CHF`,
+      value: `${currency(propertyPrice)} CHF`,
       helper: '',
     },
     {
@@ -81,7 +95,7 @@ export function MortgagePage() {
     {
       icon: BriefcaseBusiness,
       iconClassName: 'bg-blue-600/10 text-blue-600',
-      label: `Monthly Payment (At ${defaultMortgageInputs.annualInterestRate.toFixed(2)}%)`,
+      label: `Monthly Payment (At ${mortgageInputs.annualInterestRate.toFixed(2)}%)`,
       value: `${currency(mortgage.monthlyPayment)} CHF`,
       helper: `${mortgage.affordabilityRatio.toFixed(1)}% of gross income`,
       helperClassName: 'text-slate-600',
@@ -94,12 +108,17 @@ export function MortgagePage() {
       <section className="glass-panel p-5">
         <div>
           <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">1. Can You Afford This Property?</h2>
-          <p className="mt-1 text-sm font-semibold text-slate-600">Based on your income and available assets.</p>
+          <p className="mt-1 text-sm font-semibold text-slate-600">Based on your income and available assets</p>
         </div>
         <div className="mt-5 grid items-stretch gap-4 md:grid-cols-2">
-          <AffordabilityPanel metrics={topMetrics} mortgage={mortgage} />
+          <AffordabilityPanel
+            metrics={topMetrics}
+            mortgage={mortgage}
+            propertyPrice={propertyPrice}
+            onPropertyPriceChange={setPropertyPrice}
+          />
           <div className="flex h-full flex-col gap-4">
-            <AssetsPanel assets={defaultMortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} />
+            <AssetsPanel assets={mortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} />
             <DownPaymentPanel
               downPayment={mortgage.downPayment}
               downPaymentRatio={mortgage.downPaymentRatio}
@@ -129,6 +148,8 @@ function MortgageHeader() {
 function AffordabilityPanel({
   metrics,
   mortgage,
+  onPropertyPriceChange,
+  propertyPrice,
 }: {
   metrics: Array<{
     helper: string;
@@ -138,6 +159,8 @@ function AffordabilityPanel({
     value: string;
   }>;
   mortgage: ReturnType<typeof calculateMortgageOverview>;
+  propertyPrice: number;
+  onPropertyPriceChange: (value: number) => void;
 }) {
   return (
     <section className="glass-panel flex h-full flex-col p-5">
@@ -155,7 +178,7 @@ function AffordabilityPanel({
       <p className="mt-6 text-center text-3xl font-bold tracking-normal text-emerald-600 md:text-4xl">
         {currency(mortgage.maxAffordablePropertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
       </p>
-      <MortgageProgress mortgage={mortgage} />
+      <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
       <div className="mt-auto grid gap-3 pt-6 md:grid-cols-3">
         {metrics.map((metric) => (
           <MortgageMetricTile key={metric.label} {...metric} />
@@ -165,25 +188,53 @@ function AffordabilityPanel({
   );
 }
 
-function MortgageProgress({ mortgage }: { mortgage: ReturnType<typeof calculateMortgageOverview> }) {
-  const progressPercent = clampPercent((defaultMortgageInputs.propertyPrice / mortgage.maxAffordablePropertyPrice) * 100);
+function MortgageProgress({
+  mortgage,
+  onPropertyPriceChange,
+  propertyPrice,
+}: {
+  mortgage: ReturnType<typeof calculateMortgageOverview>;
+  propertyPrice: number;
+  onPropertyPriceChange: (value: number) => void;
+}) {
+  const progressPercent = clampPercent((propertyPrice / MAX_PROPERTY_PRICE) * 100);
+  const affordablePercent = clampPercent((mortgage.maxAffordablePropertyPrice / MAX_PROPERTY_PRICE) * 100);
 
   return (
     <div className="mt-6">
-      <div className="relative pt-11">
-        <div className="absolute right-8 top-0 text-center text-sm font-bold text-slate-950">
+      <div className="relative pt-12">
+        <div
+          className="absolute top-0 w-48 -translate-x-1/2 text-center text-sm font-bold text-slate-950"
+          style={{ left: `${progressPercent}%` }}
+        >
           <span className="block">Requested Property Price</span>
-          <span className="block">{currency(defaultMortgageInputs.propertyPrice)} CHF</span>
+          <span className="block">{currency(propertyPrice)} CHF</span>
         </div>
-        <div className="h-3 rounded-full bg-slate-200">
-          <div className="relative h-3 rounded-full bg-emerald-600" style={{ width: `${progressPercent}%` }}>
-            <span className="absolute right-0 top-1/2 h-7 w-7 -translate-y-1/2 translate-x-1/2 rounded-full border-4 border-white bg-emerald-600 shadow-lg" />
-          </div>
-        </div>
+        <span
+          className="pointer-events-none absolute top-12 z-10 h-5 w-1 -translate-x-1/2 -translate-y-1.5 rounded-full bg-emerald-800/70 shadow-sm"
+          title="Maximum affordable property price"
+          style={{ left: `${affordablePercent}%` }}
+        />
+        <input
+          aria-label="Requested property price"
+          className="years-slider mortgage-slider"
+          max={MAX_PROPERTY_PRICE}
+          min={0}
+          step={PROPERTY_PRICE_STEP}
+          style={{ '--slider-progress': `${progressPercent}%` } as CSSProperties}
+          type="range"
+          value={propertyPrice}
+          onChange={(event) => onPropertyPriceChange(Number(event.currentTarget.value))}
+        />
       </div>
       <div className="mt-4 flex items-center justify-between text-sm font-bold text-slate-600">
         <span>0 CHF</span>
-        <span>{currency(mortgage.maxAffordablePropertyPrice)} CHF</span>
+        <span>{currency(MAX_PROPERTY_PRICE)} CHF</span>
+      </div>
+      <div className="relative mt-1 h-5 text-sm font-bold text-emerald-700">
+        <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${affordablePercent}%` }}>
+          Max affordable: {currency(mortgage.maxAffordablePropertyPrice)} CHF
+        </span>
       </div>
     </div>
   );
@@ -203,14 +254,18 @@ function MortgageMetricTile({
   value: string;
 }) {
   return (
-    <article className="glass-panel flex min-h-28 items-center gap-3 p-4">
-      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
-        <Icon className="h-7 w-7" />
+    <article className="glass-panel flex h-full min-h-30 flex-col p-4">
+      <div className="flex items-start gap-3">
+        <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="min-h-9 text-sm font-bold leading-4 text-slate-950">{label}</h3>
+        </div>
       </div>
-      <div className="min-w-0">
-        <p className="text-sm font-bold text-slate-600">{label}</p>
-        <p className="mt-1 text-xl font-bold tracking-normal text-slate-950">{value}</p>
-        <p className="mt-2 text-sm text-slate-500">{helper}</p>
+      <p className="mt-2 text-center whitespace-nowrap text-xl font-bold tracking-normal text-slate-950 2xl:text-2xl">{value}</p>
+      <div className="mt-auto pt-3 text-sm">
+        <span className="text-slate-600">{helper}</span>
       </div>
     </article>
   );

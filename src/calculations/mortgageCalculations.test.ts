@@ -47,6 +47,6 @@ describe('mortgage calculations', () => {
     expect(overview.downPayment).toBe(160000);
     expect(overview.downPaymentRatio).toBe(20);
     expect(overview.mortgageAmount).toBe(640000);
-    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(800000, 0);
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(1300558, 0);
   });
 });

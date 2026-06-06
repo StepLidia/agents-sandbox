@@ -134,7 +134,7 @@ export function calculateMaxAffordablePropertyPrice(inputs: MortgageInputs) {
   const incomeLimitedPrice = annualCostRatio > 0 ? annualHousingBudget / annualCostRatio : 0;
   const assetLimitedPrice = downPaymentRatio > 0 ? getTotalAvailableAssets(inputs.availableAssets) / downPaymentRatio : 0;
 
-  return Math.min(normalizeMoney(inputs.propertyPrice), incomeLimitedPrice, assetLimitedPrice);
+  return Math.min(incomeLimitedPrice, assetLimitedPrice);
 }
 
 export function clampPercent(value: number) {
