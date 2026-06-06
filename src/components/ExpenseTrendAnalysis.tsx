@@ -50,6 +50,12 @@ type CategoryTrendSummary = {
   total: number;
 };
 
+type ShareCategorySummary = CategoryTrendSummary & {
+  sourceIds: string[];
+};
+
+const OTHERS_CATEGORY_COLOR = '#94a3b8';
+
 export function ExpenseTrendAnalysis({
   currentCategories,
   expenseMonth,
@@ -72,6 +78,7 @@ export function ExpenseTrendAnalysis({
   const highestMonth = trendMonths.reduce((highest, month) => (month.totalExpenses > highest.totalExpenses ? month : highest), trendMonths[0]);
   const lowestMonth = trendMonths.reduce((lowest, month) => (month.totalExpenses < lowest.totalExpenses ? month : lowest), trendMonths[0]);
   const categorySummaries = getTopCategorySummaries(trendMonths, 5);
+  const shareCategorySummaries = getShareCategorySummaries(trendMonths, categorySummaries);
   const previousAverage =
     previousTrendMonths.reduce((sum, month) => sum + month.totalExpenses, 0) / Math.max(previousTrendMonths.length, 1);
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
@@ -89,9 +96,9 @@ export function ExpenseTrendAnalysis({
     monthChange: month.monthChangeAmount ?? 0,
     totalExpenses: month.totalExpenses,
     ...Object.fromEntries(
-      categorySummaries.map((category) => [
+      shareCategorySummaries.map((category) => [
         `${category.id}Share`,
-        getPercent(month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0, month.totalExpenses),
+        getPercent(getShareCategoryValue(month.categories, category), month.totalExpenses),
       ]),
     ),
     ...Object.fromEntries(
@@ -304,7 +311,6 @@ export function ExpenseTrendAnalysis({
         </TrendPanel>
 
         <TrendPanel title="Category Share Over Time (%)">
-          <ChartLegend items={categorySummaries.map((category) => ({ label: category.label, color: category.color }))} />
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={chartData} margin={{ left: 4, right: 12, top: 12 }} barCategoryGap="24%">
               <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
@@ -324,7 +330,7 @@ export function ExpenseTrendAnalysis({
                 width={48}
               />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
-              {categorySummaries.map((category) => (
+              {shareCategorySummaries.map((category) => (
                 <Bar
                   key={category.id}
                   dataKey={`${category.id}Share`}
@@ -618,6 +624,47 @@ function getTopCategorySummaries(trendMonths: ExpenseTrendMonth[], maxCategories
   }
 
   return [...categoryTotals.values()].sort((first, second) => second.total - first.total).slice(0, maxCategories);
+}
+
+function getShareCategorySummaries(
+  trendMonths: ExpenseTrendMonth[],
+  topCategorySummaries: CategoryTrendSummary[],
+): ShareCategorySummary[] {
+  const topCategoryIds = new Set(topCategorySummaries.map((category) => category.id));
+  const otherCategoryIds = new Set<string>();
+  let otherCategoryTotal = 0;
+
+  for (const month of trendMonths) {
+    for (const category of month.categories) {
+      if (!topCategoryIds.has(category.id)) {
+        otherCategoryIds.add(category.id);
+        otherCategoryTotal += category.value;
+      }
+    }
+  }
+
+  const shareCategories = topCategorySummaries.map((category) => ({
+    ...category,
+    sourceIds: [category.id],
+  }));
+
+  if (otherCategoryIds.size > 0 && otherCategoryTotal > 0) {
+    shareCategories.push({
+      id: 'others',
+      label: 'Others',
+      color: OTHERS_CATEGORY_COLOR,
+      total: otherCategoryTotal,
+      sourceIds: [...otherCategoryIds],
+    });
+  }
+
+  return shareCategories;
+}
+
+function getShareCategoryValue(categories: ExpenseCategory[], shareCategory: ShareCategorySummary) {
+  const sourceIds = new Set(shareCategory.sourceIds);
+
+  return categories.reduce((sum, category) => (sourceIds.has(category.id) ? sum + category.value : sum), 0);
 }
 
 function buildMetricTrend(currentValue: number, previousValue: number, betterWhen: 'higher' | 'lower'): MetricTrend {
