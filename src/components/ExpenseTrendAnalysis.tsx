@@ -259,7 +259,7 @@ export function ExpenseTrendAnalysis({
         </TrendPanel>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-3">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)]">
         <TrendPanel title="Month Over Month Change">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={chartData} margin={{ left: -12, right: 12, top: 16 }}>
@@ -306,7 +306,7 @@ export function ExpenseTrendAnalysis({
         <TrendPanel title="Category Share Over Time (%)">
           <ChartLegend items={categorySummaries.map((category) => ({ label: category.label, color: category.color }))} />
           <ResponsiveContainer width="100%" height={230}>
-            <BarChart data={chartData} margin={{ left: -12, right: 12, top: 12 }}>
+            <BarChart data={chartData} margin={{ left: 4, right: 12, top: 12 }} barCategoryGap="24%">
               <defs>
                 {categorySummaries.map((category) => (
                   <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-share`} x1="0" x2="0" y1="0" y2="1">
@@ -329,7 +329,7 @@ export function ExpenseTrendAnalysis({
                 tickFormatter={(value) => `${value}%`}
                 tickLine={false}
                 ticks={[0, 25, 50, 75, 100]}
-                width={42}
+                width={48}
               />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
               {categorySummaries.map((category) => (
@@ -339,7 +339,9 @@ export function ExpenseTrendAnalysis({
                   fill={`url(#${gradientPrefix}-${category.id}-share)`}
                   name={category.label}
                   radius={[3, 3, 0, 0]}
+                  shape={<ShareBarSegment />}
                   stackId="share"
+                  barSize={26}
                 />
               ))}
             </BarChart>
@@ -527,6 +529,38 @@ function TrendTooltip({
         );
       })}
     </div>
+  );
+}
+
+function ShareBarSegment({
+  fill,
+  height,
+  width,
+  x,
+  y,
+}: {
+  fill?: string;
+  height?: number;
+  width?: number;
+  x?: number;
+  y?: number;
+}) {
+  const segmentHeight = Math.max(0, Number(height ?? 0) - 3);
+
+  if (segmentHeight <= 0) {
+    return null;
+  }
+
+  return (
+    <rect
+      fill={fill}
+      height={segmentHeight}
+      rx={3}
+      ry={3}
+      width={Number(width ?? 0)}
+      x={Number(x ?? 0)}
+      y={Number(y ?? 0) + 1.5}
+    />
   );
 }
 
