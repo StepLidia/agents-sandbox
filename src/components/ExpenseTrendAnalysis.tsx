@@ -77,6 +77,7 @@ export function ExpenseTrendAnalysis({
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
   const expenseAxisTicks = buildThousandsTicks(trendMonths.map((month) => month.totalExpenses));
   const dailyAxisTicks = buildDailyExpenseTicks(trendMonths.map((month) => month.averageDailyExpense));
+  const monthChangeDomain = buildMonthChangeDomain(trendMonths.map((month) => month.monthChangeAmount ?? 0));
   const categoryAxisTicks = buildPaddedValueTicks(
     trendMonths.flatMap((month) =>
       categorySummaries.map((category) => month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0),
@@ -221,6 +222,7 @@ export function ExpenseTrendAnalysis({
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
               <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              <ReferenceLine stroke="#94a3b8" strokeOpacity={0.38} y={0} />
               <XAxis
                 axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
                 dataKey="name"
@@ -254,7 +256,7 @@ export function ExpenseTrendAnalysis({
       <div className="grid gap-3 xl:grid-cols-[1fr_1.35fr]">
         <TrendPanel title="Month Over Month Change">
           <ResponsiveContainer width="100%" height={230}>
-            <BarChart data={chartData} margin={{ left: -12, right: 12, top: 12 }}>
+            <BarChart data={chartData} margin={{ left: -12, right: 12, top: 16 }}>
               <defs>
                 <linearGradient id={`${gradientPrefix}-positive-change`} x1="0" x2="0" y1="0" y2="1">
                   <stop offset="0%" stopColor="#22c55e" stopOpacity={0.84} />
@@ -265,11 +267,24 @@ export function ExpenseTrendAnalysis({
                   <stop offset="100%" stopColor="#ef4444" stopOpacity={0.18} />
                 </linearGradient>
               </defs>
-              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.55} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickFormatter={formatSignedThousandsAxis} tickLine={false} width={54} />
+              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              <XAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                dataKey="name"
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickFormatter={formatSignedThousandsAxis}
+                tickLine={false}
+                domain={monthChangeDomain}
+                padding={{ bottom: 12, top: 8 }}
+                width={54}
+              />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
-              <Bar dataKey="monthChange" name="Vs Previous Month" radius={[6, 6, 0, 0]}>
+              <Bar dataKey="monthChange" name="vs previous month" radius={[6, 6, 0, 0]}>
                 {chartData.map((month) => (
                   <Cell
                     key={month.name}
@@ -333,7 +348,7 @@ export function ExpenseTrendAnalysis({
               <tr className="border-b border-slate-300/50">
                 <th className="px-2 py-2 font-bold">Month</th>
                 <th className="px-2 py-2 text-right font-bold">Total Expenses</th>
-                <th className="px-2 py-2 text-right font-bold">Vs Previous Month</th>
+                <th className="px-2 py-2 text-right font-bold">vs previous month</th>
                 <th className="px-2 py-2 text-right font-bold">Average Daily</th>
                 <th className="px-2 py-2 font-bold">Highest Category</th>
                 <th className="px-2 py-2 text-right font-bold">Category Amount</th>
@@ -441,19 +456,19 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
   return (
     <div className={tooltipContentClasses('px-3 py-2')}>
-      {label && <p className="mb-1 font-bold text-slate-950">{label}</p>}
+      {label && <p className="mb-1 font-semibold text-slate-950">{label}</p>}
       {payload.map((item) => {
         const labelColor = item.name === 'Average Daily Expense' ? '#059669' : item.color;
 
         return (
           <p key={`${item.name}-${item.color}`} className="text-slate-700">
-          <span className="font-bold" style={{ color: labelColor }}>
-            {item.name}:
-          </span>{' '}
-          {item.name?.includes('Previous Month') ? formatSignedCurrency(item.value ?? 0) : `${currency(item.value ?? 0)} CHF`}
-        </p>
-      );
-    })}
+            <span className="font-medium" style={{ color: labelColor }}>
+              {item.name}:
+            </span>{' '}
+            {item.name?.includes('previous month') ? formatSignedCurrency(item.value ?? 0) : `${currency(item.value ?? 0)} CHF`}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -478,7 +493,7 @@ function MonthChangeLabel({
   }
 
   const labelX = Number(x ?? 0) + Number(width ?? 0) / 2;
-  const labelY = numericValue > 0 ? Number(y ?? 0) - 8 : Number(y ?? 0) + Number(height ?? 0) + 16;
+  const labelY = numericValue > 0 ? Number(y ?? 0) - 8 : Number(y ?? 0) + Number(height ?? 0) + 28;
 
   return (
     <text
@@ -647,4 +662,15 @@ function buildPaddedValueTicks(values: number[]) {
   const step = axisMax / 4;
 
   return Array.from({ length: 5 }, (_, index) => index * step);
+}
+
+function buildMonthChangeDomain(values: number[]): [number, number] {
+  const minValue = Math.min(...values, 0);
+  const maxValue = Math.max(...values, 0);
+  const lowerPadding = Math.max(700, Math.abs(minValue) * 1.5);
+  const upperPadding = Math.max(300, Math.abs(maxValue) * 0.12);
+  const domainMin = Math.floor((minValue - lowerPadding) / 100) * 100;
+  const domainMax = Math.ceil((maxValue + upperPadding) / 100) * 100;
+
+  return [domainMin, domainMax];
 }
