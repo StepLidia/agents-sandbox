@@ -6,6 +6,7 @@ export type MortgageAsset = {
 
 export type MortgageInputs = {
   propertyPrice: number;
+  downPayment: number;
   grossAnnualIncome: number;
   annualInterestRate: number;
   maintenanceRate: number;
@@ -35,6 +36,7 @@ const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
 
 export const defaultMortgageInputs: MortgageInputs = {
   propertyPrice: 800000,
+  downPayment: 160000,
   grossAnnualIncome: 127100,
   annualInterestRate: 5,
   maintenanceRate: 1,
@@ -54,7 +56,7 @@ export function calculateMortgageOverview(inputs: MortgageInputs): MortgageOverv
   const propertyPrice = normalizeMoney(inputs.propertyPrice);
   const totalAvailableAssets = getTotalAvailableAssets(inputs.availableAssets);
   const requiredDownPayment = calculateDownPayment(propertyPrice, inputs.requiredDownPaymentRatio);
-  const downPayment = Math.min(totalAvailableAssets, requiredDownPayment);
+  const downPayment = Math.min(normalizeMoney(inputs.downPayment), propertyPrice);
   const mortgageAmount = calculateMortgageAmount(propertyPrice, downPayment);
   const loanToValueRatio = calculateLoanToValueRatio(mortgageAmount, propertyPrice);
   const monthlyPayment = calculateMonthlyHousingPayment({
@@ -79,7 +81,8 @@ export function calculateMortgageOverview(inputs: MortgageInputs): MortgageOverv
     affordabilityRatio,
     maxAffordablePropertyPrice,
     canAffordProperty:
-      totalAvailableAssets >= requiredDownPayment &&
+      downPayment >= requiredDownPayment &&
+      totalAvailableAssets >= downPayment &&
       hardEquityRatio >= MIN_HARD_EQUITY_RATIO &&
       affordabilityRatio <= inputs.maxAffordabilityRatio &&
       loanToValueRatio <= inputs.maxLoanToValueRatio,

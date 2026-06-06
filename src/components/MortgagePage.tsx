@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
+  calculateDownPayment,
   calculateHardEquityRatio,
   calculateMortgageOverview,
   clampPercent,
@@ -47,12 +48,18 @@ const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
 type SavedMortgageInputs = {
   assets?: Record<string, number>;
   assetsEdited?: boolean;
+  downPayment?: number;
+  downPaymentEdited?: boolean;
 };
 
 export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAsset[] }) {
   const savedInputs = useMemo(readSavedMortgageInputs, []);
   const [hasEditedMortgageAssets, setHasEditedMortgageAssets] = useState(() => savedInputs.assetsEdited === true);
+  const [hasEditedDownPayment, setHasEditedDownPayment] = useState(() => savedInputs.downPaymentEdited === true);
   const [propertyPrice, setPropertyPrice] = useState(defaultMortgageInputs.propertyPrice);
+  const [downPayment, setDownPayment] = useState(() =>
+    getSavedMortgageAmount(savedInputs.downPayment, defaultMortgageInputs.downPayment),
+  );
   const [mortgageAssets, setMortgageAssets] = useState(() =>
     mergeSavedMortgageAssets(savedInputs.assetsEdited ? savedInputs.assets : undefined, dashboardAssets),
   );
@@ -60,16 +67,22 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     () => ({
       ...defaultMortgageInputs,
       availableAssets: mortgageAssets,
+      downPayment,
       propertyPrice,
     }),
-    [mortgageAssets, propertyPrice],
+    [downPayment, mortgageAssets, propertyPrice],
   );
   const mortgage = useMemo(() => calculateMortgageOverview(mortgageInputs), [mortgageInputs]);
   const hardEquityRatio = calculateHardEquityRatio(mortgageInputs.availableAssets, propertyPrice);
 
   useEffect(() => {
-    saveMortgageInputs({ assets: mortgageAssets, assetsEdited: hasEditedMortgageAssets });
-  }, [hasEditedMortgageAssets, mortgageAssets]);
+    saveMortgageInputs({
+      assets: mortgageAssets,
+      assetsEdited: hasEditedMortgageAssets,
+      downPayment,
+      downPaymentEdited: hasEditedDownPayment,
+    });
+  }, [downPayment, hasEditedDownPayment, hasEditedMortgageAssets, mortgageAssets]);
 
   useEffect(() => {
     if (!hasEditedMortgageAssets) {
@@ -77,11 +90,22 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     }
   }, [dashboardAssets, hasEditedMortgageAssets]);
 
+  useEffect(() => {
+    if (!hasEditedDownPayment) {
+      setDownPayment(calculateDownPayment(propertyPrice, defaultMortgageInputs.requiredDownPaymentRatio));
+    }
+  }, [hasEditedDownPayment, propertyPrice]);
+
   function updateMortgageAsset(id: string, amount: number) {
     setHasEditedMortgageAssets(true);
     setMortgageAssets((currentAssets) =>
       currentAssets.map((asset) => (asset.id === id ? { ...asset, amount } : asset)),
     );
+  }
+
+  function updateDownPayment(amount: number) {
+    setHasEditedDownPayment(true);
+    setDownPayment(amount);
   }
 
   const topMetrics = [
@@ -185,6 +209,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
               downPayment={mortgage.downPayment}
               downPaymentRatio={mortgage.downPaymentRatio}
               requiredDownPayment={mortgage.requiredDownPayment}
+              onChange={updateDownPayment}
             />
           </div>
         </div>
@@ -407,21 +432,34 @@ function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: st
 function DownPaymentPanel({
   downPayment,
   downPaymentRatio,
+  onChange,
   requiredDownPayment,
 }: {
   downPayment: number;
   downPaymentRatio: number;
+  onChange: (amount: number) => void;
   requiredDownPayment: number;
 }) {
+  const { inputValue, onInputChange } = useEditableNumber(downPayment, onChange);
+
   return (
     <section className="glass-panel p-5">
-      <div className="flex items-start justify-between gap-4">
-        <h2 className="text-base font-bold text-slate-600">Down Payment</h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-base font-bold text-cyan-600">Down Payment ({downPaymentRatio.toFixed(0)}%)</h2>
+        <span className="glass-input grid w-44 grid-cols-[1fr_auto] items-center gap-2 px-3 py-2">
+          <input
+            aria-label="Down payment amount"
+            className="w-full min-w-0 bg-transparent text-right text-lg font-bold tracking-normal text-cyan-600 outline-none"
+            min={0}
+            step={1000}
+            type="number"
+            value={inputValue}
+            onChange={(event) => onInputChange(event.currentTarget.value)}
+          />
+          <span className="text-sm font-bold text-cyan-600">CHF</span>
+        </span>
       </div>
-      <p className="mt-4 text-2xl font-bold tracking-normal text-emerald-600">
-        {currency(downPayment)} CHF <span className="text-lg">({downPaymentRatio.toFixed(0)}%)</span>
-      </p>
-      <p className="mt-3 text-sm font-bold text-slate-600">
+      <p className="mt-3 text-sm font-semibold text-slate-600">
         Min. required: {currency(requiredDownPayment)} CHF ({defaultMortgageInputs.requiredDownPaymentRatio}%)
       </p>
     </section>
@@ -466,13 +504,25 @@ function readSavedMortgageInputs(): SavedMortgageInputs {
   }
 }
 
-function saveMortgageInputs({ assets, assetsEdited }: { assets: MortgageAsset[]; assetsEdited: boolean }) {
+function saveMortgageInputs({
+  assets,
+  assetsEdited,
+  downPayment,
+  downPaymentEdited,
+}: {
+  assets: MortgageAsset[];
+  assetsEdited: boolean;
+  downPayment: number;
+  downPaymentEdited: boolean;
+}) {
   try {
     window.localStorage.setItem(
       MORTGAGE_STORAGE_KEY,
       JSON.stringify({
         assets: Object.fromEntries(assets.map((asset) => [asset.id, asset.amount])),
         assetsEdited,
+        downPayment,
+        downPaymentEdited,
       } satisfies SavedMortgageInputs),
     );
   } catch {
