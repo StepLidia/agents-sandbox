@@ -1,4 +1,5 @@
 import { Clock3, Wallet } from 'lucide-react';
+import { formatPercent, getPercent } from '../calculations/percent';
 import { currency, type IncomePlan } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 
@@ -12,10 +13,10 @@ export function IncomeCard({
   onChange: (field: keyof Pick<IncomePlan, 'monthlyNetIncome'>, value: number) => void;
 }) {
   const monthlyNetIncome = Math.max(0, income.monthlyNetIncome);
-  const savingsPercent = monthlyNetIncome === 0 ? 0 : (income.savingsContribution / monthlyNetIncome) * 100;
-  const investmentPercent = monthlyNetIncome === 0 ? 0 : (income.investmentContribution / monthlyNetIncome) * 100;
-  const pillar3Percent = monthlyNetIncome === 0 ? 0 : (income.pillar3Contribution / monthlyNetIncome) * 100;
-  const expensePercent = monthlyNetIncome === 0 ? 0 : (income.otherExpenses / monthlyNetIncome) * 100;
+  const savingsPercent = getPercent(income.savingsContribution, monthlyNetIncome);
+  const investmentPercent = getPercent(income.investmentContribution, monthlyNetIncome);
+  const pillar3Percent = getPercent(income.pillar3Contribution, monthlyNetIncome);
+  const expensePercent = getPercent(income.otherExpenses, monthlyNetIncome);
 
   return (
     <section className="glass-panel flex h-full flex-col p-4">
@@ -75,7 +76,7 @@ export function IncomeCard({
           </div>
           <div className="mt-3 flex items-center gap-3 rounded-lg border border-blue-200/50 bg-blue-500/8 px-4 py-3 text-sm font-bold text-blue-800">
             <Clock3 className="h-4 w-4 shrink-0" />
-            {futureBuildingPercent.toFixed(1)}% of your income is building your future.
+            {formatPercent(futureBuildingPercent, 100)} of your income is building your future.
           </div>
         </div>
       </div>
@@ -198,7 +199,7 @@ function AllocationRow({
         <span className="truncate">{label}</span>
       </div>
       {readOnly ? <CurrencyValue value={amount} /> : <CurrencyInput value={amount} onChange={onChange ?? (() => undefined)} />}
-      <span className="text-right text-sm font-semibold text-slate-600">{percent.toFixed(1)}%</span>
+      <span className="text-right text-sm font-semibold text-slate-600">{formatPercent(percent, 100)}</span>
     </div>
   );
 }

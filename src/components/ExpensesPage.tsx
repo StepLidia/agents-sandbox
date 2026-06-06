@@ -16,6 +16,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
+import { formatPercent, getPercent } from '../calculations/percent';
 import { buttonClasses } from '../constants/buttonStyles';
 import { tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
@@ -532,7 +533,7 @@ function ExpenseBreakdownRow({
           />
           <span className="text-sm text-slate-600">CHF</span>
         </label>
-        <span className="text-right font-semibold text-slate-600">{percent.toFixed(1)}%</span>
+        <span className="text-right font-semibold text-slate-600">{formatPercent(percent, 100)}</span>
       </div>
       <div className="mt-0.5 h-px bg-slate-300/60">
         <div className="h-px" style={{ width: barWidth, backgroundColor: category.color }} />
@@ -636,7 +637,7 @@ function IncomeVsExpenses({
         <div>
           <p className="text-sm font-bold text-slate-700">Savings Rate</p>
           <p className="text-lg font-bold text-emerald-600">
-            {savingsRate.toFixed(1)}% <span className="text-sm text-slate-950">of income</span>
+            {formatPercent(savingsRate, 100)} <span className="text-sm text-slate-950">of income</span>
           </p>
         </div>
       </div>
@@ -645,7 +646,7 @@ function IncomeVsExpenses({
 }
 
 function ProgressRow({ color, label, max, value }: { color: string; label: string; max: number; value: number }) {
-  const width = max > 0 ? `${Math.min(100, (value / max) * 100)}%` : '0%';
+  const width = `${Math.min(100, getPercent(value, max))}%`;
 
   return (
     <div className="grid grid-cols-[1fr_5.5rem] items-center gap-3 text-sm">
@@ -680,7 +681,7 @@ function TopCostDrivers({ drivers, totalExpenses }: { drivers: ExpenseCategory[]
             </span>
             <span className="truncate font-semibold text-slate-700">{category.label}</span>
             <span className="text-right font-bold text-slate-950">{currency(category.value)} CHF</span>
-            <span className="text-right font-semibold text-slate-600">{getPercent(category.value, totalExpenses).toFixed(1)}%</span>
+            <span className="text-right font-semibold text-slate-600">{formatPercent(category.value, totalExpenses)}</span>
           </div>
         ))}
       </div>
@@ -712,7 +713,7 @@ function ExpenseInsights({
           Rent represents <InsightValue>{formatPercent(rent, totalExpenses)}</InsightValue> of your total monthly expenses.
         </InsightItem>
         <InsightItem color="bg-amber-500/12 text-amber-500" icon={Star}>
-          Food spending exceeds insurance costs by <InsightValue>{currency(Math.max(food - insurance, 0))} CHF</InsightValue>.
+          Insurance exceeds food costs by <InsightValue>{currency(Math.max(insurance - food, 0))} CHF</InsightValue>.
         </InsightItem>
         <InsightItem color="bg-cyan-500/12 text-cyan-600" icon={WalletCards}>
           Reducing subscriptions by <InsightValue>50%</InsightValue> could save you <InsightValue>{currency(subscriptions / 2)} CHF</InsightValue> per month.
@@ -753,7 +754,7 @@ function ExpenseTooltip({ active, payload, totalExpenses }: ExpenseTooltipProps)
     <div className={tooltipContentClasses('px-3 py-2')}>
       <p className="font-bold text-slate-950">{category.label}</p>
       <p className="mt-1 text-slate-600">
-        {currency(category.value)} CHF - {getPercent(category.value, totalExpenses).toFixed(1)}%
+        {currency(category.value)} CHF - {formatPercent(category.value, totalExpenses)}
       </p>
     </div>
   );
@@ -943,12 +944,12 @@ function calculateExpenseMetrics(categories: ExpenseCategory[], monthlyIncome: n
 
 function buildMetricTrend(currentValue: number, previousValue: number, betterWhen: 'higher' | 'lower') {
   const difference = currentValue - previousValue;
-  const percentChange = previousValue === 0 ? (currentValue === 0 ? 0 : 100) : (Math.abs(difference) / previousValue) * 100;
+  const percentChange = previousValue === 0 ? (currentValue === 0 ? 0 : 100) : getPercent(Math.abs(difference), previousValue);
   const trendDirection = difference >= 0 ? 'up' : 'down';
   const isGood = betterWhen === 'higher' ? difference >= 0 : difference <= 0;
 
   return {
-    trend: `${percentChange.toFixed(1)}%`,
+    trend: formatPercent(percentChange, 100),
     trendDirection,
     trendTone: isGood ? 'good' : 'bad',
   } satisfies Pick<MetricCardProps, 'trend' | 'trendDirection' | 'trendTone'>;
@@ -984,12 +985,4 @@ function hslToHex(hue: number, saturation: number, lightness: number) {
   return `#${[red, green, blue]
     .map((color) => Math.round((color + lightnessAdjustment) * 255).toString(16).padStart(2, '0'))
     .join('')}`;
-}
-
-function getPercent(value: number, total: number) {
-  return total > 0 ? (value / total) * 100 : 0;
-}
-
-function formatPercent(value: number, total: number) {
-  return `${getPercent(value, total).toFixed(1)}%`;
 }

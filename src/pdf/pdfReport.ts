@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { formatPercent } from '../calculations/percent';
 import type { FinancialAsset, IncomePlan, InsightAmounts, ProjectionPoint } from '../finance';
 
 const DISCLAIMER = 'This report is for illustrative purposes only and does not constitute financial advice.';
@@ -91,7 +92,7 @@ function drawInputAssumptions(context: PdfContext, data: FinancialReportData) {
       label: `${asset.label} monthly ${asset.id === 'pillar2' ? 'saving part' : 'contribution'}`,
       value: formatMoney(asset.monthlyContribution),
     },
-    { label: `${asset.label} expected yearly return`, value: `${asset.annualReturn.toFixed(2)}%`, rule: 'light' as const },
+    { label: `${asset.label} expected yearly return`, value: formatPercent(asset.annualReturn, 100, 2), rule: 'light' as const },
   ]);
 
   drawStatementRows(context, rows);
@@ -100,11 +101,11 @@ function drawInputAssumptions(context: PdfContext, data: FinancialReportData) {
 function drawAllocation(context: PdfContext, income: IncomePlan) {
   drawStatementTitle(context, 'Monthly Disposable Income Allocation');
   drawStatementRows(context, [
-    { label: 'Monthly net income', value: formatMoney(income.monthlyNetIncome), sideNote: '100.0%', bold: true },
-    { label: 'To Savings Account', value: formatMoney(income.savingsContribution), sideNote: percent(income.savingsContribution, income.monthlyNetIncome) },
-    { label: 'To Investments', value: formatMoney(income.investmentContribution), sideNote: percent(income.investmentContribution, income.monthlyNetIncome) },
-    { label: '3rd Pillar', value: formatMoney(income.pillar3Contribution), sideNote: percent(income.pillar3Contribution, income.monthlyNetIncome) },
-    { label: 'Expenses', value: formatMoney(income.otherExpenses), sideNote: percent(income.otherExpenses, income.monthlyNetIncome), rule: 'light' },
+    { label: 'Monthly net income', value: formatMoney(income.monthlyNetIncome), sideNote: formatPercent(100, 100), bold: true },
+    { label: 'To Savings Account', value: formatMoney(income.savingsContribution), sideNote: formatPercent(income.savingsContribution, income.monthlyNetIncome) },
+    { label: 'To Investments', value: formatMoney(income.investmentContribution), sideNote: formatPercent(income.investmentContribution, income.monthlyNetIncome) },
+    { label: '3rd Pillar', value: formatMoney(income.pillar3Contribution), sideNote: formatPercent(income.pillar3Contribution, income.monthlyNetIncome) },
+    { label: 'Expenses', value: formatMoney(income.otherExpenses), sideNote: formatPercent(income.otherExpenses, income.monthlyNetIncome), rule: 'light' },
   ]);
 }
 
@@ -348,10 +349,6 @@ function finalizePageNumbers(context: PdfContext) {
 
 function formatMoney(value: number) {
   return `${new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Math.round(value))} CHF`;
-}
-
-function percent(value: number, total: number) {
-  return total <= 0 ? '0.0%' : `${((value / total) * 100).toFixed(1)}%`;
 }
 
 function monthlyFutureAllocation(income: IncomePlan) {

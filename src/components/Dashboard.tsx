@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Menu } from 'lucide-react';
+import { getPercent } from '../calculations/percent';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { buttonClasses } from '../constants/buttonStyles';
@@ -279,7 +280,7 @@ function Footer() {
 }
 
 function YearsSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
-  const percent = (value / 40) * 100;
+  const percent = getPercent(value, 40);
 
   return (
     <section className="glass-panel mt-3 px-5 py-4">
