@@ -305,26 +305,26 @@ function TrendMetricCard({
   const TrendIcon = trend?.trendDirection === 'up' ? ArrowUp : ArrowDown;
 
   return (
-    <section className="glass-panel p-5">
+    <section className="glass-panel flex h-full flex-col p-5">
       <div className="flex items-start gap-4">
-        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg ${iconClassName}`}>
-          <Icon className="h-6 w-6" />
+        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-lg ${iconClassName}`}>
+          <Icon className="h-7 w-7" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-sm font-bold leading-5 text-slate-950">{title}</h2>
-          <p className="mt-3 text-3xl font-bold tracking-normal text-slate-950">
+          <h2 className="min-h-10 text-sm font-bold leading-5 text-slate-950">{title}</h2>
+          <p className="mt-3 text-2xl font-bold tracking-normal text-slate-950">
             {currency(amount)} <span className="text-sm font-bold">CHF</span>
           </p>
-          <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-600">{helper}</span>
-            {trend && (
-              <span className={`flex items-center gap-1 font-bold ${trend.trendTone === 'good' ? 'text-emerald-600' : 'text-red-500'}`}>
-                <TrendIcon className="h-4 w-4" />
-                {trend.trend}
-              </span>
-            )}
-          </div>
         </div>
+      </div>
+      <div className="mt-auto flex items-center justify-between gap-3 pt-7 text-sm">
+        <span className="text-slate-600">{helper}</span>
+        {trend && (
+          <span className={`flex items-center gap-1 font-bold ${trend.trendTone === 'good' ? 'text-emerald-600' : 'text-red-500'}`}>
+            <TrendIcon className="h-4 w-4" />
+            {trend.trend}
+          </span>
+        )}
       </div>
     </section>
   );
