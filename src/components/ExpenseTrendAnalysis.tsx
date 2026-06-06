@@ -139,10 +139,36 @@ export function ExpenseTrendAnalysis({
               </defs>
               <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} width={46} />
+              <YAxis
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickFormatter={formatThousandsAxis}
+                tickLine={false}
+                width={46}
+                yAxisId="total"
+              />
+              <YAxis
+                orientation="right"
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickLine={false}
+                width={36}
+                yAxisId="daily"
+              />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
-              <Bar dataKey="totalExpenses" fill={`url(#${gradientPrefix}-total-expenses)`} name="Total Expenses" radius={[6, 6, 0, 0]} />
-              <Line dataKey="averageDailyExpense" dot={{ r: 4 }} name="Average Daily Expense" stroke="#0f766e" strokeWidth={2} />
+              <Bar
+                dataKey="totalExpenses"
+                fill={`url(#${gradientPrefix}-total-expenses)`}
+                name="Total Expenses"
+                radius={[6, 6, 0, 0]}
+                yAxisId="total"
+              />
+              <Line
+                dataKey="averageDailyExpense"
+                dot={{ fill: '#60a5fa', r: 4, stroke: '#2563eb', strokeWidth: 2 }}
+                name="Average Daily Expense"
+                stroke="#2563eb"
+                strokeWidth={2}
+                yAxisId="daily"
+              />
             </ComposedChart>
           </ResponsiveContainer>
         </TrendPanel>
@@ -312,11 +338,11 @@ function TrendMetricCard({
         </div>
         <div className="min-w-0">
           <h2 className="min-h-10 text-sm font-bold leading-5 text-slate-950">{title}</h2>
-          <p className="mt-3 text-2xl font-bold tracking-normal text-slate-950">
-            {currency(amount)} <span className="text-sm font-bold">CHF</span>
-          </p>
         </div>
       </div>
+      <p className="mt-4 text-center whitespace-nowrap text-2xl font-bold tracking-normal text-slate-950 2xl:text-3xl">
+        {currency(amount)} <span className="text-sm font-bold">CHF</span>
+      </p>
       <div className="mt-auto flex items-center justify-between gap-3 pt-7 text-sm">
         <span className="text-slate-600">{helper}</span>
         {trend && (
@@ -464,4 +490,8 @@ function getTrendTextClass(value: number) {
   }
 
   return 'text-slate-600';
+}
+
+function formatThousandsAxis(value: number) {
+  return value >= 1000 ? `${Math.round(value / 1000)}K` : `${value}`;
 }
