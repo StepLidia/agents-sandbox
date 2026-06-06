@@ -226,7 +226,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
               <div className="mt-auto flex justify-end pt-3">
                 <span className="group relative">
                   <button
-                    className={buttonClasses({ className: 'animate-pulse shadow-blue-500/20', size: 'icon' })}
+                    className={buttonClasses({ className: 'pulse-blue-border', size: 'icon' })}
                     aria-describedby="distribution-trend-tooltip"
                     aria-label="View expenses trend"
                     type="button"

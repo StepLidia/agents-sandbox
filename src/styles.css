@@ -90,9 +90,31 @@ input[type="number"]::-webkit-inner-spin-button {
   border-radius: 0;
 }
 
-.glass-panel > * {
+.glass-panel>* {
   position: relative;
   z-index: 1;
+}
+
+.pulse-blue-border {
+  animation: pulse-blue-border 1.8s ease-out infinite;
+}
+
+@keyframes pulse-blue-border {
+
+  0%,
+  100% {
+    border-color: rgba(37, 99, 235, 0.26);
+    box-shadow:
+      0 0 0 0 rgba(37, 99, 235, 0.28),
+      0 14px 28px rgba(37, 99, 235, 0.12);
+  }
+
+  50% {
+    border-color: rgba(37, 99, 235, 0.78);
+    box-shadow:
+      0 0 0 8px rgba(37, 99, 235, 0),
+      0 16px 32px rgba(37, 99, 235, 0.22);
+  }
 }
 
 .glass-input {
