@@ -129,6 +129,12 @@ export function ExpenseTrendAnalysis({
 
       <div className="grid gap-3 xl:grid-cols-2">
         <TrendPanel title="Expenses Over Time">
+          <ChartLegend
+            items={[
+              { label: 'Total Expenses (CHF)', color: '#2563eb' },
+              { label: 'Average Daily Expense (CHF)', color: '#2563eb', line: true },
+            ]}
+          />
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
               <defs>
@@ -137,9 +143,15 @@ export function ExpenseTrendAnalysis({
                   <stop offset="100%" stopColor="#2563eb" stopOpacity={0.18} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
+              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              <XAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                dataKey="name"
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickLine={false}
+              />
               <YAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
                 tick={{ fill: '#334155', fontSize: 12 }}
                 tickFormatter={formatThousandsAxis}
                 tickLine={false}
@@ -147,6 +159,7 @@ export function ExpenseTrendAnalysis({
                 yAxisId="total"
               />
               <YAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
                 orientation="right"
                 tick={{ fill: '#334155', fontSize: 12 }}
                 tickLine={false}
@@ -362,6 +375,26 @@ function TrendPanel({ children, title }: { children: ReactNode; title: string })
       <h2 className="text-sm font-bold text-slate-950">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
+  );
+}
+
+function ChartLegend({ items }: { items: Array<{ color: string; label: string; line?: boolean }> }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-medium text-slate-700">
+      {items.map((item) => (
+        <span key={item.label} className="flex items-center gap-2">
+          {item.line ? (
+            <span className="relative h-2.5 w-5">
+              <span className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ backgroundColor: item.color }} />
+              <span className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ backgroundColor: item.color }} />
+            </span>
+          ) : (
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+          )}
+          {item.label}
+        </span>
+      ))}
+    </div>
   );
 }
 
