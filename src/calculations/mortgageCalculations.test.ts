@@ -43,10 +43,10 @@ describe('mortgage calculations', () => {
   it('builds mortgage overview values', () => {
     const overview = calculateMortgageOverview(defaultMortgageInputs);
 
-    expect(overview.canAffordProperty).toBe(false);
+    expect(overview.canAffordProperty).toBe(true);
     expect(overview.downPayment).toBe(160000);
-    expect(overview.downPaymentRatio).toBe(20);
-    expect(overview.mortgageAmount).toBe(640000);
+    expect(overview.downPaymentRatio).toBe(32);
+    expect(overview.mortgageAmount).toBe(340000);
     expect(overview.maxAffordablePropertyPrice).toBeCloseTo(695117, 0);
   });
 

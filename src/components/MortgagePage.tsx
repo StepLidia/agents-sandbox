@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
-  calculateDownPayment,
   calculateGrossAnnualIncome,
   calculateHardEquityRatio,
   calculateMortgageOverview,
@@ -96,12 +95,6 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       setMortgageAssets(mergeSavedMortgageAssets(undefined, dashboardAssets));
     }
   }, [dashboardAssets, hasEditedMortgageAssets]);
-
-  useEffect(() => {
-    if (!hasEditedDownPayment) {
-      setDownPayment(calculateDownPayment(propertyPrice, defaultMortgageInputs.requiredDownPaymentRatio));
-    }
-  }, [hasEditedDownPayment, propertyPrice]);
 
   useEffect(() => {
     if (downPayment > mortgage.totalAvailableAssets) {
