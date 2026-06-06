@@ -289,7 +289,7 @@ function AffordabilityPanel({
         {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
       </p>
       <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
-      <div className="mt-auto grid gap-3 pt-4 md:grid-cols-4">
+      <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-4">
         {metrics.map((metric) => (
           <MortgageMetricTile key={metric.label} {...metric} />
         ))}

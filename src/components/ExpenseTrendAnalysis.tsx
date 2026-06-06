@@ -310,7 +310,7 @@ export function ExpenseTrendAnalysis({
                 {chartData.map((month) => (
                   <Cell
                     key={month.name}
-                    fill={`url(#${gradientPrefix}-${month.monthChange >= 0 ? 'positive' : 'negative'}-change)`}
+                    fill={`url(#${gradientPrefix}-${month.monthChange >= 0 ? 'negative' : 'positive'}-change)`}
                   />
                 ))}
                 <LabelList content={<MonthChangeLabel />} dataKey="monthChange" />
@@ -618,7 +618,7 @@ function MonthChangeLabel({
 
   return (
     <text
-      fill={numericValue > 0 ? '#059669' : '#ef4444'}
+      fill={numericValue > 0 ? '#ef4444' : '#059669'}
       fontSize={12}
       fontWeight={700}
       textAnchor="middle"

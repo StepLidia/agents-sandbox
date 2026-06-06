@@ -35,7 +35,7 @@ export const MIN_HARD_EQUITY_RATIO = 10;
 const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
 
 export const defaultMortgageInputs: MortgageInputs = {
-  propertyPrice: 800000,
+  propertyPrice: 500000,
   downPayment: 160000,
   grossAnnualIncome: 120000,
   annualInterestRate: 5,
