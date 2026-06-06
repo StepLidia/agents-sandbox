@@ -1,8 +1,9 @@
 import {
   Banknote,
   BriefcaseBusiness,
-  ChartNoAxesCombined,
+  ChartPie,
   Check,
+  CircleAlert,
   CircleDollarSign,
   Home,
   Info,
@@ -30,7 +31,7 @@ const assetIconById: Record<string, LucideIcon> = {
 };
 
 const MAX_PROPERTY_PRICE = 3000000;
-const PROPERTY_PRICE_STEP = 10000;
+const PROPERTY_PRICE_STEP = 1000;
 
 export function MortgagePage() {
   const [propertyPrice, setPropertyPrice] = useState(defaultMortgageInputs.propertyPrice);
@@ -64,7 +65,7 @@ export function MortgagePage() {
       helperClassName: 'text-slate-600',
     },
     {
-      icon: ChartNoAxesCombined,
+      icon: ChartPie,
       iconClassName: 'bg-violet-500/10 text-violet-600',
       label: 'Loan-to-Value (LTV)',
       value: `${mortgage.loanToValueRatio.toFixed(0)}%`,
@@ -174,14 +175,17 @@ function AffordabilityPanel({
   const isOverAffordablePrice = propertyPrice > mortgage.maxAffordablePropertyPrice;
   const statusTextClassName = isOverAffordablePrice ? 'text-red-500' : 'text-emerald-600';
   const statusIconClassName = isOverAffordablePrice
-    ? 'border-red-500/70 text-red-500'
+    ? 'text-red-500'
     : 'border-emerald-500/70 text-emerald-600';
+  const StatusIcon = isOverAffordablePrice ? CircleAlert : Check;
 
   return (
     <section className="glass-panel flex h-full flex-col p-5">
       <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
-        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 ${statusIconClassName}`}>
-          <Check className="h-7 w-7" />
+        <div
+          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${isOverAffordablePrice ? '' : 'border-4'} ${statusIconClassName}`}
+        >
+          <StatusIcon className="h-7 w-7" />
         </div>
         <div className="min-w-0">
           <p className={`text-lg font-semibold md:text-xl ${statusTextClassName}`}>
@@ -222,7 +226,7 @@ function MortgageProgress({
     <div className="mt-6">
       <div className="relative pt-2">
         <span
-          className="pointer-events-none absolute top-1/2 z-10 -translate-x-1/2 -translate-y-3/4 drop-shadow-sm"
+          className="pointer-events-none absolute top-1/2 z-10 -translate-x-1/8 -translate-y-3/4 drop-shadow-sm"
           title="Maximum affordable property price"
           style={{ left: `${affordablePercent}%` }}
         >
