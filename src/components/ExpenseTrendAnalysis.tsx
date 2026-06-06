@@ -9,6 +9,7 @@ import {
   Line,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -73,6 +74,7 @@ export function ExpenseTrendAnalysis({
   const previousAverage =
     previousTrendMonths.reduce((sum, month) => sum + month.totalExpenses, 0) / Math.max(previousTrendMonths.length, 1);
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
+  const expenseAxisTicks = buildThousandsTicks(trendMonths.map((month) => month.totalExpenses));
   const chartData = trendMonths.map((month) => ({
     name: month.month.shortLabel,
     averageDailyExpense: Math.round(month.averageDailyExpense),
@@ -144,6 +146,16 @@ export function ExpenseTrendAnalysis({
                 </linearGradient>
               </defs>
               <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              {expenseAxisTicks.slice(1).map((tick) => (
+                <ReferenceLine
+                  key={tick}
+                  stroke="#94a3b8"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.34}
+                  y={tick}
+                  yAxisId="total"
+                />
+              ))}
               <XAxis
                 axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
                 dataKey="name"
@@ -155,6 +167,7 @@ export function ExpenseTrendAnalysis({
                 tick={{ fill: '#334155', fontSize: 12 }}
                 tickFormatter={formatThousandsAxis}
                 tickLine={false}
+                ticks={expenseAxisTicks}
                 width={46}
                 yAxisId="total"
               />
@@ -406,14 +419,18 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
   return (
     <div className={tooltipContentClasses('px-3 py-2')}>
       {label && <p className="mb-1 font-bold text-slate-950">{label}</p>}
-      {payload.map((item) => (
-        <p key={`${item.name}-${item.color}`} className="text-slate-700">
-          <span className="font-bold" style={{ color: item.color }}>
-            {item.name}:
-          </span>{' '}
-          {item.name?.includes('Previous Month') ? formatPercent(item.value ?? 0, 100) : `${currency(item.value ?? 0)} CHF`}
-        </p>
-      ))}
+      {payload.map((item) => {
+        const labelColor = item.name === 'Average Daily Expense' ? '#059669' : item.color;
+
+        return (
+          <p key={`${item.name}-${item.color}`} className="text-slate-700">
+            <span className="font-bold" style={{ color: labelColor }}>
+              {item.name}:
+            </span>{' '}
+            {item.name?.includes('Previous Month') ? formatPercent(item.value ?? 0, 100) : `${currency(item.value ?? 0)} CHF`}
+          </p>
+        );
+      })}
     </div>
   );
 }
@@ -527,4 +544,11 @@ function getTrendTextClass(value: number) {
 
 function formatThousandsAxis(value: number) {
   return value >= 1000 ? `${Math.round(value / 1000)}K` : `${value}`;
+}
+
+function buildThousandsTicks(values: number[]) {
+  const maxValue = Math.max(...values, 0);
+  const step = Math.max(1000, Math.ceil(maxValue / 4 / 1000) * 1000);
+
+  return Array.from({ length: 5 }, (_, index) => index * step);
 }
