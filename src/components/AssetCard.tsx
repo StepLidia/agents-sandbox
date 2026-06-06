@@ -116,11 +116,11 @@ export function AssetCard({
 
 function ReadonlyField({ label, value, suffix }: { label: string; value: number; suffix: string }) {
   return (
-    <div className="grid grid-cols-[1fr_112px] items-center gap-3">
+    <div className="grid grid-cols-[1fr_9rem] items-center gap-3">
       <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
         <span className="truncate">{label}</span>
       </span>
-      <span className="glass-input flex justify-between py-2 text-[14px] font-normal text-slate-700">
+      <span className="glass-input grid grid-cols-[1fr_auto] items-center gap-2 py-2 text-[14px] font-normal text-slate-700">
         <span>{value}</span>
         <span className="text-sm font-normal text-slate-600">{suffix}</span>
       </span>
@@ -149,15 +149,15 @@ function EditableField({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, isMoney ? { format: 'money' } : undefined);
 
   return (
-    <div className="grid grid-cols-[1fr_112px] items-center gap-3">
+    <div className="grid grid-cols-[1fr_9rem] items-center gap-3">
       <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
         <span className="truncate">{label}</span>
         {labelExtra}
       </span>
-      <span className="glass-input flex justify-between py-2 text-[14px]">
+      <span className="glass-input grid grid-cols-[1fr_auto] items-center gap-2 py-2 text-[14px]">
         <input
           aria-label={label}
-          className="w-full min-w-0 bg-transparent font-black text-slate-950 outline-none"
+          className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"
           inputMode={isMoney ? 'numeric' : 'decimal'}
           min={min}
           step={step}
@@ -165,7 +165,7 @@ function EditableField({
           value={inputValue}
           onChange={(event) => onInputChange(event.currentTarget.value)}
         />
-        <span className="font-black text-slate-600">{suffix}</span>
+        <span className="font-semibold text-slate-600">{suffix}</span>
       </span>
     </div>
   );

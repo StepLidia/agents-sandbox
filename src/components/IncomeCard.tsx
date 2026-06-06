@@ -233,7 +233,7 @@ function CurrencyInput({
         value={inputValue}
         onChange={(event) => onInputChange(event.currentTarget.value)}
       />
-      <span className="text-xs font-black text-slate-600">CHF</span>
+      <span className="text-xs font-semibold text-slate-600">CHF</span>
     </span>
   );
 }

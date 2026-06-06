@@ -411,7 +411,7 @@ function GrossIncomePanel({
             value={inputValue}
             onChange={(event) => onInputChange(event.currentTarget.value)}
           />
-          <span className="text-sm font-black text-slate-600">CHF</span>
+          <span className="text-sm font-semibold text-slate-600">CHF</span>
         </span>
       </div>
     </section>
@@ -467,7 +467,7 @@ function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: st
           value={inputValue}
           onChange={(event) => onInputChange(event.currentTarget.value)}
         />
-        <span className="text-sm font-black text-slate-600">CHF</span>
+        <span className="text-sm font-semibold text-slate-600">CHF</span>
       </span>
     </div>
   );
@@ -499,7 +499,7 @@ function DownPaymentPanel({
             value={inputValue}
             onChange={(event) => onInputChange(event.currentTarget.value)}
           />
-          <span className="text-sm font-black text-cyan-600">CHF</span>
+          <span className="text-sm font-semibold text-cyan-600">CHF</span>
         </span>
       </div>
       <p className="mt-3 text-sm font-semibold text-slate-600">
