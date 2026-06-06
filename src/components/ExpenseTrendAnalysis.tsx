@@ -335,7 +335,7 @@ export function ExpenseTrendAnalysis({
                   key={category.id}
                   dataKey={`${category.id}Share`}
                   fill={category.color}
-                  fillOpacity={0.72}
+                  fillOpacity={0.52}
                   name={category.label}
                   stackId="share"
                   barSize={26}

@@ -14,11 +14,12 @@ import {
   Star,
   TrendingUp,
   WalletCards,
+  CalendarClock,
 } from 'lucide-react';
 import { Pie, PieChart, ResponsiveContainer, Sector, Tooltip, type PieSectorShapeProps } from 'recharts';
 import { formatPercent, getPercent } from '../calculations/percent';
 import { buttonClasses } from '../constants/buttonStyles';
-import { tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
+import { hoverTooltipClasses, tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 import { ExpenseTrendAnalysis } from './ExpenseTrendAnalysis';
@@ -307,15 +308,25 @@ function ExpensesHeader({
             />
           )}
         </div>
-        <button
-          className={buttonClasses({ className: isTrendVisible ? 'bg-blue-100/90 text-blue-700 shadow-inner' : '', size: 'icon' })}
-          aria-label="View expense trend"
-          aria-pressed={isTrendVisible}
-          type="button"
-          onClick={onToggleTrend}
-        >
-          <ChartLine className="h-4 w-4" />
-        </button>
+        <span className="group relative">
+          <button
+            className={buttonClasses({ className: isTrendVisible ? 'bg-blue-100/90 text-blue-700 shadow-inner' : '', size: 'icon' })}
+            aria-describedby="expense-trend-toggle-tooltip"
+            aria-label={isTrendVisible ? 'Back to monthly expenses' : 'View expenses trend'}
+            aria-pressed={isTrendVisible}
+            type="button"
+            onClick={onToggleTrend}
+          >
+            {isTrendVisible ? <CalendarClock className="h-4 w-4" /> : <ChartLine className="h-4 w-4" />}
+          </button>
+          <span
+            id="expense-trend-toggle-tooltip"
+            role="tooltip"
+            className={hoverTooltipClasses('right-0 top-12 w-max whitespace-nowrap px-3 py-2')}
+          >
+            {isTrendVisible ? 'Back to monthly expenses' : 'View expenses trend'}
+          </span>
+        </span>
         <span className="group relative">
           <button
             className={buttonClasses({ size: 'icon', tone: 'danger' })}
