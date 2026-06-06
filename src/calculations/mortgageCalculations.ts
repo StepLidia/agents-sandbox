@@ -37,7 +37,7 @@ const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
 export const defaultMortgageInputs: MortgageInputs = {
   propertyPrice: 800000,
   downPayment: 160000,
-  grossAnnualIncome: 127100,
+  grossAnnualIncome: 120000,
   annualInterestRate: 5,
   maintenanceRate: 1,
   amortizationRate: 1.10125,
@@ -139,6 +139,10 @@ export function calculateMonthlyHousingPayment({
 
 export function calculateAffordabilityRatio(monthlyPayment: number, grossAnnualIncome: number) {
   return calculateRatio(normalizeMoney(monthlyPayment) * 12, grossAnnualIncome);
+}
+
+export function calculateGrossAnnualIncome(grossMonthlyIncome: number) {
+  return normalizeMoney(grossMonthlyIncome) * 12;
 }
 
 export function calculateMaxAffordablePropertyPrice(inputs: MortgageInputs) {

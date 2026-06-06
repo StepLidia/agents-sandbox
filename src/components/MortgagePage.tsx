@@ -16,6 +16,7 @@ import {
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   calculateDownPayment,
+  calculateGrossAnnualIncome,
   calculateHardEquityRatio,
   calculateMortgageOverview,
   clampPercent,
@@ -50,6 +51,7 @@ type SavedMortgageInputs = {
   assetsEdited?: boolean;
   downPayment?: number;
   downPaymentEdited?: boolean;
+  grossMonthlyIncome?: number;
 };
 
 export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAsset[] }) {
@@ -60,6 +62,9 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
   const [downPayment, setDownPayment] = useState(() =>
     getSavedMortgageAmount(savedInputs.downPayment, defaultMortgageInputs.downPayment),
   );
+  const [grossMonthlyIncome, setGrossMonthlyIncome] = useState(() =>
+    getSavedMortgageAmount(savedInputs.grossMonthlyIncome, defaultMortgageInputs.grossAnnualIncome / 12),
+  );
   const [mortgageAssets, setMortgageAssets] = useState(() =>
     mergeSavedMortgageAssets(savedInputs.assetsEdited ? savedInputs.assets : undefined, dashboardAssets),
   );
@@ -68,9 +73,10 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       ...defaultMortgageInputs,
       availableAssets: mortgageAssets,
       downPayment,
+      grossAnnualIncome: calculateGrossAnnualIncome(grossMonthlyIncome),
       propertyPrice,
     }),
-    [downPayment, mortgageAssets, propertyPrice],
+    [downPayment, grossMonthlyIncome, mortgageAssets, propertyPrice],
   );
   const mortgage = useMemo(() => calculateMortgageOverview(mortgageInputs), [mortgageInputs]);
   const hardEquityRatio = calculateHardEquityRatio(mortgageInputs.availableAssets, propertyPrice);
@@ -81,8 +87,9 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       assetsEdited: hasEditedMortgageAssets,
       downPayment,
       downPaymentEdited: hasEditedDownPayment,
+      grossMonthlyIncome,
     });
-  }, [downPayment, hasEditedDownPayment, hasEditedMortgageAssets, mortgageAssets]);
+  }, [downPayment, grossMonthlyIncome, hasEditedDownPayment, hasEditedMortgageAssets, mortgageAssets]);
 
   useEffect(() => {
     if (!hasEditedMortgageAssets) {
@@ -204,6 +211,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
             onPropertyPriceChange={setPropertyPrice}
           />
           <div className="flex h-full flex-col gap-4 md:col-span-2">
+            <GrossIncomePanel grossMonthlyIncome={grossMonthlyIncome} onChange={setGrossMonthlyIncome} />
             <AssetsPanel assets={mortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} onChange={updateMortgageAsset} />
             <DownPaymentPanel
               downPayment={mortgage.downPayment}
@@ -375,6 +383,41 @@ function MortgageMetricTile({
   );
 }
 
+function GrossIncomePanel({
+  grossMonthlyIncome,
+  onChange,
+}: {
+  grossMonthlyIncome: number;
+  onChange: (amount: number) => void;
+}) {
+  const { inputValue, onInputChange } = useEditableNumber(grossMonthlyIncome, onChange, { format: 'money' });
+
+  return (
+    <section className="glass-panel p-5">
+      <h2 className="text-base font-bold text-slate-950">Gross Income per Month</h2>
+      <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-blue-500/20 bg-blue-600/10 text-blue-600">
+            <BriefcaseBusiness className="h-5 w-5" />
+          </span>
+          <span className="truncate font-bold text-slate-600">Income</span>
+        </span>
+        <span className="glass-input grid w-36 grid-cols-[1fr_auto] items-center gap-2 px-2 py-1">
+          <input
+            aria-label="Gross monthly income"
+            className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"
+            inputMode="numeric"
+            type="text"
+            value={inputValue}
+            onChange={(event) => onInputChange(event.currentTarget.value)}
+          />
+          <span className="text-sm font-black text-slate-600">CHF</span>
+        </span>
+      </div>
+    </section>
+  );
+}
+
 function AssetsPanel({
   assets,
   onChange,
@@ -403,7 +446,9 @@ function AssetsPanel({
 function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: string, amount: number) => void }) {
   const Icon = assetIconById[asset.id] ?? Banknote;
   const colors = assetColorById[asset.id] ?? colorClasses.emerald;
-  const { inputValue, onInputChange } = useEditableNumber(asset.amount, (amount) => onChange(asset.id, amount));
+  const { inputValue, onInputChange } = useEditableNumber(asset.amount, (amount) => onChange(asset.id, amount), {
+    format: 'money',
+  });
 
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
@@ -416,14 +461,13 @@ function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: st
       <span className="glass-input grid w-36 grid-cols-[1fr_auto] items-center gap-2 px-2 py-1">
         <input
           aria-label={`${asset.label} mortgage amount`}
-          className="w-full min-w-0 bg-transparent text-right font-bold text-slate-950 outline-none"
-          min={0}
-          step={1000}
-          type="number"
+          className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"
+          inputMode="numeric"
+          type="text"
           value={inputValue}
           onChange={(event) => onInputChange(event.currentTarget.value)}
         />
-        <span className="text-sm text-slate-600">CHF</span>
+        <span className="text-sm font-black text-slate-600">CHF</span>
       </span>
     </div>
   );
@@ -440,7 +484,7 @@ function DownPaymentPanel({
   onChange: (amount: number) => void;
   requiredDownPayment: number;
 }) {
-  const { inputValue, onInputChange } = useEditableNumber(downPayment, onChange);
+  const { inputValue, onInputChange } = useEditableNumber(downPayment, onChange, { format: 'money' });
 
   return (
     <section className="glass-panel p-5">
@@ -449,14 +493,13 @@ function DownPaymentPanel({
         <span className="glass-input grid w-44 grid-cols-[1fr_auto] items-center gap-2 px-3 py-2">
           <input
             aria-label="Down payment amount"
-            className="w-full min-w-0 bg-transparent text-right text-lg font-bold tracking-normal text-cyan-600 outline-none"
-            min={0}
-            step={1000}
-            type="number"
+            className="w-full min-w-0 bg-transparent text-right font-black text-cyan-600 outline-none"
+            inputMode="numeric"
+            type="text"
             value={inputValue}
             onChange={(event) => onInputChange(event.currentTarget.value)}
           />
-          <span className="text-sm font-bold text-cyan-600">CHF</span>
+          <span className="text-sm font-black text-cyan-600">CHF</span>
         </span>
       </div>
       <p className="mt-3 text-sm font-semibold text-slate-600">
@@ -509,11 +552,13 @@ function saveMortgageInputs({
   assetsEdited,
   downPayment,
   downPaymentEdited,
+  grossMonthlyIncome,
 }: {
   assets: MortgageAsset[];
   assetsEdited: boolean;
   downPayment: number;
   downPaymentEdited: boolean;
+  grossMonthlyIncome: number;
 }) {
   try {
     window.localStorage.setItem(
@@ -523,6 +568,7 @@ function saveMortgageInputs({
         assetsEdited,
         downPayment,
         downPaymentEdited,
+        grossMonthlyIncome,
       } satisfies SavedMortgageInputs),
     );
   } catch {

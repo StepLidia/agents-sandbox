@@ -145,7 +145,8 @@ function EditableField({
   step: number;
   onChange: (value: number) => void;
 }) {
-  const { inputValue, onInputChange } = useEditableNumber(value, onChange);
+  const isMoney = suffix === 'CHF';
+  const { inputValue, onInputChange } = useEditableNumber(value, onChange, isMoney ? { format: 'money' } : undefined);
 
   return (
     <div className="grid grid-cols-[1fr_112px] items-center gap-3">
@@ -156,14 +157,15 @@ function EditableField({
       <span className="glass-input flex justify-between py-2 text-[14px]">
         <input
           aria-label={label}
-          className="w-full min-w-0 bg-transparent font-normal text-slate-950 outline-none"
+          className="w-full min-w-0 bg-transparent font-black text-slate-950 outline-none"
+          inputMode={isMoney ? 'numeric' : 'decimal'}
           min={min}
           step={step}
-          type="number"
+          type={isMoney ? 'text' : 'number'}
           value={inputValue}
           onChange={(event) => onInputChange(event.currentTarget.value)}
         />
-        <span className="text-slate-600">{suffix}</span>
+        <span className="font-black text-slate-600">{suffix}</span>
       </span>
     </div>
   );

@@ -566,7 +566,9 @@ function ExpenseBreakdownRow({
   onDelete: (id: string) => void;
 }) {
   const barWidth = totalExpenses > 0 ? `${Math.max(3, percent)}%` : '0%';
-  const { inputValue, onInputChange } = useEditableNumber(category.value, (value) => onChange(category.id, value));
+  const { inputValue, onInputChange } = useEditableNumber(category.value, (value) => onChange(category.id, value), {
+    format: 'money',
+  });
 
   return (
     <div className="group">
@@ -587,9 +589,8 @@ function ExpenseBreakdownRow({
           <input
             aria-label={`${category.label} monthly expense`}
             className="w-full min-w-0 bg-transparent text-right outline-none"
-            min={0}
-            step={10}
-            type="number"
+            inputMode="numeric"
+            type="text"
             value={inputValue}
             onChange={(event) => onInputChange(event.currentTarget.value)}
           />
@@ -617,7 +618,7 @@ function AddCategoryRow({
   onSave: () => void;
   onValueChange: (value: number) => void;
 }) {
-  const { inputValue, onInputChange } = useEditableNumber(draftCategory?.value ?? 0, onValueChange);
+  const { inputValue, onInputChange } = useEditableNumber(draftCategory?.value ?? 0, onValueChange, { format: 'money' });
 
   if (!draftCategory) {
     return (
@@ -655,9 +656,8 @@ function AddCategoryRow({
         <input
           aria-label="New category monthly expense"
           className="w-full min-w-0 bg-transparent text-right outline-none"
-          min={0}
-          step={10}
-          type="number"
+          inputMode="numeric"
+          type="text"
           value={inputValue}
           onChange={(event) => onInputChange(event.currentTarget.value)}
           onKeyDown={(event) => {

@@ -222,19 +222,18 @@ function CurrencyInput({
   className?: string;
   onChange: (value: number) => void;
 }) {
-  const { inputValue, onInputChange } = useEditableNumber(value, onChange);
+  const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
 
   return (
     <span className={`glass-input justify-between py-2 text-sm ${className}`}>
       <input
-        className="w-full min-w-0 bg-transparent font-bold text-slate-950 outline-none"
-        min={0}
-        step={100}
-        type="number"
+        className="w-full min-w-0 bg-transparent font-black text-slate-950 outline-none"
+        inputMode="numeric"
+        type="text"
         value={inputValue}
         onChange={(event) => onInputChange(event.currentTarget.value)}
       />
-      <span className="text-xs font-bold text-slate-600">CHF</span>
+      <span className="text-xs font-black text-slate-600">CHF</span>
     </span>
   );
 }
