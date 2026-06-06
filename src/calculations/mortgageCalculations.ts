@@ -32,7 +32,7 @@ export type MortgageOverview = {
 export const defaultMortgageInputs: MortgageInputs = {
   propertyPrice: 800000,
   grossAnnualIncome: 127100,
-  annualInterestRate: 1.68,
+  annualInterestRate: 5,
   maintenanceRate: 1,
   amortizationRate: 1.10125,
   maxAffordabilityRatio: 33,

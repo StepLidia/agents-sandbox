@@ -28,25 +28,25 @@ describe('mortgage calculations', () => {
     expect(
       calculateMonthlyHousingPayment({
         amortizationRate: 1.10125,
-        annualInterestRate: 1.68,
+        annualInterestRate: 5,
         maintenanceRate: 1,
         mortgageAmount: 640000,
         propertyPrice: 800000,
       }),
-    ).toBeCloseTo(2150, 2);
+    ).toBeCloseTo(3920.67, 2);
   });
 
   it('calculates affordability ratio against gross income', () => {
-    expect(calculateAffordabilityRatio(2150.67, 127100)).toBeCloseTo(20.3, 1);
+    expect(calculateAffordabilityRatio(3920.67, 127100)).toBeCloseTo(37, 1);
   });
 
   it('builds mortgage overview values', () => {
     const overview = calculateMortgageOverview(defaultMortgageInputs);
 
-    expect(overview.canAffordProperty).toBe(true);
+    expect(overview.canAffordProperty).toBe(false);
     expect(overview.downPayment).toBe(160000);
     expect(overview.downPaymentRatio).toBe(20);
     expect(overview.mortgageAmount).toBe(640000);
-    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(1300558, 0);
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(713195, 0);
   });
 });

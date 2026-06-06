@@ -52,20 +52,28 @@ export function MortgagePage() {
         mortgage.affordabilityRatio <= mortgageInputs.maxAffordabilityRatio
           ? `Well within the ${mortgageInputs.maxAffordabilityRatio}% limit`
           : `Above the ${mortgageInputs.maxAffordabilityRatio}% limit`,
+      helperClassName:
+        mortgage.affordabilityRatio <= mortgageInputs.maxAffordabilityRatio ? 'text-slate-600' : 'text-red-500',
     },
     {
       icon: ShieldCheck,
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: 'Stress Test Rate',
-      value: `${mortgageInputs.annualInterestRate.toFixed(2)}%`,
+      value: `${mortgageInputs.annualInterestRate.toFixed(1)}%`,
       helper: 'Applied by banks',
+      helperClassName: 'text-slate-600',
     },
     {
       icon: ChartNoAxesCombined,
       iconClassName: 'bg-violet-500/10 text-violet-600',
       label: 'Loan-to-Value (LTV)',
       value: `${mortgage.loanToValueRatio.toFixed(0)}%`,
-      helper: `Within the ${mortgageInputs.maxLoanToValueRatio}% limit`,
+      helper:
+        mortgage.loanToValueRatio <= mortgageInputs.maxLoanToValueRatio
+          ? `Within the ${mortgageInputs.maxLoanToValueRatio}% limit`
+          : `Above the ${mortgageInputs.maxLoanToValueRatio}% limit`,
+      helperClassName:
+        mortgage.loanToValueRatio <= mortgageInputs.maxLoanToValueRatio ? 'text-slate-600' : 'text-red-500',
     },
   ];
   const summaryCards = [
@@ -153,6 +161,7 @@ function AffordabilityPanel({
 }: {
   metrics: Array<{
     helper: string;
+    helperClassName: string;
     icon: LucideIcon;
     iconClassName: string;
     label: string;
@@ -256,12 +265,14 @@ function CheckeredFlagIcon({ className }: { className?: string }) {
 
 function MortgageMetricTile({
   helper,
+  helperClassName,
   icon: Icon,
   iconClassName,
   label,
   value,
 }: {
   helper: string;
+  helperClassName: string;
   icon: LucideIcon;
   iconClassName: string;
   label: string;
@@ -279,7 +290,7 @@ function MortgageMetricTile({
       </div>
       <p className="mt-2 text-center whitespace-nowrap text-xl font-bold tracking-normal text-slate-950 2xl:text-2xl">{value}</p>
       <div className="mt-auto pt-3 text-sm">
-        <span className="text-slate-600">{helper}</span>
+        <span className={helperClassName}>{helper}</span>
       </div>
     </article>
   );
