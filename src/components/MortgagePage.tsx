@@ -162,21 +162,26 @@ function AffordabilityPanel({
   propertyPrice: number;
   onPropertyPriceChange: (value: number) => void;
 }) {
+  const isOverAffordablePrice = propertyPrice > mortgage.maxAffordablePropertyPrice;
+  const statusTextClassName = isOverAffordablePrice ? 'text-red-500' : 'text-emerald-600';
+  const statusIconClassName = isOverAffordablePrice
+    ? 'border-red-500/70 text-red-500'
+    : 'border-emerald-500/70 text-emerald-600';
+
   return (
     <section className="glass-panel flex h-full flex-col p-5">
-      <div className="flex flex-col items-center gap-4 text-center md:flex-row md:items-start md:text-left">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 border-emerald-500/70 text-emerald-600">
+      <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full border-4 ${statusIconClassName}`}>
           <Check className="h-7 w-7" />
         </div>
         <div className="min-w-0">
-          <p className="text-lg font-semibold text-emerald-600 md:text-xl">
+          <p className={`text-lg font-semibold md:text-xl ${statusTextClassName}`}>
             {mortgage.canAffordProperty ? 'Yes, you can afford this property!' : 'This property needs more review.'}
           </p>
-          <p className="mt-2 text-sm font-semibold text-slate-600">Based on your financial situation, you can afford a property up to:</p>
         </div>
       </div>
-      <p className="mt-6 text-center text-3xl font-bold tracking-normal text-emerald-600 md:text-4xl">
-        {currency(mortgage.maxAffordablePropertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
+      <p className={`m-6 text-center text-3xl font-bold tracking-normal md:text-4xl ${statusTextClassName}`}>
+        {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
       </p>
       <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
       <div className="mt-auto grid gap-3 pt-6 md:grid-cols-3">
@@ -199,25 +204,24 @@ function MortgageProgress({
 }) {
   const progressPercent = clampPercent((propertyPrice / MAX_PROPERTY_PRICE) * 100);
   const affordablePercent = clampPercent((mortgage.maxAffordablePropertyPrice / MAX_PROPERTY_PRICE) * 100);
+  const sliderClassName =
+    propertyPrice > mortgage.maxAffordablePropertyPrice
+      ? 'years-slider mortgage-slider-over-limit'
+      : 'years-slider mortgage-slider';
 
   return (
     <div className="mt-6">
-      <div className="relative pt-12">
-        <div
-          className="absolute top-0 w-48 -translate-x-1/2 text-center text-sm font-bold text-slate-950"
-          style={{ left: `${progressPercent}%` }}
-        >
-          <span className="block">Requested Property Price</span>
-          <span className="block">{currency(propertyPrice)} CHF</span>
-        </div>
+      <div className="relative pt-2">
         <span
-          className="pointer-events-none absolute top-12 z-10 h-5 w-1 -translate-x-1/2 -translate-y-1.5 rounded-full bg-emerald-800/70 shadow-sm"
+          className="pointer-events-none absolute top-1/2 z-10 -translate-x-1/2 -translate-y-3/4 drop-shadow-sm"
           title="Maximum affordable property price"
           style={{ left: `${affordablePercent}%` }}
-        />
+        >
+          <CheckeredFlagIcon className="h-9 w-9" />
+        </span>
         <input
           aria-label="Requested property price"
-          className="years-slider mortgage-slider"
+          className={sliderClassName}
           max={MAX_PROPERTY_PRICE}
           min={0}
           step={PROPERTY_PRICE_STEP}
@@ -237,6 +241,16 @@ function MortgageProgress({
         </span>
       </div>
     </div>
+  );
+}
+
+function CheckeredFlagIcon({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" className={className} fill="none" viewBox="0 0 36 36">
+      <path d="M10 5v26" stroke="#0f172a" strokeLinecap="round" strokeWidth="2.6" />
+      <path d="M11 6h17v15H11z" fill="white" stroke="#0f172a" strokeLinejoin="round" strokeWidth="1.8" />
+      <path d="M11 6h5.7v5H11zm11.4 0H28v5h-5.6zm-5.7 5h5.7v5h-5.7zM11 16h5.7v5H11zm11.4 0H28v5h-5.6z" fill="#0f172a" />
+    </svg>
   );
 }
 
