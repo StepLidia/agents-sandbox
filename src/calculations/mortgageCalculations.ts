@@ -39,7 +39,7 @@ export const defaultMortgageInputs: MortgageInputs = {
   maxLoanToValueRatio: 80,
   requiredDownPaymentRatio: 20,
   availableAssets: [
-    { id: 'pillar2', label: '2nd Pillar (LPP)', amount: 120000 },
+    { id: 'pillar2', label: '2nd Pillar (BVG)', amount: 120000 },
     { id: 'pillar3', label: '3rd Pillar (a)', amount: 60000 },
     { id: 'cash', label: 'Cash & Savings', amount: 80000 },
     { id: 'securities', label: 'Securities / Investments', amount: 40000 },

@@ -21,6 +21,7 @@ import {
   defaultMortgageInputs,
   type MortgageAsset,
 } from '../calculations/mortgageCalculations';
+import { colorClasses, type ChartPalette } from '../constants/colors';
 import { currency } from '../finance';
 
 const assetIconById: Record<string, LucideIcon> = {
@@ -28,6 +29,13 @@ const assetIconById: Record<string, LucideIcon> = {
   pillar2: Landmark,
   pillar3: CircleDollarSign,
   securities: TrendingUp,
+};
+
+const assetColorById: Record<string, ChartPalette> = {
+  cash: colorClasses.blue,
+  pillar2: colorClasses.emerald,
+  pillar3: colorClasses.cyan,
+  securities: colorClasses.coral,
 };
 
 const MAX_PROPERTY_PRICE = 3000000;
@@ -304,7 +312,7 @@ function AssetsPanel({ assets, total }: { assets: MortgageAsset[]; total: number
   return (
     <section className="glass-panel flex flex-1 flex-col p-5">
       <h2 className="text-base font-bold text-slate-950">Available Assets</h2>
-      <div className="mt-5 space-y-4">
+      <div className="mt-4 flex flex-1 flex-col justify-evenly">
         {assets.map((asset) => (
           <AssetRow key={asset.id} asset={asset} />
         ))}
@@ -319,11 +327,14 @@ function AssetsPanel({ assets, total }: { assets: MortgageAsset[]; total: number
 
 function AssetRow({ asset }: { asset: MortgageAsset }) {
   const Icon = assetIconById[asset.id] ?? Banknote;
+  const colors = assetColorById[asset.id] ?? colorClasses.emerald;
 
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
       <span className="flex min-w-0 items-center gap-3">
-        <Icon className="h-5 w-5 shrink-0 text-emerald-600" />
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${colors.border} ${colors.bg} ${colors.text}`}>
+          <Icon className="h-5 w-5" />
+        </span>
         <span className="truncate font-bold text-slate-600">{asset.label}</span>
       </span>
       <span className="whitespace-nowrap font-bold text-slate-950">{currency(asset.amount)} CHF</span>
