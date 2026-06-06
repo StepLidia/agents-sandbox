@@ -39,7 +39,7 @@ type ExpenseTrendMonth = {
   categories: ExpenseCategory[];
   totalExpenses: number;
   averageDailyExpense: number;
-  monthChangePercent: number | null;
+  monthChangeAmount: number | null;
   highestCategory: ExpenseCategory | null;
 };
 
@@ -77,10 +77,15 @@ export function ExpenseTrendAnalysis({
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
   const expenseAxisTicks = buildThousandsTicks(trendMonths.map((month) => month.totalExpenses));
   const dailyAxisTicks = buildDailyExpenseTicks(trendMonths.map((month) => month.averageDailyExpense));
+  const categoryAxisTicks = buildPaddedValueTicks(
+    trendMonths.flatMap((month) =>
+      categorySummaries.map((category) => month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0),
+    ),
+  );
   const chartData = trendMonths.map((month) => ({
     name: month.month.shortLabel,
     averageDailyExpense: Math.round(month.averageDailyExpense),
-    monthChange: month.monthChangePercent ?? 0,
+    monthChange: month.monthChangeAmount ?? 0,
     totalExpenses: month.totalExpenses,
     ...Object.fromEntries(
       categorySummaries.map((category) => [
@@ -212,31 +217,36 @@ export function ExpenseTrendAnalysis({
         </TrendPanel>
 
         <TrendPanel title="Top Categories Over Time">
+          <ChartLegend items={categorySummaries.map((category) => ({ label: category.label, color: category.color, line: true }))} />
           <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
-              <defs>
-                {categorySummaries.map((category) => (
-                  <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-bar`} x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor={category.color} stopOpacity={0.86} />
-                    <stop offset="100%" stopColor={category.color} stopOpacity={0.2} />
-                  </linearGradient>
-                ))}
-              </defs>
-              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} width={46} />
+            <ComposedChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
+              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              <XAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                dataKey="name"
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickFormatter={formatThousandsAxis}
+                tickLine={false}
+                ticks={categoryAxisTicks}
+                width={46}
+              />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
               {categorySummaries.map((category) => (
-                <Bar
+                <Line
                   key={category.id}
                   dataKey={category.id}
-                  fill={`url(#${gradientPrefix}-${category.id}-bar)`}
+                  dot={{ fill: category.color, r: 4, stroke: category.color, strokeWidth: 1 }}
                   name={category.label}
-                  radius={[3, 3, 0, 0]}
-                  stackId="categories"
+                  stroke={category.color}
+                  strokeWidth={2}
                 />
               ))}
-            </BarChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </TrendPanel>
       </div>
@@ -255,9 +265,9 @@ export function ExpenseTrendAnalysis({
                   <stop offset="100%" stopColor="#ef4444" stopOpacity={0.18} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
+              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.55} vertical={false} />
               <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
-              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickFormatter={(value) => `${value}%`} tickLine={false} width={44} />
+              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickFormatter={formatSignedThousandsAxis} tickLine={false} width={54} />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
               <Bar dataKey="monthChange" name="Vs Previous Month" radius={[6, 6, 0, 0]}>
                 {chartData.map((month) => (
@@ -266,6 +276,7 @@ export function ExpenseTrendAnalysis({
                     fill={`url(#${gradientPrefix}-${month.monthChange >= 0 ? 'positive' : 'negative'}-change)`}
                   />
                 ))}
+                <LabelList content={<MonthChangeLabel />} dataKey="monthChange" />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
@@ -333,8 +344,8 @@ export function ExpenseTrendAnalysis({
                 <tr key={month.month.key} className="border-b border-slate-300/35 last:border-b-0">
                   <td className="px-2 py-2 font-semibold text-slate-800">{month.month.label}</td>
                   <td className="px-2 py-2 text-right font-bold text-slate-950">{currency(month.totalExpenses)} CHF</td>
-                  <td className={`px-2 py-2 text-right font-bold ${getTrendTextClass(month.monthChangePercent ?? 0)}`}>
-                    {month.monthChangePercent === null ? '-' : formatPercent(month.monthChangePercent, 100)}
+                  <td className={`px-2 py-2 text-right font-bold ${getTrendTextClass(month.monthChangeAmount ?? 0)}`}>
+                    {month.monthChangeAmount === null ? '-' : formatSignedCurrency(month.monthChangeAmount)}
                   </td>
                   <td className="px-2 py-2 text-right font-semibold text-slate-700">{currency(month.averageDailyExpense)} CHF</td>
                   <td className="px-2 py-2 font-semibold text-slate-700">{month.highestCategory?.label ?? '-'}</td>
@@ -436,14 +447,50 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
         return (
           <p key={`${item.name}-${item.color}`} className="text-slate-700">
-            <span className="font-bold" style={{ color: labelColor }}>
-              {item.name}:
-            </span>{' '}
-            {item.name?.includes('Previous Month') ? formatPercent(item.value ?? 0, 100) : `${currency(item.value ?? 0)} CHF`}
-          </p>
-        );
-      })}
+          <span className="font-bold" style={{ color: labelColor }}>
+            {item.name}:
+          </span>{' '}
+          {item.name?.includes('Previous Month') ? formatSignedCurrency(item.value ?? 0) : `${currency(item.value ?? 0)} CHF`}
+        </p>
+      );
+    })}
     </div>
+  );
+}
+
+function MonthChangeLabel({
+  height,
+  value,
+  width,
+  x,
+  y,
+}: {
+  height?: number | string;
+  value?: number | string;
+  width?: number | string;
+  x?: number | string;
+  y?: number | string;
+}) {
+  const numericValue = Number(value ?? 0);
+
+  if (!Number.isFinite(numericValue) || numericValue === 0) {
+    return null;
+  }
+
+  const labelX = Number(x ?? 0) + Number(width ?? 0) / 2;
+  const labelY = numericValue > 0 ? Number(y ?? 0) - 8 : Number(y ?? 0) + Number(height ?? 0) + 16;
+
+  return (
+    <text
+      fill={numericValue > 0 ? '#059669' : '#ef4444'}
+      fontSize={12}
+      fontWeight={700}
+      textAnchor="middle"
+      x={labelX}
+      y={labelY}
+    >
+      {formatSignedCurrency(numericValue)}
+    </text>
   );
 }
 
@@ -465,7 +512,7 @@ function buildExpenseTrendMonths(
     const previousCategories =
       previousMonth.key === endMonth.key && currentCategories ? currentCategories : readExpenses(previousMonth.key);
     const previousTotal = getCategoryTotal(previousCategories);
-    const monthChangePercent = previousTotal > 0 ? getPercent(totalExpenses - previousTotal, previousTotal) : null;
+    const monthChangeAmount = previousTotal > 0 ? totalExpenses - previousTotal : null;
     const highestCategory = [...categories].sort((first, second) => second.value - first.value)[0] ?? null;
 
     return {
@@ -473,7 +520,7 @@ function buildExpenseTrendMonths(
       categories,
       totalExpenses,
       averageDailyExpense: totalExpenses / getDaysInExpenseMonth(month),
-      monthChangePercent,
+      monthChangeAmount,
       highestCategory,
     };
   });
@@ -558,6 +605,27 @@ function formatThousandsAxis(value: number) {
   return value >= 1000 ? `${Math.round(value / 1000)}K` : `${value}`;
 }
 
+function formatSignedThousandsAxis(value: number) {
+  const absoluteValue = Math.abs(value);
+  const formattedValue = absoluteValue >= 1000 ? `${Math.round(absoluteValue / 1000)}K` : `${absoluteValue}`;
+
+  if (value > 0) {
+    return `+${formattedValue}`;
+  }
+
+  if (value < 0) {
+    return `-${formattedValue}`;
+  }
+
+  return '0';
+}
+
+function formatSignedCurrency(value: number) {
+  const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+
+  return `${sign}${currency(Math.abs(value))}`;
+}
+
 function buildThousandsTicks(values: number[]) {
   const maxValue = Math.max(...values, 0);
   const step = Math.max(1000, Math.ceil(maxValue / 4 / 1000) * 1000);
@@ -568,6 +636,14 @@ function buildThousandsTicks(values: number[]) {
 function buildDailyExpenseTicks(values: number[]) {
   const maxValue = Math.max(...values, 0);
   const axisMax = Math.max(100, Math.ceil((maxValue * 2.25) / 50) * 50);
+  const step = axisMax / 4;
+
+  return Array.from({ length: 5 }, (_, index) => index * step);
+}
+
+function buildPaddedValueTicks(values: number[]) {
+  const maxValue = Math.max(...values, 0);
+  const axisMax = Math.max(1000, Math.ceil((maxValue * 1.25) / 500) * 500);
   const step = axisMax / 4;
 
   return Array.from({ length: 5 }, (_, index) => index * step);
