@@ -15,6 +15,12 @@ export function useEditableNumber(value: number, onChange: (value: number) => vo
   }, [format, value]);
 
   function handleChange(rawValue: string) {
+    if (format === 'money' && rawValue === '') {
+      setDraftValue('');
+      onChange(0);
+      return;
+    }
+
     const nextValue = parseEditableNumber(rawValue, format);
     setDraftValue(format === 'money' && Number.isFinite(nextValue) ? formatEditableNumber(nextValue, format) : rawValue);
 
