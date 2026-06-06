@@ -448,7 +448,7 @@ function TrendMetricCard({
   return (
     <section className="glass-panel flex h-full flex-col p-5">
       <div className="flex items-start gap-4">
-        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-lg ${iconClassName}`}>
+        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-3xl ${iconClassName}`}>
           <Icon className="h-7 w-7" />
         </div>
         <div className="min-w-0">

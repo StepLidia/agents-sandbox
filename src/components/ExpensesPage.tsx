@@ -223,6 +223,26 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
                 <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
                 <CategoryLegend categories={categories} />
               </div>
+              <div className="mt-auto flex justify-end pt-3">
+                <span className="group relative">
+                  <button
+                    className={buttonClasses({ className: 'animate-pulse shadow-blue-500/20', size: 'icon' })}
+                    aria-describedby="distribution-trend-tooltip"
+                    aria-label="View expenses trend"
+                    type="button"
+                    onClick={() => setIsTrendVisible(true)}
+                  >
+                    <ChartLine className="h-4 w-4" />
+                  </button>
+                  <span
+                    id="distribution-trend-tooltip"
+                    role="tooltip"
+                    className={hoverTooltipClasses('bottom-12 right-0 w-max whitespace-nowrap px-3 py-2')}
+                  >
+                    View expenses trend
+                  </span>
+                </span>
+              </div>
             </section>
 
             <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
@@ -424,7 +444,7 @@ function MetricCard({
   return (
     <section className="glass-panel p-5">
       <div className="flex items-start gap-4">
-        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-lg ${iconClassName}`}>
+        <div className={`grid h-14 w-14 shrink-0 place-items-center rounded-3xl ${iconClassName}`}>
           <Icon className="h-7 w-7" />
         </div>
         <div className="min-w-0">
