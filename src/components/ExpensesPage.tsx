@@ -21,12 +21,14 @@ import { buttonClasses } from '../constants/buttonStyles';
 import { tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
+import { ExpenseTrendAnalysis } from './ExpenseTrendAnalysis';
 import { InsightValue } from './InsightValue';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
+const TREND_MONTH_COUNT = 6;
 
-type ExpenseCategory = {
+export type ExpenseCategory = {
   id: string;
   label: string;
   value: number;
@@ -34,7 +36,7 @@ type ExpenseCategory = {
   kind: 'essential' | 'lifestyle';
 };
 
-type ExpenseMonth = {
+export type ExpenseMonth = {
   key: string;
   label: string;
   shortLabel: string;
@@ -75,6 +77,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
   const shouldSkipNextSave = useRef(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>(() => readSavedExpenses(expenseMonth.key));
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
+  const [isTrendVisible, setIsTrendVisible] = useState(false);
   const totalExpenses = useMemo(() => categories.reduce((sum, category) => sum + category.value, 0), [categories]);
   const essentialExpenses = useMemo(
     () => categories.filter(({ kind }) => kind === 'essential').reduce((sum, category) => sum + category.value, 0),
@@ -156,100 +159,122 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
   return (
     <>
-      <ExpensesHeader expenseMonth={expenseMonth} onMonthChange={selectExpenseMonth} onResetMonth={resetCurrentMonth} />
-      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={WalletCards}
-          iconClassName="bg-blue-600/10 text-blue-600"
-          title="Total Monthly Expenses"
-          amount={totalExpenses}
-          helper={`${formatPercent(totalExpenses, monthlyIncome)} of net income`}
-          helperClassName="text-blue-600"
-          {...totalExpensesTrend}
+      <ExpensesHeader
+        expenseMonth={expenseMonth}
+        isTrendVisible={isTrendVisible}
+        onMonthChange={selectExpenseMonth}
+        onResetMonth={resetCurrentMonth}
+        onToggleTrend={() => setIsTrendVisible((isVisible) => !isVisible)}
+      />
+      {isTrendVisible && (
+        <ExpenseTrendAnalysis
+          currentCategories={categories}
+          expenseMonth={expenseMonth}
+          monthCount={TREND_MONTH_COUNT}
+          readExpenses={readSavedExpenses}
         />
-        <MetricCard
-          icon={Home}
-          iconClassName="bg-emerald-500/12 text-emerald-600"
-          title="Essential Expenses"
-          amount={essentialExpenses}
-          helper={`${formatPercent(essentialExpenses, totalExpenses)} of total expenses`}
-          helperClassName="text-emerald-600"
-          {...essentialExpensesTrend}
-        />
-        <MetricCard
-          icon={Star}
-          iconClassName="bg-amber-500/12 text-amber-500"
-          title="Lifestyle Expenses"
-          amount={lifestyleExpenses}
-          helper={`${formatPercent(lifestyleExpenses, totalExpenses)} of total expenses`}
-          helperClassName="text-amber-500"
-          {...lifestyleExpensesTrend}
-        />
-        <MetricCard
-          icon={TrendingUp}
-          iconClassName="bg-violet-500/12 text-violet-600"
-          title="Monthly Savings Potential"
-          amount={savingsPotential}
-          helper={`${formatPercent(savingsPotential, monthlyIncome)} of net income`}
-          helperClassName="text-violet-600"
-          {...savingsPotentialTrend}
-        />
-      </div>
-
-      <div className="mt-3 grid gap-3 xl:grid-cols-2">
-        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
-          <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
-          <div className="mt-3 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,14rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(12rem,18rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(16rem,20rem)_minmax(9rem,20rem)] md:gap-10">
-            <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
-            <CategoryLegend categories={categories} />
+      )}
+      {!isTrendVisible && (
+        <>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              icon={WalletCards}
+              iconClassName="bg-blue-600/10 text-blue-600"
+              title="Total Monthly Expenses"
+              amount={totalExpenses}
+              helper={`${formatPercent(totalExpenses, monthlyIncome)} of net income`}
+              helperClassName="text-blue-600"
+              {...totalExpensesTrend}
+            />
+            <MetricCard
+              icon={Home}
+              iconClassName="bg-emerald-500/12 text-emerald-600"
+              title="Essential Expenses"
+              amount={essentialExpenses}
+              helper={`${formatPercent(essentialExpenses, totalExpenses)} of total expenses`}
+              helperClassName="text-emerald-600"
+              {...essentialExpensesTrend}
+            />
+            <MetricCard
+              icon={Star}
+              iconClassName="bg-amber-500/12 text-amber-500"
+              title="Lifestyle Expenses"
+              amount={lifestyleExpenses}
+              helper={`${formatPercent(lifestyleExpenses, totalExpenses)} of total expenses`}
+              helperClassName="text-amber-500"
+              {...lifestyleExpensesTrend}
+            />
+            <MetricCard
+              icon={TrendingUp}
+              iconClassName="bg-violet-500/12 text-violet-600"
+              title="Monthly Savings Potential"
+              amount={savingsPotential}
+              helper={`${formatPercent(savingsPotential, monthlyIncome)} of net income`}
+              helperClassName="text-violet-600"
+              {...savingsPotentialTrend}
+            />
           </div>
-        </section>
 
-        <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
-          <h2 className="text-sm font-bold text-slate-950">Category Breakdown</h2>
-          <div className="mt-3 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-2">
-            {categories.map((category) => (
-              <ExpenseBreakdownRow
-                key={category.id}
-                category={category}
-                percent={getPercent(category.value, totalExpenses)}
-                totalExpenses={totalExpenses}
-                onChange={updateCategory}
-                onDelete={deleteCategory}
+          <div className="mt-3 grid gap-3 xl:grid-cols-2">
+            <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
+              <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
+              <div className="mt-3 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,14rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(12rem,18rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(16rem,20rem)_minmax(9rem,20rem)] md:gap-10">
+                <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
+                <CategoryLegend categories={categories} />
+              </div>
+            </section>
+
+            <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
+              <h2 className="text-sm font-bold text-slate-950">Category Breakdown</h2>
+              <div className="mt-3 min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-2">
+                {categories.map((category) => (
+                  <ExpenseBreakdownRow
+                    key={category.id}
+                    category={category}
+                    percent={getPercent(category.value, totalExpenses)}
+                    totalExpenses={totalExpenses}
+                    onChange={updateCategory}
+                    onDelete={deleteCategory}
+                  />
+                ))}
+              </div>
+              <AddCategoryRow
+                draftCategory={draftCategory}
+                onAdd={addCategory}
+                onNameChange={(name) => setDraftCategory((draft) => (draft ? { ...draft, name } : draft))}
+                onSave={saveDraftCategory}
+                onValueChange={(value) => setDraftCategory((draft) => (draft ? { ...draft, value } : draft))}
               />
-            ))}
+              <div className="mt-3 flex items-center justify-between pt-3 text-sm font-bold">
+                <span>Total Expenses</span>
+                <span>{currency(totalExpenses)} CHF</span>
+              </div>
+            </section>
           </div>
-          <AddCategoryRow
-            draftCategory={draftCategory}
-            onAdd={addCategory}
-            onNameChange={(name) => setDraftCategory((draft) => (draft ? { ...draft, name } : draft))}
-            onSave={saveDraftCategory}
-            onValueChange={(value) => setDraftCategory((draft) => (draft ? { ...draft, value } : draft))}
-          />
-          <div className="mt-3 flex items-center justify-between pt-3 text-sm font-bold">
-            <span>Total Expenses</span>
-            <span>{currency(totalExpenses)} CHF</span>
-          </div>
-        </section>
-      </div>
 
-      <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-3">
-        <IncomeVsExpenses monthlyIncome={monthlyIncome} totalExpenses={totalExpenses} savingsPotential={savingsPotential} />
-        <TopCostDrivers drivers={topDrivers} totalExpenses={totalExpenses} />
-        <ExpenseInsights categories={categories} totalExpenses={totalExpenses} savingsPotential={savingsPotential} monthlyIncome={monthlyIncome} />
-      </div>
+          <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-3">
+            <IncomeVsExpenses monthlyIncome={monthlyIncome} totalExpenses={totalExpenses} savingsPotential={savingsPotential} />
+            <TopCostDrivers drivers={topDrivers} totalExpenses={totalExpenses} />
+            <ExpenseInsights categories={categories} totalExpenses={totalExpenses} savingsPotential={savingsPotential} monthlyIncome={monthlyIncome} />
+          </div>
+        </>
+      )}
     </>
   );
 }
 
 function ExpensesHeader({
   expenseMonth,
+  isTrendVisible,
   onMonthChange,
   onResetMonth,
+  onToggleTrend,
 }: {
   expenseMonth: ExpenseMonth;
+  isTrendVisible: boolean;
   onMonthChange: (month: ExpenseMonth) => void;
   onResetMonth: () => void;
+  onToggleTrend: () => void;
 }) {
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
 
@@ -282,7 +307,13 @@ function ExpensesHeader({
             />
           )}
         </div>
-        <button className={buttonClasses({ size: 'icon' })} aria-label="View expense trend" type="button">
+        <button
+          className={buttonClasses({ className: isTrendVisible ? 'bg-blue-100/90 text-blue-700 shadow-inner' : '', size: 'icon' })}
+          aria-label="View expense trend"
+          aria-pressed={isTrendVisible}
+          type="button"
+          onClick={onToggleTrend}
+        >
           <ChartLine className="h-4 w-4" />
         </button>
         <span className="group relative">

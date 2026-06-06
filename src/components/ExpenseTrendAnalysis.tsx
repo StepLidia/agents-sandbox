@@ -1,0 +1,467 @@
+import { useId, useMemo, type ReactNode } from 'react';
+import { ArrowDown, ArrowUp, ChartLine, TrendingUp, Wallet, WalletCards, type LucideIcon } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Line,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { formatPercent, getPercent } from '../calculations/percent';
+import { tooltipContentClasses } from '../constants/tooltipStyles';
+import { currency } from '../finance';
+import type { ExpenseCategory, ExpenseMonth } from './ExpensesPage';
+
+type ExpenseTrendAnalysisProps = {
+  currentCategories: ExpenseCategory[];
+  expenseMonth: ExpenseMonth;
+  monthCount: number;
+  readExpenses: (monthKey: string) => ExpenseCategory[];
+};
+
+type MetricTrend = {
+  trend: string;
+  trendDirection: 'up' | 'down';
+  trendTone: 'good' | 'bad';
+};
+
+type ExpenseTrendMonth = {
+  month: ExpenseMonth;
+  categories: ExpenseCategory[];
+  totalExpenses: number;
+  averageDailyExpense: number;
+  monthChangePercent: number | null;
+  highestCategory: ExpenseCategory | null;
+};
+
+type CategoryTrendSummary = {
+  id: string;
+  label: string;
+  color: string;
+  total: number;
+};
+
+export function ExpenseTrendAnalysis({
+  currentCategories,
+  expenseMonth,
+  monthCount,
+  readExpenses,
+}: ExpenseTrendAnalysisProps) {
+  const gradientPrefix = useId().replaceAll(':', '');
+  const trendMonths = useMemo(
+    () => buildExpenseTrendMonths(expenseMonth, monthCount, readExpenses, currentCategories),
+    [currentCategories, expenseMonth, monthCount, readExpenses],
+  );
+  const previousTrendMonths = useMemo(
+    () => buildExpenseTrendMonths(getPreviousExpenseMonth(trendMonths[0].month), monthCount, readExpenses),
+    [monthCount, readExpenses, trendMonths],
+  );
+  const totalExpenses = trendMonths.reduce((sum, month) => sum + month.totalExpenses, 0);
+  const averageMonthlyExpenses = totalExpenses / Math.max(trendMonths.length, 1);
+  const averageDailyExpense =
+    trendMonths.reduce((sum, month) => sum + month.averageDailyExpense, 0) / Math.max(trendMonths.length, 1);
+  const highestMonth = trendMonths.reduce((highest, month) => (month.totalExpenses > highest.totalExpenses ? month : highest), trendMonths[0]);
+  const lowestMonth = trendMonths.reduce((lowest, month) => (month.totalExpenses < lowest.totalExpenses ? month : lowest), trendMonths[0]);
+  const categorySummaries = getTopCategorySummaries(trendMonths, 5);
+  const previousAverage =
+    previousTrendMonths.reduce((sum, month) => sum + month.totalExpenses, 0) / Math.max(previousTrendMonths.length, 1);
+  const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
+  const chartData = trendMonths.map((month) => ({
+    name: month.month.shortLabel,
+    averageDailyExpense: Math.round(month.averageDailyExpense),
+    monthChange: month.monthChangePercent ?? 0,
+    totalExpenses: month.totalExpenses,
+    ...Object.fromEntries(
+      categorySummaries.map((category) => [
+        category.id,
+        month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0,
+      ]),
+    ),
+  }));
+
+  return (
+    <section className="mt-5 space-y-3">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <TrendMetricCard
+          icon={WalletCards}
+          iconClassName="bg-blue-600/10 text-blue-600"
+          title="Average Monthly Expenses"
+          amount={averageMonthlyExpenses}
+          helper={`vs previous ${monthCount} months`}
+          trend={averageTrend}
+        />
+        <TrendMetricCard
+          icon={TrendingUp}
+          iconClassName="bg-emerald-500/12 text-emerald-600"
+          title={`Total Expenses (${monthCount} Months)`}
+          amount={totalExpenses}
+          helper={`${trendMonths[0].month.shortLabel} - ${trendMonths.at(-1)?.month.shortLabel}`}
+        />
+        <TrendMetricCard
+          icon={ChartLine}
+          iconClassName="bg-amber-500/12 text-amber-500"
+          title="Highest Month"
+          amount={highestMonth.totalExpenses}
+          helper={highestMonth.month.label}
+        />
+        <TrendMetricCard
+          icon={ArrowDown}
+          iconClassName="bg-violet-500/12 text-violet-600"
+          title="Lowest Month"
+          amount={lowestMonth.totalExpenses}
+          helper={lowestMonth.month.label}
+        />
+        <TrendMetricCard
+          icon={Wallet}
+          iconClassName="bg-cyan-500/12 text-cyan-600"
+          title="Average Daily Expense"
+          amount={averageDailyExpense}
+          helper={`Across last ${monthCount} months`}
+        />
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-2">
+        <TrendPanel title="Expenses Over Time">
+          <ResponsiveContainer width="100%" height={260}>
+            <ComposedChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
+              <defs>
+                <linearGradient id={`${gradientPrefix}-total-expenses`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#2563eb" stopOpacity={0.82} />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity={0.18} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
+              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} width={46} />
+              <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
+              <Bar dataKey="totalExpenses" fill={`url(#${gradientPrefix}-total-expenses)`} name="Total Expenses" radius={[6, 6, 0, 0]} />
+              <Line dataKey="averageDailyExpense" dot={{ r: 4 }} name="Average Daily Expense" stroke="#0f766e" strokeWidth={2} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </TrendPanel>
+
+        <TrendPanel title="Top Categories Over Time">
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={chartData} margin={{ left: -10, right: 12, top: 12 }}>
+              <defs>
+                {categorySummaries.map((category) => (
+                  <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-bar`} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor={category.color} stopOpacity={0.86} />
+                    <stop offset="100%" stopColor={category.color} stopOpacity={0.2} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
+              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} width={46} />
+              <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
+              {categorySummaries.map((category) => (
+                <Bar
+                  key={category.id}
+                  dataKey={category.id}
+                  fill={`url(#${gradientPrefix}-${category.id}-bar)`}
+                  name={category.label}
+                  radius={[3, 3, 0, 0]}
+                  stackId="categories"
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </TrendPanel>
+      </div>
+
+      <div className="grid gap-3 xl:grid-cols-[1fr_1.35fr]">
+        <TrendPanel title="Month Over Month Change">
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={chartData} margin={{ left: -12, right: 12, top: 12 }}>
+              <defs>
+                <linearGradient id={`${gradientPrefix}-positive-change`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.84} />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0.18} />
+                </linearGradient>
+                <linearGradient id={`${gradientPrefix}-negative-change`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.84} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.18} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#cbd5e1" strokeOpacity={0.55} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: '#334155', fontSize: 12 }} tickLine={false} />
+              <YAxis tick={{ fill: '#334155', fontSize: 12 }} tickFormatter={(value) => `${value}%`} tickLine={false} width={44} />
+              <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
+              <Bar dataKey="monthChange" name="Vs Previous Month" radius={[6, 6, 0, 0]}>
+                {chartData.map((month) => (
+                  <Cell
+                    key={month.name}
+                    fill={`url(#${gradientPrefix}-${month.monthChange >= 0 ? 'positive' : 'negative'}-change)`}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </TrendPanel>
+
+        <TrendPanel title="Top Categories by Total Spend">
+          <div className="grid items-center gap-4 md:grid-cols-[13rem_1fr]">
+            <div className="relative h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <defs>
+                    {categorySummaries.map((category) => (
+                      <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-pie`} x1="0" x2="1" y1="0" y2="1">
+                        <stop offset="0%" stopColor={category.color} stopOpacity={0.38} />
+                        <stop offset="100%" stopColor={category.color} stopOpacity={0.96} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <Pie data={categorySummaries} dataKey="total" innerRadius="56%" outerRadius="86%" paddingAngle={1}>
+                    {categorySummaries.map((category) => (
+                      <Cell key={category.id} fill={`url(#${gradientPrefix}-${category.id}-pie)`} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<TrendTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
+                <p className="text-lg font-bold text-slate-950">
+                  {currency(totalExpenses)}
+                  <span className="block text-sm">CHF</span>
+                </p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {categorySummaries.map((category) => (
+                <div key={category.id} className="grid grid-cols-[1fr_6rem_4rem] items-center gap-3 text-sm">
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
+                    <span className="truncate font-semibold text-slate-700">{category.label}</span>
+                  </span>
+                  <span className="text-right font-bold text-slate-950">{currency(category.total)} CHF</span>
+                  <span className="text-right font-semibold text-slate-600">{formatPercent(category.total, totalExpenses)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TrendPanel>
+      </div>
+
+      <TrendPanel title="Monthly Summary">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="text-slate-600">
+              <tr className="border-b border-slate-300/50">
+                <th className="px-2 py-2 font-bold">Month</th>
+                <th className="px-2 py-2 text-right font-bold">Total Expenses</th>
+                <th className="px-2 py-2 text-right font-bold">Vs Previous Month</th>
+                <th className="px-2 py-2 text-right font-bold">Average Daily</th>
+                <th className="px-2 py-2 font-bold">Highest Category</th>
+                <th className="px-2 py-2 text-right font-bold">Category Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trendMonths.map((month) => (
+                <tr key={month.month.key} className="border-b border-slate-300/35 last:border-b-0">
+                  <td className="px-2 py-2 font-semibold text-slate-800">{month.month.label}</td>
+                  <td className="px-2 py-2 text-right font-bold text-slate-950">{currency(month.totalExpenses)} CHF</td>
+                  <td className={`px-2 py-2 text-right font-bold ${getTrendTextClass(month.monthChangePercent ?? 0)}`}>
+                    {month.monthChangePercent === null ? '-' : formatPercent(month.monthChangePercent, 100)}
+                  </td>
+                  <td className="px-2 py-2 text-right font-semibold text-slate-700">{currency(month.averageDailyExpense)} CHF</td>
+                  <td className="px-2 py-2 font-semibold text-slate-700">{month.highestCategory?.label ?? '-'}</td>
+                  <td className="px-2 py-2 text-right font-bold text-slate-950">
+                    {currency(month.highestCategory?.value ?? 0)} CHF
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </TrendPanel>
+    </section>
+  );
+}
+
+function TrendMetricCard({
+  icon: Icon,
+  iconClassName,
+  title,
+  amount,
+  helper,
+  trend,
+}: {
+  icon: LucideIcon;
+  iconClassName: string;
+  title: string;
+  amount: number;
+  helper: string;
+  trend?: MetricTrend;
+}) {
+  const TrendIcon = trend?.trendDirection === 'up' ? ArrowUp : ArrowDown;
+
+  return (
+    <section className="glass-panel p-5">
+      <div className="flex items-start gap-4">
+        <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-lg ${iconClassName}`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold leading-5 text-slate-950">{title}</h2>
+          <p className="mt-3 text-3xl font-bold tracking-normal text-slate-950">
+            {currency(amount)} <span className="text-sm font-bold">CHF</span>
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+            <span className="text-slate-600">{helper}</span>
+            {trend && (
+              <span className={`flex items-center gap-1 font-bold ${trend.trendTone === 'good' ? 'text-emerald-600' : 'text-red-500'}`}>
+                <TrendIcon className="h-4 w-4" />
+                {trend.trend}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrendPanel({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <section className="glass-panel min-w-0 p-4">
+      <h2 className="text-sm font-bold text-slate-950">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
+function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string }>; label?: string }) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  return (
+    <div className={tooltipContentClasses('px-3 py-2')}>
+      {label && <p className="mb-1 font-bold text-slate-950">{label}</p>}
+      {payload.map((item) => (
+        <p key={`${item.name}-${item.color}`} className="text-slate-700">
+          <span className="font-bold" style={{ color: item.color }}>
+            {item.name}:
+          </span>{' '}
+          {item.name?.includes('Previous Month') ? formatPercent(item.value ?? 0, 100) : `${currency(item.value ?? 0)} CHF`}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function buildExpenseTrendMonths(
+  endMonth: ExpenseMonth,
+  monthCount: number,
+  readExpenses: (monthKey: string) => ExpenseCategory[],
+  currentCategories?: ExpenseCategory[],
+): ExpenseTrendMonth[] {
+  const [endYear, endMonthNumber] = endMonth.key.split('-').map(Number);
+  const months = Array.from({ length: monthCount }, (_, index) =>
+    buildExpenseMonth(endYear, endMonthNumber - monthCount + index),
+  );
+
+  return months.map((month, index) => {
+    const categories = month.key === endMonth.key && currentCategories ? currentCategories : readExpenses(month.key);
+    const totalExpenses = getCategoryTotal(categories);
+    const previousMonth = index === 0 ? getPreviousExpenseMonth(month) : months[index - 1];
+    const previousCategories =
+      previousMonth.key === endMonth.key && currentCategories ? currentCategories : readExpenses(previousMonth.key);
+    const previousTotal = getCategoryTotal(previousCategories);
+    const monthChangePercent = previousTotal > 0 ? getPercent(totalExpenses - previousTotal, previousTotal) : null;
+    const highestCategory = [...categories].sort((first, second) => second.value - first.value)[0] ?? null;
+
+    return {
+      month,
+      categories,
+      totalExpenses,
+      averageDailyExpense: totalExpenses / getDaysInExpenseMonth(month),
+      monthChangePercent,
+      highestCategory,
+    };
+  });
+}
+
+function getTopCategorySummaries(trendMonths: ExpenseTrendMonth[], maxCategories: number): CategoryTrendSummary[] {
+  const categoryTotals = new Map<string, CategoryTrendSummary>();
+
+  for (const month of trendMonths) {
+    for (const category of month.categories) {
+      const existingCategory = categoryTotals.get(category.id);
+
+      categoryTotals.set(category.id, {
+        id: category.id,
+        label: category.label,
+        color: category.color,
+        total: (existingCategory?.total ?? 0) + category.value,
+      });
+    }
+  }
+
+  return [...categoryTotals.values()].sort((first, second) => second.total - first.total).slice(0, maxCategories);
+}
+
+function buildMetricTrend(currentValue: number, previousValue: number, betterWhen: 'higher' | 'lower'): MetricTrend {
+  const difference = currentValue - previousValue;
+  const percentChange = previousValue === 0 ? (currentValue === 0 ? 0 : 100) : getPercent(Math.abs(difference), previousValue);
+  const trendDirection = difference >= 0 ? 'up' : 'down';
+  const isGood = betterWhen === 'higher' ? difference >= 0 : difference <= 0;
+
+  return {
+    trend: formatPercent(percentChange, 100),
+    trendDirection,
+    trendTone: isGood ? 'good' : 'bad',
+  };
+}
+
+function buildExpenseMonth(year: number, monthIndex: number): ExpenseMonth {
+  const date = new Date(year, monthIndex, 1);
+
+  return {
+    key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+    label: date.toLocaleDateString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    }),
+    shortLabel: date.toLocaleDateString('en-US', {
+      month: 'short',
+    }),
+  };
+}
+
+function getPreviousExpenseMonth(expenseMonth: ExpenseMonth) {
+  const [year, month] = expenseMonth.key.split('-').map(Number);
+
+  return buildExpenseMonth(year, month - 2);
+}
+
+function getCategoryTotal(categories: ExpenseCategory[]) {
+  return categories.reduce((sum, category) => sum + category.value, 0);
+}
+
+function getDaysInExpenseMonth(expenseMonth: ExpenseMonth) {
+  const [year, month] = expenseMonth.key.split('-').map(Number);
+
+  return new Date(year, month, 0).getDate();
+}
+
+function getTrendTextClass(value: number) {
+  if (value > 0) {
+    return 'text-red-500';
+  }
+
+  if (value < 0) {
+    return 'text-emerald-600';
+  }
+
+  return 'text-slate-600';
+}
