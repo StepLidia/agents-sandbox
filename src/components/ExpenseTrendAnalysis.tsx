@@ -90,6 +90,12 @@ export function ExpenseTrendAnalysis({
     totalExpenses: month.totalExpenses,
     ...Object.fromEntries(
       categorySummaries.map((category) => [
+        `${category.id}Share`,
+        getPercent(month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0, month.totalExpenses),
+      ]),
+    ),
+    ...Object.fromEntries(
+      categorySummaries.map((category) => [
         category.id,
         month.categories.find((monthCategory) => monthCategory.id === category.id)?.value ?? 0,
       ]),
@@ -253,7 +259,7 @@ export function ExpenseTrendAnalysis({
         </TrendPanel>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[1fr_1.35fr]">
+      <div className="grid gap-3 xl:grid-cols-3">
         <TrendPanel title="Month Over Month Change">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={chartData} margin={{ left: -12, right: 12, top: 16 }}>
@@ -293,6 +299,49 @@ export function ExpenseTrendAnalysis({
                 ))}
                 <LabelList content={<MonthChangeLabel />} dataKey="monthChange" />
               </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </TrendPanel>
+
+        <TrendPanel title="Category Share Over Time (%)">
+          <ChartLegend items={categorySummaries.map((category) => ({ label: category.label, color: category.color }))} />
+          <ResponsiveContainer width="100%" height={230}>
+            <BarChart data={chartData} margin={{ left: -12, right: 12, top: 12 }}>
+              <defs>
+                {categorySummaries.map((category) => (
+                  <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-share`} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor={category.color} stopOpacity={0.86} />
+                    <stop offset="100%" stopColor={category.color} stopOpacity={0.22} />
+                  </linearGradient>
+                ))}
+              </defs>
+              <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
+              <XAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                dataKey="name"
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+                domain={[0, 100]}
+                tick={{ fill: '#334155', fontSize: 12 }}
+                tickFormatter={(value) => `${value}%`}
+                tickLine={false}
+                ticks={[0, 25, 50, 75, 100]}
+                width={42}
+              />
+              <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
+              {categorySummaries.map((category) => (
+                <Bar
+                  key={category.id}
+                  dataKey={`${category.id}Share`}
+                  fill={`url(#${gradientPrefix}-${category.id}-share)`}
+                  name={category.label}
+                  radius={[3, 3, 0, 0]}
+                  stackId="share"
+                />
+              ))}
             </BarChart>
           </ResponsiveContainer>
         </TrendPanel>
@@ -449,7 +498,15 @@ function ChartLegend({ items }: { items: Array<{ color: string; label: string; l
   );
 }
 
-function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string }>; label?: string }) {
+function TrendTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ color?: string; dataKey?: string | number; name?: string; value?: number }>;
+  label?: string;
+}) {
   if (!active || !payload?.length) {
     return null;
   }
@@ -465,12 +522,24 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
             <span className="font-medium" style={{ color: labelColor }}>
               {item.name}:
             </span>{' '}
-            {item.name?.includes('previous month') ? formatSignedCurrency(item.value ?? 0) : `${currency(item.value ?? 0)} CHF`}
+            {formatTooltipValue(item.name, item.value ?? 0, item.dataKey)}
           </p>
         );
       })}
     </div>
   );
+}
+
+function formatTooltipValue(name: string | undefined, value: number, dataKey: string | number | undefined) {
+  if (name?.includes('previous month')) {
+    return formatSignedCurrency(value);
+  }
+
+  if (String(dataKey).endsWith('Share')) {
+    return formatPercent(value, 100);
+  }
+
+  return `${currency(value)} CHF`;
 }
 
 function MonthChangeLabel({
