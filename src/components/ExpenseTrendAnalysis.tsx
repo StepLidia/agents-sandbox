@@ -474,13 +474,11 @@ function TrendTooltip({ active, payload, label }: { active?: boolean; payload?: 
 }
 
 function MonthChangeLabel({
-  height,
   value,
   width,
   x,
   y,
 }: {
-  height?: number | string;
   value?: number | string;
   width?: number | string;
   x?: number | string;
@@ -493,7 +491,7 @@ function MonthChangeLabel({
   }
 
   const labelX = Number(x ?? 0) + Number(width ?? 0) / 2;
-  const labelY = numericValue > 0 ? Number(y ?? 0) - 8 : Number(y ?? 0) + Number(height ?? 0) + 28;
+  const labelY = numericValue > 0 ? Number(y ?? 0) - 8 : Number(y ?? 0) + 18;
 
   return (
     <text
