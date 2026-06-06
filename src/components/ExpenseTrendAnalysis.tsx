@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
+  LabelList,
   Line,
   Pie,
   PieChart,
@@ -75,6 +76,7 @@ export function ExpenseTrendAnalysis({
     previousTrendMonths.reduce((sum, month) => sum + month.totalExpenses, 0) / Math.max(previousTrendMonths.length, 1);
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
   const expenseAxisTicks = buildThousandsTicks(trendMonths.map((month) => month.totalExpenses));
+  const dailyAxisTicks = buildDailyExpenseTicks(trendMonths.map((month) => month.averageDailyExpense));
   const chartData = trendMonths.map((month) => ({
     name: month.month.shortLabel,
     averageDailyExpense: Math.round(month.averageDailyExpense),
@@ -176,6 +178,7 @@ export function ExpenseTrendAnalysis({
                 orientation="right"
                 tick={{ fill: '#334155', fontSize: 12 }}
                 tickLine={false}
+                ticks={dailyAxisTicks}
                 width={36}
                 yAxisId="daily"
               />
@@ -186,7 +189,16 @@ export function ExpenseTrendAnalysis({
                 name="Total Expenses"
                 radius={[6, 6, 0, 0]}
                 yAxisId="total"
-              />
+              >
+                <LabelList
+                  dataKey="totalExpenses"
+                  fill="#0f172a"
+                  fontSize={12}
+                  fontWeight={700}
+                  formatter={(value) => currency(Number(value ?? 0))}
+                  position="top"
+                />
+              </Bar>
               <Line
                 dataKey="averageDailyExpense"
                 dot={{ fill: '#60a5fa', r: 4, stroke: '#2563eb', strokeWidth: 2 }}
@@ -549,6 +561,14 @@ function formatThousandsAxis(value: number) {
 function buildThousandsTicks(values: number[]) {
   const maxValue = Math.max(...values, 0);
   const step = Math.max(1000, Math.ceil(maxValue / 4 / 1000) * 1000);
+
+  return Array.from({ length: 5 }, (_, index) => index * step);
+}
+
+function buildDailyExpenseTicks(values: number[]) {
+  const maxValue = Math.max(...values, 0);
+  const axisMax = Math.max(100, Math.ceil((maxValue * 2.25) / 50) * 50);
+  const step = axisMax / 4;
 
   return Array.from({ length: 5 }, (_, index) => index * step);
 }
