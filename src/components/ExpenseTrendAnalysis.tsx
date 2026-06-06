@@ -81,6 +81,12 @@ export function ExpenseTrendAnalysis({
   const lowestMonth = trendMonths.reduce((lowest, month) => (month.totalExpenses < lowest.totalExpenses ? month : lowest), trendMonths[0]);
   const categorySummaries = getTopCategorySummaries(trendMonths, 5);
   const shareCategorySummaries = getShareCategorySummaries(trendMonths, categorySummaries);
+  const shareTooltipColors = Object.fromEntries(
+    shareCategorySummaries.flatMap((category) => [
+      [`${category.id}Share`, category.color],
+      [category.label, category.color],
+    ]),
+  );
   const previousAverage =
     previousTrendMonths.reduce((sum, month) => sum + month.totalExpenses, 0) / Math.max(previousTrendMonths.length, 1);
   const averageTrend = buildMetricTrend(averageMonthlyExpenses, previousAverage, 'lower');
@@ -316,6 +322,15 @@ export function ExpenseTrendAnalysis({
         <TrendPanel title="Category Share Over Time (%)">
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={chartData} margin={{ left: 4, right: 12, top: 12 }} barCategoryGap="24%">
+              <defs>
+                {shareCategorySummaries.map((category) => (
+                  <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-share`} x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stopColor={category.color} stopOpacity={0.82} />
+                    <stop offset="70%" stopColor={category.color} stopOpacity={0.82} />
+                    <stop offset="100%" stopColor={category.color} stopOpacity={0.48} />
+                  </linearGradient>
+                ))}
+              </defs>
               <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
               <XAxis
                 axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
@@ -332,13 +347,12 @@ export function ExpenseTrendAnalysis({
                 ticks={[0, 25, 50, 75, 100]}
                 width={48}
               />
-              <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
+              <Tooltip content={<TrendTooltip colorByTooltipKey={shareTooltipColors} />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
               {shareCategorySummaries.map((category) => (
                 <Bar
                   key={category.id}
                   dataKey={`${category.id}Share`}
-                  fill={category.color}
-                  fillOpacity={0.52}
+                  fill={`url(#${gradientPrefix}-${category.id}-share)`}
                   name={category.label}
                   stackId="share"
                   barSize={26}
@@ -535,10 +549,12 @@ function ChartLegend({ items }: { items: Array<{ color: string; label: string; l
 
 function TrendTooltip({
   active,
+  colorByTooltipKey = {},
   payload,
   label,
 }: {
   active?: boolean;
+  colorByTooltipKey?: Record<string, string>;
   payload?: Array<{ color?: string; dataKey?: string | number; name?: string; value?: number }>;
   label?: string;
 }) {
@@ -550,10 +566,13 @@ function TrendTooltip({
     <div className={tooltipContentClasses('px-3 py-2')}>
       {label && <p className="mb-1 font-semibold text-slate-950">{label}</p>}
       {payload.map((item) => {
-        const labelColor = item.name === 'Average Daily Expense' ? '#059669' : item.color;
+        const dataKey = String(item.dataKey ?? '');
+        const name = item.name ?? '';
+        const labelColor =
+          item.name === 'Average Daily Expense' ? '#059669' : colorByTooltipKey[dataKey] ?? colorByTooltipKey[name] ?? item.color;
 
         return (
-          <p key={`${item.name}-${item.color}`} className="text-slate-700">
+          <p key={`${item.name}-${dataKey}`} className="text-slate-700">
             <span className="font-medium" style={{ color: labelColor }}>
               {item.name}:
             </span>{' '}

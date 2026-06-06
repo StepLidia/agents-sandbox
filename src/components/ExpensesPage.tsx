@@ -598,7 +598,7 @@ function ExpenseBreakdownRow({
         <span className="text-right font-semibold text-slate-600">{formatPercent(percent, 100)}</span>
       </div>
       <div className="mt-0.5 h-px bg-slate-300/60">
-        <div className="h-px" style={{ width: barWidth, backgroundColor: category.color }} />
+        <div className="h-1 rounded-full opacity-80" style={{ width: barWidth, backgroundColor: category.color }} />
       </div>
     </div>
   );
