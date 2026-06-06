@@ -125,7 +125,7 @@ export function ExpenseTrendAnalysis({
           iconClassName="bg-emerald-500/12 text-emerald-600"
           title={`Total Expenses (${monthCount} Months)`}
           amount={totalExpenses}
-          helper={`${trendMonths[0].month.shortLabel} - ${trendMonths.at(-1)?.month.shortLabel}`}
+          helper={`${trendMonths[0].month.label} - ${trendMonths.at(-1)?.month.label}`}
         />
         <TrendMetricCard
           icon={ChartLine}
@@ -406,13 +406,13 @@ export function ExpenseTrendAnalysis({
               {trendMonths.map((month) => (
                 <tr key={month.month.key} className="border-b border-slate-300/35 last:border-b-0">
                   <td className="px-2 py-2 font-semibold text-slate-800">{month.month.label}</td>
-                  <td className="px-2 py-2 text-center font-bold text-slate-950">{currency(month.totalExpenses)} CHF</td>
+                  <td className="px-2 py-2 text-center font-semibold text-slate-950">{currency(month.totalExpenses)} CHF</td>
                   <td className={`px-2 py-2 text-center font-bold ${getTrendTextClass(month.monthChangeAmount ?? 0)}`}>
                     {month.monthChangeAmount === null ? '-' : formatSignedCurrency(month.monthChangeAmount)}
                   </td>
                   <td className="px-2 py-2 text-center font-semibold text-slate-700">{currency(month.averageDailyExpense)} CHF</td>
                   <td className="px-2 py-2 text-center font-semibold text-slate-700">{month.highestCategory?.label ?? '-'}</td>
-                  <td className="px-2 py-2 text-center font-bold text-slate-950">
+                  <td className="px-2 py-2 text-center font-semibold text-slate-950">
                     {currency(month.highestCategory?.value ?? 0)} CHF
                   </td>
                 </tr>
