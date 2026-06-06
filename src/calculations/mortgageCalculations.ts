@@ -110,11 +110,7 @@ export function calculateLoanToValueRatio(mortgageAmount: number, propertyPrice:
 }
 
 export function calculateHardEquityRatio(assets: MortgageAsset[], propertyPrice: number) {
-  const hardEquity = assets
-    .filter((asset) => HARD_EQUITY_ASSET_IDS.includes(asset.id))
-    .reduce((total, asset) => total + normalizeMoney(asset.amount), 0);
-
-  return calculateRatio(hardEquity, propertyPrice);
+  return calculateRatio(getHardEquity(assets), propertyPrice);
 }
 
 export function calculateMonthlyHousingPayment({
@@ -147,15 +143,20 @@ export function calculateGrossAnnualIncome(grossMonthlyIncome: number) {
 
 export function calculateMaxAffordablePropertyPrice(inputs: MortgageInputs) {
   const annualHousingBudget = normalizeMoney(inputs.grossAnnualIncome) * normalizeRatio(inputs.maxAffordabilityRatio);
-  const downPaymentRatio = normalizeRatio(inputs.requiredDownPaymentRatio);
-  const mortgageRatio = 1 - downPaymentRatio;
+  const downPayment = normalizeMoney(inputs.downPayment);
+  const financingCostRatio = normalizeRatio(inputs.annualInterestRate) + normalizeRatio(inputs.amortizationRate);
   const annualCostRatio =
-    mortgageRatio * (normalizeRatio(inputs.annualInterestRate) + normalizeRatio(inputs.amortizationRate)) +
-    normalizeRatio(inputs.maintenanceRate);
-  const incomeLimitedPrice = annualCostRatio > 0 ? annualHousingBudget / annualCostRatio : 0;
-  const assetLimitedPrice = downPaymentRatio > 0 ? getTotalAvailableAssets(inputs.availableAssets) / downPaymentRatio : 0;
+    financingCostRatio + normalizeRatio(inputs.maintenanceRate);
+  const incomeLimitedPrice =
+    annualCostRatio > 0 ? (annualHousingBudget + downPayment * financingCostRatio) / annualCostRatio : 0;
+  const requiredDownPaymentRatio = normalizeRatio(inputs.requiredDownPaymentRatio);
+  const ltvDownPaymentRatio = normalizeRatio(100 - inputs.maxLoanToValueRatio);
+  const minDownPaymentRatio = Math.max(requiredDownPaymentRatio, ltvDownPaymentRatio);
+  const downPaymentLimitedPrice = minDownPaymentRatio > 0 ? downPayment / minDownPaymentRatio : 0;
+  const hardEquityRatio = normalizeRatio(MIN_HARD_EQUITY_RATIO);
+  const hardEquityLimitedPrice = hardEquityRatio > 0 ? getHardEquity(inputs.availableAssets) / hardEquityRatio : 0;
 
-  return Math.min(incomeLimitedPrice, assetLimitedPrice);
+  return Math.min(incomeLimitedPrice, downPaymentLimitedPrice, hardEquityLimitedPrice);
 }
 
 export function clampPercent(value: number) {
@@ -178,4 +179,10 @@ function normalizeRatio(value: number) {
 
 function normalizeMoney(value: number) {
   return Number.isFinite(value) ? Math.max(value, 0) : 0;
+}
+
+function getHardEquity(assets: MortgageAsset[]) {
+  return assets
+    .filter((asset) => HARD_EQUITY_ASSET_IDS.includes(asset.id))
+    .reduce((total, asset) => total + normalizeMoney(asset.amount), 0);
 }

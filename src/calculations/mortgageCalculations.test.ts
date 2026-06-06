@@ -47,6 +47,15 @@ describe('mortgage calculations', () => {
     expect(overview.downPayment).toBe(160000);
     expect(overview.downPaymentRatio).toBe(20);
     expect(overview.mortgageAmount).toBe(640000);
-    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(713195, 0);
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(695117, 0);
+  });
+
+  it('uses the selected down payment when calculating max affordable price', () => {
+    const overview = calculateMortgageOverview({
+      ...defaultMortgageInputs,
+      downPayment: 200000,
+    });
+
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(729484, 0);
   });
 });
