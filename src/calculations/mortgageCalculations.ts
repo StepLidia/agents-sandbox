@@ -29,6 +29,10 @@ export type MortgageOverview = {
   canAffordProperty: boolean;
 };
 
+export const MIN_HARD_EQUITY_RATIO = 10;
+
+const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
+
 export const defaultMortgageInputs: MortgageInputs = {
   propertyPrice: 800000,
   grossAnnualIncome: 127100,
@@ -98,6 +102,14 @@ export function calculateMortgageAmount(propertyPrice: number, downPayment: numb
 
 export function calculateLoanToValueRatio(mortgageAmount: number, propertyPrice: number) {
   return calculateRatio(mortgageAmount, propertyPrice);
+}
+
+export function calculateHardEquityRatio(assets: MortgageAsset[], propertyPrice: number) {
+  const hardEquity = assets
+    .filter((asset) => HARD_EQUITY_ASSET_IDS.includes(asset.id))
+    .reduce((total, asset) => total + normalizeMoney(asset.amount), 0);
+
+  return calculateRatio(hardEquity, propertyPrice);
 }
 
 export function calculateMonthlyHousingPayment({

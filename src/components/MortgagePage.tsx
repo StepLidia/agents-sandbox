@@ -16,9 +16,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
+  calculateHardEquityRatio,
   calculateMortgageOverview,
   clampPercent,
   defaultMortgageInputs,
+  MIN_HARD_EQUITY_RATIO,
   type MortgageAsset,
 } from '../calculations/mortgageCalculations';
 import { colorClasses, type ChartPalette } from '../constants/colors';
@@ -64,6 +66,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     [mortgageAssets, propertyPrice],
   );
   const mortgage = useMemo(() => calculateMortgageOverview(mortgageInputs), [mortgageInputs]);
+  const hardEquityRatio = calculateHardEquityRatio(mortgageInputs.availableAssets, propertyPrice);
 
   useEffect(() => {
     saveMortgageInputs({ assets: mortgageAssets, assetsEdited: hasEditedMortgageAssets });
@@ -114,6 +117,17 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           : `Above the ${mortgageInputs.maxLoanToValueRatio}% limit`,
       helperClassName:
         mortgage.loanToValueRatio <= mortgageInputs.maxLoanToValueRatio ? 'text-slate-600' : 'text-red-500',
+    },
+    {
+      icon: PiggyBank,
+      iconClassName: 'bg-cyan-500/10 text-cyan-600',
+      label: 'Hard Equity',
+      value: `${hardEquityRatio.toFixed(1)}%`,
+      helper:
+        hardEquityRatio >= MIN_HARD_EQUITY_RATIO
+          ? `Above ${MIN_HARD_EQUITY_RATIO}% limit`
+          : `Below the ${MIN_HARD_EQUITY_RATIO}% limit`,
+      helperClassName: hardEquityRatio >= MIN_HARD_EQUITY_RATIO ? 'text-slate-600' : 'text-red-500',
     },
   ];
   const summaryCards = [
@@ -236,7 +250,7 @@ function AffordabilityPanel({
         {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
       </p>
       <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
-      <div className="mt-auto grid gap-3 pt-6 md:grid-cols-3">
+      <div className="mt-auto grid gap-3 pt-6 md:grid-cols-4">
         {metrics.map((metric) => (
           <MortgageMetricTile key={metric.label} {...metric} />
         ))}
@@ -287,10 +301,8 @@ function MortgageProgress({
         <span>0 CHF</span>
         <span>{currency(MAX_PROPERTY_PRICE)} CHF</span>
       </div>
-      <div className="relative mt-1 h-5 text-sm font-bold text-emerald-700">
-        <span className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: `${affordablePercent}%` }}>
-          Max affordable: {currency(mortgage.maxAffordablePropertyPrice)} CHF
-        </span>
+      <div className="mt-1 text-center text-sm font-bold text-emerald-700">
+        <span>Max affordable: {currency(mortgage.maxAffordablePropertyPrice)} CHF</span>
       </div>
     </div>
   );
@@ -351,12 +363,12 @@ function AssetsPanel({
   return (
     <section className="glass-panel flex flex-1 flex-col p-5">
       <h2 className="text-base font-bold text-slate-950">Available Assets</h2>
-      <div className="mt-4 flex flex-1 flex-col justify-evenly">
+      <div className="mt-2 mb-2 flex flex-1 flex-col justify-evenly">
         {assets.map((asset) => (
           <AssetRow key={asset.id} asset={asset} onChange={onChange} />
         ))}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-4 border-t border-slate-300/50 pt-5">
+      <div className="mt-auto flex items-center justify-between gap-4 border-t border-slate-300/50 pt-2">
         <p className="text-base font-bold text-emerald-600">Total Available Assets</p>
         <p className="whitespace-nowrap text-lg font-bold tracking-normal text-emerald-600">{currency(total)} CHF</p>
       </div>
