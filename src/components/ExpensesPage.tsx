@@ -261,15 +261,15 @@ function ExpensesHeader({
       <div className="flex items-center gap-2">
         <div className="relative">
           <button
-            className={buttonClasses()}
+            className={buttonClasses({ className: 'min-w-44 whitespace-nowrap' })}
             aria-controls="expenses-month-picker"
             aria-expanded={isMonthPickerOpen}
             type="button"
             onClick={() => setIsMonthPickerOpen((isOpen) => !isOpen)}
           >
-            <CalendarDays className="h-4 w-4" />
-            {expenseMonth.label}
-            <ChevronDown className={`h-4 w-4 transition-transform ${isMonthPickerOpen ? 'rotate-180' : ''}`} />
+            <CalendarDays className="h-4 w-4 shrink-0" />
+            <span>{expenseMonth.label}</span>
+            <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isMonthPickerOpen ? 'rotate-180' : ''}`} />
           </button>
           {isMonthPickerOpen && (
             <MonthPicker
@@ -467,13 +467,13 @@ function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
   const columns = chunkCategories(categories, 9);
 
   return (
-    <div className="grid grid-flow-col auto-cols-max items-start justify-center gap-x-5 gap-y-2.5">
+    <div className="grid grid-flow-col auto-cols-fr items-start justify-center gap-x-5 gap-y-2.5">
       {columns.map((columnCategories, columnIndex) => (
-        <div key={columnIndex} className="flex flex-col gap-2.5">
+        <div key={columnIndex} className="flex min-w-0 flex-col gap-2.5">
           {columnCategories.map((category) => (
-            <div key={category.id} className="flex items-center gap-2 text-xs font-medium text-slate-700 sm:gap-3 sm:text-sm">
-              <span className="h-2 w-2 rounded-full sm:h-2.5 sm:w-2.5" style={{ backgroundColor: category.color }} />
-              <span className="whitespace-nowrap">{category.label}</span>
+            <div key={category.id} className="flex min-w-0 items-start gap-2 text-sm font-medium text-slate-700 sm:gap-3">
+              <span className="mt-1 h-2 w-2 shrink-0 rounded-full sm:h-2.5 sm:w-2.5" style={{ backgroundColor: category.color }} />
+              <span className="min-w-0 wrap-break-word">{category.label}</span>
             </div>
           ))}
         </div>

@@ -98,11 +98,11 @@ export function Dashboard() {
       />
       <div className="grid min-h-screen grid-cols-1 md:grid-cols-[232px_1fr]">
         <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <section className="flex min-h-screen flex-col px-4 pb-4 pt-10 sm:px-5 md:py-4 xl:px-6">
+        <section className="flex min-h-screen flex-col px-4 pb-4 pt-20 sm:px-5 md:py-4 xl:px-6">
           {activeView === 'overview' ? (
             <>
               <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
-              <div className="mt-4 grid gap-3 xl:grid-cols-4">
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                 {dashboard.assets.map((asset) => (
                   <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
                 ))}
