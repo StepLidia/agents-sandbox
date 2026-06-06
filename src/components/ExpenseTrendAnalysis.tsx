@@ -307,14 +307,6 @@ export function ExpenseTrendAnalysis({
           <ChartLegend items={categorySummaries.map((category) => ({ label: category.label, color: category.color }))} />
           <ResponsiveContainer width="100%" height={230}>
             <BarChart data={chartData} margin={{ left: 4, right: 12, top: 12 }} barCategoryGap="24%">
-              <defs>
-                {categorySummaries.map((category) => (
-                  <linearGradient key={category.id} id={`${gradientPrefix}-${category.id}-share`} x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor={category.color} stopOpacity={0.86} />
-                    <stop offset="100%" stopColor={category.color} stopOpacity={0.22} />
-                  </linearGradient>
-                ))}
-              </defs>
               <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical={false} />
               <XAxis
                 axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
@@ -336,10 +328,9 @@ export function ExpenseTrendAnalysis({
                 <Bar
                   key={category.id}
                   dataKey={`${category.id}Share`}
-                  fill={`url(#${gradientPrefix}-${category.id}-share)`}
+                  fill={category.color}
+                  fillOpacity={0.72}
                   name={category.label}
-                  radius={[3, 3, 0, 0]}
-                  shape={<ShareBarSegment />}
                   stackId="share"
                   barSize={26}
                 />
@@ -383,7 +374,7 @@ export function ExpenseTrendAnalysis({
                     <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: category.color }} />
                     <span className="truncate font-semibold text-slate-700">{category.label}</span>
                   </span>
-                  <span className="text-right font-bold text-slate-950">{currency(category.total)} CHF</span>
+                  <span className="text-right font-semibold text-slate-950">{currency(category.total)} CHF</span>
                   <span className="text-right font-semibold text-slate-600">{formatPercent(category.total, totalExpenses)}</span>
                 </div>
               ))}
@@ -398,24 +389,24 @@ export function ExpenseTrendAnalysis({
             <thead className="text-slate-600">
               <tr className="border-b border-slate-300/50">
                 <th className="px-2 py-2 font-bold">Month</th>
-                <th className="px-2 py-2 text-right font-bold">Total Expenses</th>
-                <th className="px-2 py-2 text-right font-bold">vs previous month</th>
-                <th className="px-2 py-2 text-right font-bold">Average Daily</th>
-                <th className="px-2 py-2 font-bold">Highest Category</th>
-                <th className="px-2 py-2 text-right font-bold">Category Amount</th>
+                <th className="px-2 py-2 text-center font-bold">Total Expenses</th>
+                <th className="px-2 py-2 text-center font-bold">vs Previous Month</th>
+                <th className="px-2 py-2 text-center font-bold">Average Daily</th>
+                <th className="px-2 py-2 text-center font-bold">Highest Category</th>
+                <th className="px-2 py-2 text-center font-bold">Category Amount</th>
               </tr>
             </thead>
             <tbody>
               {trendMonths.map((month) => (
                 <tr key={month.month.key} className="border-b border-slate-300/35 last:border-b-0">
                   <td className="px-2 py-2 font-semibold text-slate-800">{month.month.label}</td>
-                  <td className="px-2 py-2 text-right font-bold text-slate-950">{currency(month.totalExpenses)} CHF</td>
-                  <td className={`px-2 py-2 text-right font-bold ${getTrendTextClass(month.monthChangeAmount ?? 0)}`}>
+                  <td className="px-2 py-2 text-center font-bold text-slate-950">{currency(month.totalExpenses)} CHF</td>
+                  <td className={`px-2 py-2 text-center font-bold ${getTrendTextClass(month.monthChangeAmount ?? 0)}`}>
                     {month.monthChangeAmount === null ? '-' : formatSignedCurrency(month.monthChangeAmount)}
                   </td>
-                  <td className="px-2 py-2 text-right font-semibold text-slate-700">{currency(month.averageDailyExpense)} CHF</td>
-                  <td className="px-2 py-2 font-semibold text-slate-700">{month.highestCategory?.label ?? '-'}</td>
-                  <td className="px-2 py-2 text-right font-bold text-slate-950">
+                  <td className="px-2 py-2 text-center font-semibold text-slate-700">{currency(month.averageDailyExpense)} CHF</td>
+                  <td className="px-2 py-2 text-center font-semibold text-slate-700">{month.highestCategory?.label ?? '-'}</td>
+                  <td className="px-2 py-2 text-center font-bold text-slate-950">
                     {currency(month.highestCategory?.value ?? 0)} CHF
                   </td>
                 </tr>
@@ -529,38 +520,6 @@ function TrendTooltip({
         );
       })}
     </div>
-  );
-}
-
-function ShareBarSegment({
-  fill,
-  height,
-  width,
-  x,
-  y,
-}: {
-  fill?: string;
-  height?: number;
-  width?: number;
-  x?: number;
-  y?: number;
-}) {
-  const segmentHeight = Math.max(0, Number(height ?? 0) - 3);
-
-  if (segmentHeight <= 0) {
-    return null;
-  }
-
-  return (
-    <rect
-      fill={fill}
-      height={segmentHeight}
-      rx={3}
-      ry={3}
-      width={Number(width ?? 0)}
-      x={Number(x ?? 0)}
-      y={Number(y ?? 0) + 1.5}
-    />
   );
 }
 
