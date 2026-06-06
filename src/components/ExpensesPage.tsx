@@ -27,7 +27,7 @@ import { InsightValue } from './InsightValue';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
-const TREND_MONTH_COUNT = 6;
+const DEFAULT_TREND_MONTHS_BACK = 5;
 
 export type ExpenseCategory = {
   id: string;
@@ -171,7 +171,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
         <ExpenseTrendAnalysis
           currentCategories={categories}
           expenseMonth={expenseMonth}
-          monthCount={TREND_MONTH_COUNT}
+          initialMonthsBack={DEFAULT_TREND_MONTHS_BACK}
           readExpenses={readSavedExpenses}
         />
       )}

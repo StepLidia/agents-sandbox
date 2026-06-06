@@ -1,4 +1,4 @@
-import { useId, useMemo, type ReactNode } from 'react';
+import { useId, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, ChartLine, TrendingUp, Wallet, WalletCards, type LucideIcon } from 'lucide-react';
 import {
   Bar,
@@ -24,7 +24,7 @@ import type { ExpenseCategory, ExpenseMonth } from './ExpensesPage';
 type ExpenseTrendAnalysisProps = {
   currentCategories: ExpenseCategory[];
   expenseMonth: ExpenseMonth;
-  monthCount: number;
+  initialMonthsBack: number;
   readExpenses: (monthKey: string) => ExpenseCategory[];
 };
 
@@ -59,17 +59,19 @@ const OTHERS_CATEGORY_COLOR = '#94a3b8';
 export function ExpenseTrendAnalysis({
   currentCategories,
   expenseMonth,
-  monthCount,
+  initialMonthsBack,
   readExpenses,
 }: ExpenseTrendAnalysisProps) {
   const gradientPrefix = useId().replaceAll(':', '');
+  const [monthsBack, setMonthsBack] = useState(initialMonthsBack);
+  const analyzedMonthCount = monthsBack + 1;
   const trendMonths = useMemo(
-    () => buildExpenseTrendMonths(expenseMonth, monthCount, readExpenses, currentCategories),
-    [currentCategories, expenseMonth, monthCount, readExpenses],
+    () => buildExpenseTrendMonths(expenseMonth, analyzedMonthCount, readExpenses, currentCategories),
+    [analyzedMonthCount, currentCategories, expenseMonth, readExpenses],
   );
   const previousTrendMonths = useMemo(
-    () => buildExpenseTrendMonths(getPreviousExpenseMonth(trendMonths[0].month), monthCount, readExpenses),
-    [monthCount, readExpenses, trendMonths],
+    () => buildExpenseTrendMonths(getPreviousExpenseMonth(trendMonths[0].month), analyzedMonthCount, readExpenses),
+    [analyzedMonthCount, readExpenses, trendMonths],
   );
   const totalExpenses = trendMonths.reduce((sum, month) => sum + month.totalExpenses, 0);
   const averageMonthlyExpenses = totalExpenses / Math.max(trendMonths.length, 1);
@@ -111,19 +113,20 @@ export function ExpenseTrendAnalysis({
 
   return (
     <section className="mt-5 space-y-3">
+      <TrendMonthsSlider value={monthsBack} onChange={setMonthsBack} />
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         <TrendMetricCard
           icon={WalletCards}
           iconClassName="bg-blue-600/10 text-blue-600"
           title="Average Monthly Expenses"
           amount={averageMonthlyExpenses}
-          helper={`vs previous ${monthCount} months`}
+          helper={`vs previous ${analyzedMonthCount} months`}
           trend={averageTrend}
         />
         <TrendMetricCard
           icon={TrendingUp}
           iconClassName="bg-emerald-500/12 text-emerald-600"
-          title={`Total Expenses (${monthCount} Months)`}
+          title={`Total Expenses (${analyzedMonthCount} Months)`}
           amount={totalExpenses}
           helper={`${trendMonths[0].month.label} - ${trendMonths.at(-1)?.month.label}`}
         />
@@ -146,7 +149,7 @@ export function ExpenseTrendAnalysis({
           iconClassName="bg-cyan-500/12 text-cyan-600"
           title="Average Daily Expense"
           amount={averageDailyExpense}
-          helper={`Across last ${monthCount} months`}
+          helper={`Across ${analyzedMonthCount} months`}
         />
       </div>
 
@@ -463,6 +466,39 @@ function TrendMetricCard({
             {trend.trend}
           </span>
         )}
+      </div>
+    </section>
+  );
+}
+
+function TrendMonthsSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const percent = getPercent(value, 12);
+  const analyzedMonthCount = value + 1;
+
+  return (
+    <section className="glass-panel px-5 py-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="flex min-w-44 items-baseline justify-between gap-3 md:block">
+          <p className="text-sm font-bold text-slate-900">Months Back</p>
+          <p className="mt-1 text-sm text-slate-600">
+            <span className="font-extrabold text-slate-950">{analyzedMonthCount}</span> analyzed
+          </p>
+        </div>
+        <div className="flex flex-1 items-center gap-4">
+          <span className="text-sm font-bold text-slate-500">0</span>
+          <input
+            aria-label="Months back for expense trend analysis"
+            className="years-slider"
+            max={12}
+            min={0}
+            step={1}
+            style={{ '--slider-progress': `${percent}%` } as CSSProperties}
+            type="range"
+            value={value}
+            onChange={(event) => onChange(Number(event.currentTarget.value))}
+          />
+          <span className="text-sm font-bold text-slate-500">12</span>
+        </div>
       </div>
     </section>
   );
