@@ -103,6 +103,12 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     }
   }, [hasEditedDownPayment, propertyPrice]);
 
+  useEffect(() => {
+    if (downPayment > mortgage.totalAvailableAssets) {
+      setDownPayment(mortgage.totalAvailableAssets);
+    }
+  }, [downPayment, mortgage.totalAvailableAssets]);
+
   function updateMortgageAsset(id: string, amount: number) {
     setHasEditedMortgageAssets(true);
     setMortgageAssets((currentAssets) =>
@@ -217,6 +223,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
               downPayment={mortgage.downPayment}
               downPaymentRatio={mortgage.downPaymentRatio}
               requiredDownPayment={mortgage.requiredDownPayment}
+              totalAvailableAssets={mortgage.totalAvailableAssets}
               onChange={updateDownPayment}
             />
           </div>
@@ -478,30 +485,33 @@ function DownPaymentPanel({
   downPaymentRatio,
   onChange,
   requiredDownPayment,
+  totalAvailableAssets,
 }: {
   downPayment: number;
   downPaymentRatio: number;
   onChange: (amount: number) => void;
   requiredDownPayment: number;
+  totalAvailableAssets: number;
 }) {
-  const { inputValue, onInputChange } = useEditableNumber(downPayment, onChange, { format: 'money' });
+  const progressPercent = totalAvailableAssets > 0 ? clampPercent((downPayment / totalAvailableAssets) * 100) : 0;
 
   return (
     <section className="glass-panel p-3">
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-base font-bold text-cyan-600">Down Payment ({downPaymentRatio.toFixed(0)}%)</h2>
-        <span className="glass-input grid w-44 grid-cols-[1fr_auto] items-center gap-2 px-3 py-1.5">
-          <input
-            aria-label="Down payment amount"
-            className="w-full min-w-0 bg-transparent text-right font-black text-cyan-600 outline-none"
-            inputMode="numeric"
-            type="text"
-            value={inputValue}
-            onChange={(event) => onInputChange(event.currentTarget.value)}
-          />
-          <span className="text-sm font-semibold text-cyan-600">CHF</span>
-        </span>
+        <p className="whitespace-nowrap text-lg font-bold tracking-normal text-cyan-600">{currency(downPayment)} CHF</p>
       </div>
+      <input
+        aria-label="Down payment amount"
+        className="years-slider mt-3"
+        max={totalAvailableAssets}
+        min={0}
+        step={PROPERTY_PRICE_STEP}
+        style={{ '--slider-progress': `${progressPercent}%` } as CSSProperties}
+        type="range"
+        value={downPayment}
+        onChange={(event) => onChange(Number(event.currentTarget.value))}
+      />
       <p className="mt-2 text-sm font-semibold text-slate-600">
         Min. required: {currency(requiredDownPayment)} CHF ({defaultMortgageInputs.requiredDownPaymentRatio}%)
       </p>
