@@ -14,7 +14,7 @@ import {
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import {
   calculateMortgageOverview,
   clampPercent,
@@ -22,7 +22,8 @@ import {
   type MortgageAsset,
 } from '../calculations/mortgageCalculations';
 import { colorClasses, type ChartPalette } from '../constants/colors';
-import { currency } from '../finance';
+import { currency, type FinancialAsset } from '../finance';
+import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const assetIconById: Record<string, LucideIcon> = {
   cash: PiggyBank,
@@ -40,17 +41,47 @@ const assetColorById: Record<string, ChartPalette> = {
 
 const MAX_PROPERTY_PRICE = 3000000;
 const PROPERTY_PRICE_STEP = 1000;
+const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
 
-export function MortgagePage() {
+type SavedMortgageInputs = {
+  assets?: Record<string, number>;
+  assetsEdited?: boolean;
+};
+
+export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAsset[] }) {
+  const savedInputs = useMemo(readSavedMortgageInputs, []);
+  const [hasEditedMortgageAssets, setHasEditedMortgageAssets] = useState(() => savedInputs.assetsEdited === true);
   const [propertyPrice, setPropertyPrice] = useState(defaultMortgageInputs.propertyPrice);
+  const [mortgageAssets, setMortgageAssets] = useState(() =>
+    mergeSavedMortgageAssets(savedInputs.assetsEdited ? savedInputs.assets : undefined, dashboardAssets),
+  );
   const mortgageInputs = useMemo(
     () => ({
       ...defaultMortgageInputs,
+      availableAssets: mortgageAssets,
       propertyPrice,
     }),
-    [propertyPrice],
+    [mortgageAssets, propertyPrice],
   );
   const mortgage = useMemo(() => calculateMortgageOverview(mortgageInputs), [mortgageInputs]);
+
+  useEffect(() => {
+    saveMortgageInputs({ assets: mortgageAssets, assetsEdited: hasEditedMortgageAssets });
+  }, [hasEditedMortgageAssets, mortgageAssets]);
+
+  useEffect(() => {
+    if (!hasEditedMortgageAssets) {
+      setMortgageAssets(mergeSavedMortgageAssets(undefined, dashboardAssets));
+    }
+  }, [dashboardAssets, hasEditedMortgageAssets]);
+
+  function updateMortgageAsset(id: string, amount: number) {
+    setHasEditedMortgageAssets(true);
+    setMortgageAssets((currentAssets) =>
+      currentAssets.map((asset) => (asset.id === id ? { ...asset, amount } : asset)),
+    );
+  }
+
   const topMetrics = [
     {
       icon: Percent,
@@ -135,7 +166,7 @@ export function MortgagePage() {
             onPropertyPriceChange={setPropertyPrice}
           />
           <div className="flex h-full flex-col gap-4">
-            <AssetsPanel assets={mortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} />
+            <AssetsPanel assets={mortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} onChange={updateMortgageAsset} />
             <DownPaymentPanel
               downPayment={mortgage.downPayment}
               downPaymentRatio={mortgage.downPaymentRatio}
@@ -308,13 +339,21 @@ function MortgageMetricTile({
   );
 }
 
-function AssetsPanel({ assets, total }: { assets: MortgageAsset[]; total: number }) {
+function AssetsPanel({
+  assets,
+  onChange,
+  total,
+}: {
+  assets: MortgageAsset[];
+  total: number;
+  onChange: (id: string, amount: number) => void;
+}) {
   return (
     <section className="glass-panel flex flex-1 flex-col p-5">
       <h2 className="text-base font-bold text-slate-950">Available Assets</h2>
       <div className="mt-4 flex flex-1 flex-col justify-evenly">
         {assets.map((asset) => (
-          <AssetRow key={asset.id} asset={asset} />
+          <AssetRow key={asset.id} asset={asset} onChange={onChange} />
         ))}
       </div>
       <div className="mt-auto flex items-center justify-between gap-4 border-t border-slate-300/50 pt-5">
@@ -325,9 +364,10 @@ function AssetsPanel({ assets, total }: { assets: MortgageAsset[]; total: number
   );
 }
 
-function AssetRow({ asset }: { asset: MortgageAsset }) {
+function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: string, amount: number) => void }) {
   const Icon = assetIconById[asset.id] ?? Banknote;
   const colors = assetColorById[asset.id] ?? colorClasses.emerald;
+  const { inputValue, onInputChange } = useEditableNumber(asset.amount, (amount) => onChange(asset.id, amount));
 
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
@@ -337,7 +377,18 @@ function AssetRow({ asset }: { asset: MortgageAsset }) {
         </span>
         <span className="truncate font-bold text-slate-600">{asset.label}</span>
       </span>
-      <span className="whitespace-nowrap font-bold text-slate-950">{currency(asset.amount)} CHF</span>
+      <span className="glass-input grid w-36 grid-cols-[1fr_auto] items-center gap-2 px-2 py-1">
+        <input
+          aria-label={`${asset.label} mortgage amount`}
+          className="w-full min-w-0 bg-transparent text-right font-bold text-slate-950 outline-none"
+          min={0}
+          step={1000}
+          type="number"
+          value={inputValue}
+          onChange={(event) => onInputChange(event.currentTarget.value)}
+        />
+        <span className="text-sm text-slate-600">CHF</span>
+      </span>
     </div>
   );
 }
@@ -394,4 +445,50 @@ function MortgageSummaryCard({
       </div>
     </article>
   );
+}
+
+function readSavedMortgageInputs(): SavedMortgageInputs {
+  try {
+    const savedValue = window.localStorage.getItem(MORTGAGE_STORAGE_KEY);
+    return savedValue ? JSON.parse(savedValue) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveMortgageInputs({ assets, assetsEdited }: { assets: MortgageAsset[]; assetsEdited: boolean }) {
+  try {
+    window.localStorage.setItem(
+      MORTGAGE_STORAGE_KEY,
+      JSON.stringify({
+        assets: Object.fromEntries(assets.map((asset) => [asset.id, asset.amount])),
+        assetsEdited,
+      } satisfies SavedMortgageInputs),
+    );
+  } catch {
+    // Keep the mortgage calculator usable when browser storage is unavailable.
+  }
+}
+
+function mergeSavedMortgageAssets(savedAssets: SavedMortgageInputs['assets'], dashboardAssets: FinancialAsset[]) {
+  return defaultMortgageInputs.availableAssets.map((asset) => ({
+    ...asset,
+    amount: getSavedMortgageAmount(savedAssets?.[asset.id], getDashboardMortgageAssetAmount(asset.id, dashboardAssets, asset.amount)),
+  }));
+}
+
+function getSavedMortgageAmount(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function getDashboardMortgageAssetAmount(mortgageAssetId: string, dashboardAssets: FinancialAsset[], fallback: number) {
+  const dashboardAssetIdByMortgageId: Record<string, FinancialAsset['id']> = {
+    cash: 'savings',
+    pillar2: 'pillar2',
+    pillar3: 'pillar3',
+    securities: 'investments',
+  };
+  const dashboardAssetId = dashboardAssetIdByMortgageId[mortgageAssetId];
+
+  return dashboardAssets.find((asset) => asset.id === dashboardAssetId)?.amount ?? fallback;
 }

@@ -161,7 +161,7 @@ export function Dashboard() {
           ) : activeView === 'expenses' ? (
             <ExpensesPage monthlyIncome={dashboard.income.monthlyNetIncome} />
           ) : activeView === 'mortgage' ? (
-            <MortgagePage />
+            <MortgagePage dashboardAssets={assets} />
           ) : (
             <>
               <Header

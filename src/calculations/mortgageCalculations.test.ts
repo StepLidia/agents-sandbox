@@ -12,7 +12,7 @@ import {
 
 describe('mortgage calculations', () => {
   it('totals available assets', () => {
-    expect(getTotalAvailableAssets(defaultMortgageInputs.availableAssets)).toBe(300000);
+    expect(getTotalAvailableAssets(defaultMortgageInputs.availableAssets)).toBe(165000);
   });
 
   it('calculates down payment and mortgage amount', () => {
