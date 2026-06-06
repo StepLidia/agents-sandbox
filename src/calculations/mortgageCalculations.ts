@@ -66,6 +66,7 @@ export function calculateMortgageOverview(inputs: MortgageInputs): MortgageOverv
   });
   const affordabilityRatio = calculateAffordabilityRatio(monthlyPayment, inputs.grossAnnualIncome);
   const maxAffordablePropertyPrice = calculateMaxAffordablePropertyPrice(inputs);
+  const hardEquityRatio = calculateHardEquityRatio(inputs.availableAssets, propertyPrice);
 
   return {
     totalAvailableAssets,
@@ -79,6 +80,7 @@ export function calculateMortgageOverview(inputs: MortgageInputs): MortgageOverv
     maxAffordablePropertyPrice,
     canAffordProperty:
       totalAvailableAssets >= requiredDownPayment &&
+      hardEquityRatio >= MIN_HARD_EQUITY_RATIO &&
       affordabilityRatio <= inputs.maxAffordabilityRatio &&
       loanToValueRatio <= inputs.maxLoanToValueRatio,
   };

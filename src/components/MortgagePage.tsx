@@ -6,7 +6,6 @@ import {
   CircleAlert,
   CircleDollarSign,
   Home,
-  Info,
   Landmark,
   Percent,
   PiggyBank,
@@ -172,14 +171,15 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">1. Can You Afford This Property?</h2>
           <p className="mt-1 text-sm font-semibold text-slate-600">Based on your income and available assets</p>
         </div>
-        <div className="mt-5 grid items-stretch gap-4 md:grid-cols-2">
+        <div className="mt-5 grid items-stretch gap-4 md:grid-cols-5">
           <AffordabilityPanel
+            className="md:col-span-3"
             metrics={topMetrics}
             mortgage={mortgage}
             propertyPrice={propertyPrice}
             onPropertyPriceChange={setPropertyPrice}
           />
-          <div className="flex h-full flex-col gap-4">
+          <div className="flex h-full flex-col gap-4 md:col-span-2">
             <AssetsPanel assets={mortgageInputs.availableAssets} total={mortgage.totalAvailableAssets} onChange={updateMortgageAsset} />
             <DownPaymentPanel
               downPayment={mortgage.downPayment}
@@ -208,11 +208,13 @@ function MortgageHeader() {
 }
 
 function AffordabilityPanel({
+  className = '',
   metrics,
   mortgage,
   onPropertyPriceChange,
   propertyPrice,
 }: {
+  className?: string;
   metrics: Array<{
     helper: string;
     helperClassName: string;
@@ -225,18 +227,15 @@ function AffordabilityPanel({
   propertyPrice: number;
   onPropertyPriceChange: (value: number) => void;
 }) {
-  const isOverAffordablePrice = propertyPrice > mortgage.maxAffordablePropertyPrice;
-  const statusTextClassName = isOverAffordablePrice ? 'text-red-500' : 'text-emerald-600';
-  const statusIconClassName = isOverAffordablePrice
-    ? 'text-red-500'
-    : 'border-emerald-500/70 text-emerald-600';
-  const StatusIcon = isOverAffordablePrice ? CircleAlert : Check;
+  const statusTextClassName = mortgage.canAffordProperty ? 'text-emerald-600' : 'text-red-500';
+  const statusIconClassName = mortgage.canAffordProperty ? 'border-emerald-500/70 text-emerald-600' : 'text-red-500';
+  const StatusIcon = mortgage.canAffordProperty ? Check : CircleAlert;
 
   return (
-    <section className="glass-panel flex h-full flex-col p-5">
+    <section className={`glass-panel flex h-full flex-col p-5 ${className}`}>
       <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
         <div
-          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${isOverAffordablePrice ? '' : 'border-4'} ${statusIconClassName}`}
+          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${mortgage.canAffordProperty ? 'border-4' : ''} ${statusIconClassName}`}
         >
           <StatusIcon className="h-7 w-7" />
         </div>
@@ -271,7 +270,7 @@ function MortgageProgress({
   const progressPercent = clampPercent((propertyPrice / MAX_PROPERTY_PRICE) * 100);
   const affordablePercent = clampPercent((mortgage.maxAffordablePropertyPrice / MAX_PROPERTY_PRICE) * 100);
   const sliderClassName =
-    propertyPrice > mortgage.maxAffordablePropertyPrice
+    !mortgage.canAffordProperty
       ? 'years-slider mortgage-slider-over-limit'
       : 'years-slider mortgage-slider';
 
@@ -417,8 +416,7 @@ function DownPaymentPanel({
   return (
     <section className="glass-panel p-5">
       <div className="flex items-start justify-between gap-4">
-        <h2 className="text-base font-bold text-emerald-600">Down Payment You Can Make</h2>
-        <Info className="h-5 w-5 shrink-0 text-emerald-600" />
+        <h2 className="text-base font-bold text-slate-600">Down Payment</h2>
       </div>
       <p className="mt-4 text-2xl font-bold tracking-normal text-emerald-600">
         {currency(downPayment)} CHF <span className="text-lg">({downPaymentRatio.toFixed(0)}%)</span>
