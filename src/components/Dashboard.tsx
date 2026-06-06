@@ -12,6 +12,7 @@ import { IncomeCard } from './IncomeCard';
 import { InsightsCard } from './InsightsCard';
 import { ProjectionCard } from './ProjectionCard';
 import { MobileSidebarDrawer, Sidebar, type DashboardView } from './Sidebar';
+import { MortgagePage } from './MortgagePage';
 import { SummaryCard } from './SummaryCard';
 import { AssetCard } from './AssetCard';
 import { tooltipClasses } from '../constants/tooltipStyles';
@@ -159,6 +160,8 @@ export function Dashboard() {
             </>
           ) : activeView === 'expenses' ? (
             <ExpensesPage monthlyIncome={dashboard.income.monthlyNetIncome} />
+          ) : activeView === 'mortgage' ? (
+            <MortgagePage />
           ) : (
             <>
               <Header
