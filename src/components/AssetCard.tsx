@@ -121,8 +121,8 @@ function ReadonlyField({ label, value, suffix }: { label: string; value: number;
         <span className="truncate">{label}</span>
       </span>
       <span className="glass-input grid grid-cols-[1fr_auto] items-center gap-2 py-2 text-[14px] font-normal text-slate-700">
-        <span>{value}</span>
-        <span className="text-sm font-normal text-slate-600">{suffix}</span>
+        <span className="min-w-0 flex-1 text-right">{value}</span>
+        <span className="whitespace-nowrap text-sm font-normal text-slate-600">{suffix}</span>
       </span>
     </div>
   );

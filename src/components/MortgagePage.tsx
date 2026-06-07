@@ -44,6 +44,7 @@ const assetColorById: Record<string, ChartPalette> = {
 const MAX_PROPERTY_PRICE = 3000000;
 const PROPERTY_PRICE_STEP = 1000;
 const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
+const mortgageMoneyInputClasses = 'glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1';
 
 type SavedMortgageInputs = {
   assets?: Record<string, number>;
@@ -222,7 +223,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           </div>
         </div>
       </section>
-      <section className="glass-panel grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-4">
+      <section className="glass-panel grid items-start gap-3 p-3 md:grid-cols-2 md:p-4 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <MortgageSummaryCard key={card.label} {...card} />
         ))}
@@ -282,7 +283,7 @@ function AffordabilityPanel({
         {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
       </p>
       <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
-      <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-4">
+      <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
           <MortgageMetricTile key={metric.label} {...metric} />
         ))}
@@ -402,10 +403,10 @@ function GrossIncomePanel({
           </span>
           <span className="truncate font-bold text-slate-600">Income</span>
         </span>
-        <span className="glass-input grid w-36 grid-cols-[1fr_auto] items-center gap-2 px-2 py-1">
+        <span className={mortgageMoneyInputClasses}>
           <input
             aria-label="Gross monthly income"
-            className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"
+            className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
             inputMode="numeric"
             type="text"
             value={inputValue}
@@ -458,10 +459,10 @@ function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: st
         </span>
         <span className="truncate font-bold text-slate-600">{asset.label}</span>
       </span>
-      <span className="glass-input grid w-36 grid-cols-[1fr_auto] items-center gap-2 px-2 py-1">
+      <span className={mortgageMoneyInputClasses}>
         <input
           aria-label={`${asset.label} mortgage amount`}
-          className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"
+          className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
           inputMode="numeric"
           type="text"
           value={inputValue}
@@ -528,14 +529,14 @@ function MortgageSummaryCard({
   value: string;
 }) {
   return (
-    <article className="flex min-h-28 items-center gap-4 border-slate-300/50 md:border-r md:last:border-r-0">
-      <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
-        <Icon className="h-7 w-7" />
+    <article className="flex items-start gap-3 border-slate-300/50 py-1 md:border-r md:last:border-r-0">
+      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
+        <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0">
         <p className="text-sm font-bold text-slate-600">{label}</p>
-        <p className="mt-2 text-xl font-bold tracking-normal text-slate-950">{value}</p>
-        {helper && <p className={`mt-2 text-sm font-bold ${helperClassName}`}>{helper}</p>}
+        <p className="mt-1 text-xl font-bold tracking-normal text-slate-950">{value}</p>
+        {helper && <p className={`mt-1 text-sm font-bold ${helperClassName}`}>{helper}</p>}
       </div>
     </article>
   );
