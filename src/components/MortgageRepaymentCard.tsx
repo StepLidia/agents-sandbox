@@ -19,6 +19,7 @@ const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
 const INTEREST_COST_COLOR = '#42ba85';
+const CHART_MARKER_SIZE = 8;
 
 const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
   direct: 'Direct Amortization',
@@ -300,7 +301,7 @@ function RepaymentLineChart({
             <Tooltip content={<RepaymentTooltip />} cursor={{ stroke: 'rgba(37,99,235,.18)', strokeWidth: 2 }} />
             <Line
               dataKey="mortgageBalance"
-              dot={{ fill: MORTGAGE_BALANCE_COLOR, r: 3, stroke: MORTGAGE_BALANCE_COLOR, strokeWidth: 1 }}
+              dot={<FiveYearDiamondDot color={MORTGAGE_BALANCE_COLOR} />}
               name="Mortgage Balance"
               stroke={MORTGAGE_BALANCE_COLOR}
               strokeWidth={3}
@@ -309,7 +310,7 @@ function RepaymentLineChart({
             />
             <Line
               dataKey="annualInterestCost"
-              dot={{ fill: INTEREST_COST_COLOR, r: 3, stroke: INTEREST_COST_COLOR, strokeWidth: 1 }}
+              dot={<FiveYearDiamondDot color={INTEREST_COST_COLOR} />}
               name="Annual Interest Cost"
               stroke={INTEREST_COST_COLOR}
               strokeWidth={3}
@@ -321,6 +322,37 @@ function RepaymentLineChart({
         <ChartAxisLabel color={INTEREST_COST_COLOR} text="Cost per Year (CHF)" />
       </div>
     </div>
+  );
+}
+
+function FiveYearDiamondDot({
+  color,
+  cx,
+  cy,
+  payload,
+}: {
+  color: string;
+  cx?: number;
+  cy?: number;
+  payload?: { year?: number };
+}) {
+  if (typeof cx !== 'number' || typeof cy !== 'number' || typeof payload?.year !== 'number' || payload.year % 5 !== 0) {
+    return null;
+  }
+
+  const offset = CHART_MARKER_SIZE / 2;
+
+  return (
+    <rect
+      fill={color}
+      height={CHART_MARKER_SIZE}
+      stroke={color}
+      strokeWidth={1}
+      transform={`rotate(45 ${cx} ${cy})`}
+      width={CHART_MARKER_SIZE}
+      x={cx - offset}
+      y={cy - offset}
+    />
   );
 }
 
@@ -359,7 +391,7 @@ function ChartLegend({ items }: { items: Array<{ color: string; label: string }>
           <span className="relative h-2.5 w-6">
             <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2" style={{ backgroundColor: item.color }} />
             <span
-              className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rotate-45"
               style={{ backgroundColor: item.color }}
             />
           </span>
@@ -404,8 +436,11 @@ function RepaymentTooltip({
     <div className={tooltipContentClasses('px-3 py-2')}>
       {label && <p className="mb-2 font-bold text-slate-950">{label}</p>}
       {payload.map((item) => (
-        <p key={`${item.name}-${item.dataKey}`} className="text-sm font-semibold text-slate-700">
-          <span style={{ color: item.color }}>{item.name}:</span> {currency(item.value ?? 0)} CHF
+        <p key={`${item.name}-${item.dataKey}`} className="text-slate-700">
+          <span className="font-medium" style={{ color: item.color }}>
+            {item.name}:
+          </span>{' '}
+          {currency(item.value ?? 0)} CHF
         </p>
       ))}
     </div>
