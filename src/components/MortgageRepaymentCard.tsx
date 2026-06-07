@@ -5,6 +5,8 @@ import {
   buildMortgageChartTicks,
   calculateMortgageRepaymentProjection,
   clampPercent,
+  DEFAULT_REPAYMENT_YEARS,
+  DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
   type MortgageAmortizationStrategy,
   type MortgageRepaymentProjection,
 } from '../calculations/mortgageCalculations';
@@ -16,8 +18,6 @@ const MIN_INTEREST_RATE = 0.5;
 const MAX_INTEREST_RATE = 6;
 const INTEREST_RATE_STEP = 0.01;
 const DEFAULT_INTEREST_RATE = 1.68;
-const DEFAULT_REPAYMENT_YEARS = 20;
-const DEFAULT_TARGET_LTV = 65;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
 const INTEREST_COST_COLOR = '#ed859f';
 const PILLAR_3_ASSETS_COLOR = colorClasses.cyan.stroke;
@@ -48,7 +48,7 @@ export function MortgageRepaymentCard({
           mortgageAmount,
           propertyPrice,
           strategy: projectionStrategy,
-          targetLoanToValueRatio: DEFAULT_TARGET_LTV,
+          targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
           years: DEFAULT_REPAYMENT_YEARS,
         }),
       ),
@@ -195,7 +195,7 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-bold text-slate-950">Amortization to</h3>
         <span className="flex items-center gap-1 text-sm font-bold text-emerald-700">
-          65% LTV
+          {DEFAULT_TARGET_LOAN_TO_VALUE_RATIO}% LTV
         </span>
       </div>
       <div className="mt-3 space-y-2">

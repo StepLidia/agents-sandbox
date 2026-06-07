@@ -7,6 +7,7 @@ import {
   CircleAlert,
   CircleDollarSign,
   Home,
+  Info,
   Landmark,
   Percent,
   PiggyBank,
@@ -27,6 +28,7 @@ import {
 } from '../calculations/mortgageCalculations';
 import { buttonClasses } from '../constants/buttonStyles';
 import { colorClasses, type ChartPalette } from '../constants/colors';
+import { tooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 import { MortgageRepaymentCard } from './MortgageRepaymentCard';
@@ -214,6 +216,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       icon: BriefcaseBusiness,
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: `Monthly Payment (At ${mortgageInputs.annualInterestRate.toFixed(2)}%)`,
+      tooltip: 'Interest + Amortization + Maintenance',
       value: `${currency(mortgage.monthlyPayment)} CHF`,
       helper: `${formatMortgagePercent(mortgage.affordabilityRatio)} of gross income`,
       helperClassName: 'text-slate-600',
@@ -609,6 +612,7 @@ function MortgageSummaryCard({
   icon: Icon,
   iconClassName,
   label,
+  tooltip,
   value,
 }: {
   helper: string;
@@ -616,15 +620,39 @@ function MortgageSummaryCard({
   icon: LucideIcon;
   iconClassName: string;
   label: string;
+  tooltip?: string;
   value: string;
 }) {
+  const tooltipId = tooltip ? `summary-tooltip-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : undefined;
+
   return (
     <article className="flex items-start gap-3 border-slate-300/50 py-1 md:border-r md:last:border-r-0">
       <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
         <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0">
-        <p className="text-sm font-bold text-slate-600">{label}</p>
+        <p className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
+          <span>{label}</span>
+          {tooltip && tooltipId && (
+            <span className="group relative inline-flex">
+              <button
+                aria-describedby={tooltipId}
+                aria-label={`${label} details`}
+                className="grid h-5 w-5 place-items-center rounded-full text-blue-600 outline-none transition hover:text-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500/50"
+                type="button"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+              <span
+                id={tooltipId}
+                role="tooltip"
+                className={tooltipClasses('left-1/2 top-6 w-max -translate-x-1/2 px-3 py-2')}
+              >
+                {tooltip}
+              </span>
+            </span>
+          )}
+        </p>
         <p className="mt-1 text-xl font-bold tracking-normal text-slate-950">{value}</p>
         {helper && <p className={`mt-1 text-sm font-bold ${helperClassName}`}>{helper}</p>}
       </div>

@@ -8,6 +8,8 @@ import {
   calculateMortgageRepaymentProjection,
   calculateMortgageAmount,
   calculateMortgageOverview,
+  calculateRequiredAnnualAmortization,
+  calculateRequiredAnnualAmortizationRate,
   defaultMortgageInputs,
   getTotalAvailableAssets,
 } from './mortgageCalculations';
@@ -29,13 +31,32 @@ describe('mortgage calculations', () => {
   it('calculates monthly housing payment from separate cost rates', () => {
     expect(
       calculateMonthlyHousingPayment({
-        amortizationRate: 1.10125,
+        annualAmortization: 6000,
         annualInterestRate: 5,
         maintenanceRate: 1,
         mortgageAmount: 640000,
         propertyPrice: 800000,
       }),
-    ).toBeCloseTo(3920.67, 2);
+    ).toBeCloseTo(3833.33, 2);
+  });
+
+  it('calculates required amortization from target LTV and repayment years', () => {
+    expect(
+      calculateRequiredAnnualAmortization({
+        mortgageAmount: 400000,
+        propertyPrice: 500000,
+        targetLoanToValueRatio: 65,
+        years: 20,
+      }),
+    ).toBe(3750);
+    expect(
+      calculateRequiredAnnualAmortizationRate({
+        mortgageAmount: 400000,
+        propertyPrice: 500000,
+        targetLoanToValueRatio: 65,
+        years: 20,
+      }),
+    ).toBeCloseTo(0.9375, 4);
   });
 
   it('calculates affordability ratio against gross income', () => {
@@ -49,7 +70,7 @@ describe('mortgage calculations', () => {
     expect(overview.downPayment).toBe(160000);
     expect(overview.downPaymentRatio).toBe(32);
     expect(overview.mortgageAmount).toBe(340000);
-    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(695117, 0);
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(717419, 0);
   });
 
   it('uses the selected down payment when calculating max affordable price', () => {
@@ -58,7 +79,7 @@ describe('mortgage calculations', () => {
       downPayment: 200000,
     });
 
-    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(729484, 0);
+    expect(overview.maxAffordablePropertyPrice).toBeCloseTo(769032, 0);
   });
 
   it('projects direct mortgage amortization to the target LTV', () => {

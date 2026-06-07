@@ -10,7 +10,8 @@ export type MortgageInputs = {
   grossAnnualIncome: number;
   annualInterestRate: number;
   maintenanceRate: number;
-  amortizationRate: number;
+  repaymentYears: number;
+  targetLoanToValueRatio: number;
   maxAffordabilityRatio: number;
   maxLoanToValueRatio: number;
   requiredDownPaymentRatio: number;
@@ -62,6 +63,8 @@ export type MortgageRepaymentProjection = {
 };
 
 export const MIN_HARD_EQUITY_RATIO = 10;
+export const DEFAULT_REPAYMENT_YEARS = 20;
+export const DEFAULT_TARGET_LOAN_TO_VALUE_RATIO = 65;
 
 const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
 
@@ -71,7 +74,8 @@ export const defaultMortgageInputs: MortgageInputs = {
   grossAnnualIncome: 120000,
   annualInterestRate: 5,
   maintenanceRate: 1,
-  amortizationRate: 1.10125,
+  repaymentYears: DEFAULT_REPAYMENT_YEARS,
+  targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
   maxAffordabilityRatio: 33,
   maxLoanToValueRatio: 80,
   requiredDownPaymentRatio: 20,
@@ -90,8 +94,14 @@ export function calculateMortgageOverview(inputs: MortgageInputs): MortgageOverv
   const downPayment = Math.min(normalizeMoney(inputs.downPayment), propertyPrice);
   const mortgageAmount = calculateMortgageAmount(propertyPrice, downPayment);
   const loanToValueRatio = calculateLoanToValueRatio(mortgageAmount, propertyPrice);
+  const annualAmortization = calculateRequiredAnnualAmortization({
+    mortgageAmount,
+    propertyPrice,
+    targetLoanToValueRatio: inputs.targetLoanToValueRatio,
+    years: inputs.repaymentYears,
+  });
   const monthlyPayment = calculateMonthlyHousingPayment({
-    amortizationRate: inputs.amortizationRate,
+    annualAmortization,
     annualInterestRate: inputs.annualInterestRate,
     maintenanceRate: inputs.maintenanceRate,
     mortgageAmount,
@@ -145,13 +155,13 @@ export function calculateHardEquityRatio(assets: MortgageAsset[], propertyPrice:
 }
 
 export function calculateMonthlyHousingPayment({
-  amortizationRate,
+  annualAmortization,
   annualInterestRate,
   maintenanceRate,
   mortgageAmount,
   propertyPrice,
 }: {
-  amortizationRate: number;
+  annualAmortization: number;
   annualInterestRate: number;
   maintenanceRate: number;
   mortgageAmount: number;
@@ -159,9 +169,59 @@ export function calculateMonthlyHousingPayment({
 }) {
   const annualInterest = normalizeMoney(mortgageAmount) * normalizeRatio(annualInterestRate);
   const annualMaintenance = normalizeMoney(propertyPrice) * normalizeRatio(maintenanceRate);
-  const annualAmortization = normalizeMoney(mortgageAmount) * normalizeRatio(amortizationRate);
 
-  return (annualInterest + annualMaintenance + annualAmortization) / 12;
+  return (annualInterest + annualMaintenance + normalizeMoney(annualAmortization)) / 12;
+}
+
+export function calculateRequiredAnnualAmortization({
+  mortgageAmount,
+  propertyPrice,
+  targetLoanToValueRatio,
+  years,
+}: {
+  mortgageAmount: number;
+  propertyPrice: number;
+  targetLoanToValueRatio: number;
+  years: number;
+}) {
+  const normalizedYears = normalizeYears(years);
+
+  if (normalizedYears === 0) {
+    return 0;
+  }
+
+  const targetMortgageBalance = Math.min(
+    normalizeMoney(mortgageAmount),
+    normalizeMoney(propertyPrice) * normalizeRatio(targetLoanToValueRatio),
+  );
+
+  return Math.max(normalizeMoney(mortgageAmount) - targetMortgageBalance, 0) / normalizedYears;
+}
+
+export function calculateRequiredAnnualAmortizationRate({
+  mortgageAmount,
+  propertyPrice,
+  targetLoanToValueRatio,
+  years,
+}: {
+  mortgageAmount: number;
+  propertyPrice: number;
+  targetLoanToValueRatio: number;
+  years: number;
+}) {
+  const normalizedMortgageAmount = normalizeMoney(mortgageAmount);
+
+  return normalizedMortgageAmount === 0
+    ? 0
+    : calculateRatio(
+      calculateRequiredAnnualAmortization({
+        mortgageAmount,
+        propertyPrice,
+        targetLoanToValueRatio,
+        years,
+      }),
+      normalizedMortgageAmount,
+    );
 }
 
 export function calculateMortgageRepaymentProjection({
@@ -265,21 +325,54 @@ export function calculateGrossAnnualIncome(grossMonthlyIncome: number) {
 }
 
 export function calculateMaxAffordablePropertyPrice(inputs: MortgageInputs) {
-  const annualHousingBudget = normalizeMoney(inputs.grossAnnualIncome) * normalizeRatio(inputs.maxAffordabilityRatio);
   const downPayment = normalizeMoney(inputs.downPayment);
-  const financingCostRatio = normalizeRatio(inputs.annualInterestRate) + normalizeRatio(inputs.amortizationRate);
-  const annualCostRatio =
-    financingCostRatio + normalizeRatio(inputs.maintenanceRate);
-  const incomeLimitedPrice =
-    annualCostRatio > 0 ? (annualHousingBudget + downPayment * financingCostRatio) / annualCostRatio : 0;
   const requiredDownPaymentRatio = normalizeRatio(inputs.requiredDownPaymentRatio);
   const ltvDownPaymentRatio = normalizeRatio(100 - inputs.maxLoanToValueRatio);
   const minDownPaymentRatio = Math.max(requiredDownPaymentRatio, ltvDownPaymentRatio);
   const downPaymentLimitedPrice = minDownPaymentRatio > 0 ? downPayment / minDownPaymentRatio : 0;
   const hardEquityRatio = normalizeRatio(MIN_HARD_EQUITY_RATIO);
   const hardEquityLimitedPrice = hardEquityRatio > 0 ? getHardEquity(inputs.availableAssets) / hardEquityRatio : 0;
+  const assetLimitedPrice = Math.min(downPaymentLimitedPrice, hardEquityLimitedPrice);
+  const incomeLimitedPrice = calculateMaxAffordablePropertyPriceByIncome(inputs, assetLimitedPrice);
 
   return Math.min(incomeLimitedPrice, downPaymentLimitedPrice, hardEquityLimitedPrice);
+}
+
+function calculateMaxAffordablePropertyPriceByIncome(inputs: MortgageInputs, maxPropertyPrice: number) {
+  const normalizedMaxPropertyPrice = normalizeMoney(maxPropertyPrice);
+
+  if (normalizedMaxPropertyPrice === 0) {
+    return 0;
+  }
+
+  const annualHousingBudget = normalizeMoney(inputs.grossAnnualIncome) * normalizeRatio(inputs.maxAffordabilityRatio);
+  let low = 0;
+  let high = normalizedMaxPropertyPrice;
+
+  for (let iteration = 0; iteration < 60; iteration += 1) {
+    const propertyPrice = (low + high) / 2;
+    const mortgageAmount = calculateMortgageAmount(propertyPrice, inputs.downPayment);
+    const monthlyPayment = calculateMonthlyHousingPayment({
+      annualAmortization: calculateRequiredAnnualAmortization({
+        mortgageAmount,
+        propertyPrice,
+        targetLoanToValueRatio: inputs.targetLoanToValueRatio,
+        years: inputs.repaymentYears,
+      }),
+      annualInterestRate: inputs.annualInterestRate,
+      maintenanceRate: inputs.maintenanceRate,
+      mortgageAmount,
+      propertyPrice,
+    });
+
+    if (monthlyPayment * 12 <= annualHousingBudget) {
+      low = propertyPrice;
+    } else {
+      high = propertyPrice;
+    }
+  }
+
+  return low;
 }
 
 export function clampPercent(value: number) {
