@@ -14,7 +14,8 @@ import {
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import {
   calculateGrossAnnualIncome,
   calculateHardEquityRatio,
@@ -47,9 +48,27 @@ const MAX_PROPERTY_PRICE = 3000000;
 const PROPERTY_PRICE_STEP = 1000;
 const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
 const mortgageMoneyInputClasses = 'glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1';
+const MORTGAGE_STRUCTURE_POPOVER_MAX_WIDTH = 768;
+const MORTGAGE_STRUCTURE_POPOVER_MIN_WIDTH = 320;
+const MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP = 16;
+const MORTGAGE_STRUCTURE_POPOVER_BUTTON_GAP = 16;
 
 function formatMortgagePercent(value: number) {
   return `${value.toFixed(1)}%`;
+}
+
+function getMortgageStructurePopoverStyle(buttonRect: DOMRect, viewportWidth: number): CSSProperties {
+  const availableWidth = buttonRect.left - MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP - MORTGAGE_STRUCTURE_POPOVER_BUTTON_GAP;
+  const width = Math.max(
+    MORTGAGE_STRUCTURE_POPOVER_MIN_WIDTH,
+    Math.min(MORTGAGE_STRUCTURE_POPOVER_MAX_WIDTH, availableWidth),
+  );
+
+  return {
+    left: Math.max(MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP, buttonRect.left - width - MORTGAGE_STRUCTURE_POPOVER_BUTTON_GAP),
+    top: Math.max(MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP, buttonRect.top),
+    width: Math.min(width, viewportWidth - MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP * 2),
+  };
 }
 
 type SavedMortgageInputs = {
@@ -268,9 +287,34 @@ function AffordabilityPanel({
   onPropertyPriceChange: (value: number) => void;
 }) {
   const [isStructureOpen, setIsStructureOpen] = useState(false);
+  const [structurePopoverStyle, setStructurePopoverStyle] = useState<CSSProperties>();
+  const structureButtonRef = useRef<HTMLButtonElement>(null);
   const statusTextClassName = mortgage.canAffordProperty ? 'text-emerald-600' : 'text-red-500';
   const statusIconClassName = mortgage.canAffordProperty ? 'border-emerald-500/70 text-emerald-600' : 'text-red-500';
   const StatusIcon = mortgage.canAffordProperty ? Check : CircleAlert;
+
+  useEffect(() => {
+    if (!isStructureOpen) {
+      return;
+    }
+
+    function updateStructurePopoverStyle() {
+      const buttonRect = structureButtonRef.current?.getBoundingClientRect();
+
+      if (buttonRect) {
+        setStructurePopoverStyle(getMortgageStructurePopoverStyle(buttonRect, window.innerWidth));
+      }
+    }
+
+    updateStructurePopoverStyle();
+    window.addEventListener('resize', updateStructurePopoverStyle);
+    window.addEventListener('scroll', updateStructurePopoverStyle, true);
+
+    return () => {
+      window.removeEventListener('resize', updateStructurePopoverStyle);
+      window.removeEventListener('scroll', updateStructurePopoverStyle, true);
+    };
+  }, [isStructureOpen]);
 
   return (
     <>
@@ -290,6 +334,7 @@ function AffordabilityPanel({
           </div>
           <div className="relative shrink-0 self-center md:self-start">
             <button
+              ref={structureButtonRef}
               aria-controls="mortgage-structure-popover"
               aria-expanded={isStructureOpen}
               aria-label="Show mortgage structure"
@@ -299,7 +344,7 @@ function AffordabilityPanel({
             >
               <BookOpenText className="h-4 w-4" />
             </button>
-            {isStructureOpen && <MortgageStructurePopover />}
+            {isStructureOpen && structurePopoverStyle && <MortgageStructurePopover style={structurePopoverStyle} />}
           </div>
         </div>
         <p className={`my-4 text-center text-3xl font-bold tracking-normal md:text-4xl ${statusTextClassName}`}>
@@ -316,20 +361,22 @@ function AffordabilityPanel({
   );
 }
 
-function MortgageStructurePopover() {
-  return (
+function MortgageStructurePopover({ style }: { style: CSSProperties }) {
+  return createPortal(
     <div
       id="mortgage-structure-popover"
       role="dialog"
       aria-label="Mortgage structure"
-      className="absolute right-0 top-12 z-50 w-[min(calc(100vw-2rem),56rem)] rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+      className="fixed z-[999] rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+      style={style}
     >
       <img
         alt="Mortgage structure"
         className="max-h-[min(78vh,48rem)] w-full rounded-md object-contain"
         src="/images/MortgageStructure.webp"
       />
-    </div>
+    </div>,
+    document.body,
   );
 }
 
