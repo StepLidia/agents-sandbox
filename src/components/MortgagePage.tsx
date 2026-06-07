@@ -25,6 +25,8 @@ import {
   defaultMortgageInputs,
   MIN_HARD_EQUITY_RATIO,
   type MortgageAsset,
+  type MortgageCostAmounts,
+  type MortgageCostItemId,
 } from '../calculations/mortgageCalculations';
 import { buttonClasses } from '../constants/buttonStyles';
 import { colorClasses, type ChartPalette } from '../constants/colors';
@@ -32,7 +34,7 @@ import { tooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 import { MortgageCostsCard } from './MortgageCostsCard';
-import { MortgageRepaymentCard } from './MortgageRepaymentCard';
+import { DEFAULT_REPAYMENT_INTEREST_RATE, MortgageRepaymentCard } from './MortgageRepaymentCard';
 
 const assetIconById: Record<string, LucideIcon> = {
   cash: PiggyBank,
@@ -81,18 +83,29 @@ type SavedMortgageInputs = {
   downPayment?: number;
   downPaymentEdited?: boolean;
   grossMonthlyIncome?: number;
+  mortgageCostAmounts?: MortgageCostAmounts;
+  propertyPrice?: number;
+  repaymentInterestRate?: number;
 };
 
 export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAsset[] }) {
   const savedInputs = useMemo(readSavedMortgageInputs, []);
   const [hasEditedMortgageAssets, setHasEditedMortgageAssets] = useState(() => savedInputs.assetsEdited === true);
   const [hasEditedDownPayment, setHasEditedDownPayment] = useState(() => savedInputs.downPaymentEdited === true);
-  const [propertyPrice, setPropertyPrice] = useState(defaultMortgageInputs.propertyPrice);
+  const [propertyPrice, setPropertyPrice] = useState(() =>
+    getSavedMortgageAmount(savedInputs.propertyPrice, defaultMortgageInputs.propertyPrice),
+  );
   const [downPayment, setDownPayment] = useState(() =>
     getSavedMortgageAmount(savedInputs.downPayment, defaultMortgageInputs.downPayment),
   );
   const [grossMonthlyIncome, setGrossMonthlyIncome] = useState(() =>
     getSavedMortgageAmount(savedInputs.grossMonthlyIncome, defaultMortgageInputs.grossAnnualIncome / 12),
+  );
+  const [mortgageCostAmounts, setMortgageCostAmounts] = useState<MortgageCostAmounts>(() =>
+    getSavedMortgageCostAmounts(savedInputs.mortgageCostAmounts),
+  );
+  const [repaymentInterestRate, setRepaymentInterestRate] = useState(() =>
+    getSavedMortgageAmount(savedInputs.repaymentInterestRate, DEFAULT_REPAYMENT_INTEREST_RATE),
   );
   const [mortgageAssets, setMortgageAssets] = useState(() =>
     mergeSavedMortgageAssets(savedInputs.assetsEdited ? savedInputs.assets : undefined, dashboardAssets),
@@ -117,8 +130,20 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       downPayment,
       downPaymentEdited: hasEditedDownPayment,
       grossMonthlyIncome,
+      mortgageCostAmounts,
+      propertyPrice,
+      repaymentInterestRate,
     });
-  }, [downPayment, grossMonthlyIncome, hasEditedDownPayment, hasEditedMortgageAssets, mortgageAssets]);
+  }, [
+    downPayment,
+    grossMonthlyIncome,
+    hasEditedDownPayment,
+    hasEditedMortgageAssets,
+    mortgageCostAmounts,
+    mortgageAssets,
+    propertyPrice,
+    repaymentInterestRate,
+  ]);
 
   useEffect(() => {
     if (!hasEditedMortgageAssets) {
@@ -142,6 +167,17 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
   function updateDownPayment(amount: number) {
     setHasEditedDownPayment(true);
     setDownPayment(amount);
+  }
+
+  function updateMortgageCostAmount(id: MortgageCostItemId, amount: number) {
+    setMortgageCostAmounts((currentAmounts) => ({
+      ...currentAmounts,
+      [id]: amount,
+    }));
+  }
+
+  function resetMortgageCostAmounts() {
+    setMortgageCostAmounts({});
   }
 
   const topMetrics = [
@@ -258,8 +294,19 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           <MortgageSummaryCard key={card.label} {...card} />
         ))}
       </section>
-      <MortgageRepaymentCard mortgageAmount={mortgage.mortgageAmount} propertyPrice={propertyPrice} />
-      <MortgageCostsCard maintenanceRate={mortgageInputs.maintenanceRate} propertyPrice={propertyPrice} />
+      <MortgageRepaymentCard
+        interestRate={repaymentInterestRate}
+        mortgageAmount={mortgage.mortgageAmount}
+        propertyPrice={propertyPrice}
+        onInterestRateChange={setRepaymentInterestRate}
+      />
+      <MortgageCostsCard
+        costAmounts={mortgageCostAmounts}
+        maintenanceRate={mortgageInputs.maintenanceRate}
+        propertyPrice={propertyPrice}
+        onCostAmountChange={updateMortgageCostAmount}
+        onResetCosts={resetMortgageCostAmounts}
+      />
     </div>
   );
 }
@@ -677,12 +724,18 @@ function saveMortgageInputs({
   downPayment,
   downPaymentEdited,
   grossMonthlyIncome,
+  mortgageCostAmounts,
+  propertyPrice,
+  repaymentInterestRate,
 }: {
   assets: MortgageAsset[];
   assetsEdited: boolean;
   downPayment: number;
   downPaymentEdited: boolean;
   grossMonthlyIncome: number;
+  mortgageCostAmounts: MortgageCostAmounts;
+  propertyPrice: number;
+  repaymentInterestRate: number;
 }) {
   try {
     window.localStorage.setItem(
@@ -693,6 +746,9 @@ function saveMortgageInputs({
         downPayment,
         downPaymentEdited,
         grossMonthlyIncome,
+        mortgageCostAmounts,
+        propertyPrice,
+        repaymentInterestRate,
       } satisfies SavedMortgageInputs),
     );
   } catch {
@@ -709,6 +765,16 @@ function mergeSavedMortgageAssets(savedAssets: SavedMortgageInputs['assets'], da
 
 function getSavedMortgageAmount(value: unknown, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
+function getSavedMortgageCostAmounts(value: unknown): MortgageCostAmounts {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter(([, amount]) => typeof amount === 'number' && Number.isFinite(amount)),
+  ) as MortgageCostAmounts;
 }
 
 function getDashboardMortgageAssetAmount(mortgageAssetId: string, dashboardAssets: FinancialAsset[], fallback: number) {

@@ -17,7 +17,7 @@ import { currency } from '../finance';
 const MIN_INTEREST_RATE = 0.5;
 const MAX_INTEREST_RATE = 6;
 const INTEREST_RATE_STEP = 0.01;
-const DEFAULT_INTEREST_RATE = 1.68;
+export const DEFAULT_REPAYMENT_INTEREST_RATE = 1.68;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
 const INTEREST_COST_COLOR = '#ed859f';
 const PILLAR_3_ASSETS_COLOR = colorClasses.cyan.stroke;
@@ -29,13 +29,16 @@ const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
 };
 
 export function MortgageRepaymentCard({
+  interestRate,
   mortgageAmount,
+  onInterestRateChange,
   propertyPrice,
 }: {
+  interestRate: number;
   mortgageAmount: number;
+  onInterestRateChange: (value: number) => void;
   propertyPrice: number;
 }) {
-  const [interestRate, setInterestRate] = useState(DEFAULT_INTEREST_RATE);
   const [strategy, setStrategy] = useState<MortgageAmortizationStrategy>('direct');
   const sliderProgress = clampPercent(
     ((interestRate - MIN_INTEREST_RATE) / (MAX_INTEREST_RATE - MIN_INTEREST_RATE)) * 100,
@@ -69,7 +72,7 @@ export function MortgageRepaymentCard({
         <InterestRateControl
           interestRate={interestRate}
           sliderProgress={sliderProgress}
-          onInterestRateChange={setInterestRate}
+          onInterestRateChange={onInterestRateChange}
         />
         <StrategyControl strategy={strategy} onStrategyChange={setStrategy} />
         <RepaymentMetricPanel projection={selectedProjection} />

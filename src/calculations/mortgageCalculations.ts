@@ -62,7 +62,22 @@ export type MortgageRepaymentProjection = {
   schedule: MortgageRepaymentYear[];
 };
 
+export type MortgageCostItemId =
+  | 'landRegistryFee'
+  | 'notaryFees'
+  | 'mortgageRegistration'
+  | 'administrativeFees'
+  | 'oneTimeOtherCosts'
+  | 'maintenance'
+  | 'propertyTax'
+  | 'buildingInsurance'
+  | 'heatingAndUtilities'
+  | 'annualOtherCosts';
+
+export type MortgageCostAmounts = Partial<Record<MortgageCostItemId, number>>;
+
 export type MortgageCostItem = {
+  id: MortgageCostItemId;
   label: string;
   amount: number;
 };
@@ -247,36 +262,43 @@ export function calculateRequiredAnnualAmortizationRate({
 }
 
 export function calculateMortgageCosts({
+  costAmounts = {},
   maintenanceRate,
   propertyPrice,
 }: {
+  costAmounts?: MortgageCostAmounts;
   maintenanceRate: number;
   propertyPrice: number;
 }): MortgageCosts {
   const normalizedPropertyPrice = normalizeMoney(propertyPrice);
-  const oneTimeCosts = [
+  const defaultOneTimeCosts: MortgageCostItem[] = [
     {
+      id: 'landRegistryFee',
       label: `Land Registry Fee (${LAND_REGISTRY_FEE_RATE.toFixed(1)}%)`,
       amount: calculatePercentageCost(normalizedPropertyPrice, LAND_REGISTRY_FEE_RATE),
     },
-    { label: 'Notary Fees', amount: ESTIMATED_NOTARY_FEES },
-    { label: 'Mortgage Registration', amount: ESTIMATED_MORTGAGE_REGISTRATION_FEES },
-    { label: 'Administrative Fees', amount: ESTIMATED_ADMINISTRATIVE_FEES },
-    { label: 'Other Costs', amount: ESTIMATED_ONE_TIME_OTHER_COSTS },
+    { id: 'notaryFees', label: 'Notary Fees', amount: ESTIMATED_NOTARY_FEES },
+    { id: 'mortgageRegistration', label: 'Mortgage Registration', amount: ESTIMATED_MORTGAGE_REGISTRATION_FEES },
+    { id: 'administrativeFees', label: 'Administrative Fees', amount: ESTIMATED_ADMINISTRATIVE_FEES },
+    { id: 'oneTimeOtherCosts', label: 'Other Costs', amount: ESTIMATED_ONE_TIME_OTHER_COSTS },
   ];
-  const ongoingAnnualCosts = [
+  const defaultOngoingAnnualCosts: MortgageCostItem[] = [
     {
+      id: 'maintenance',
       label: `Maintenance (${maintenanceRate.toFixed(1)}%)`,
       amount: calculatePercentageCost(normalizedPropertyPrice, maintenanceRate),
     },
     {
+      id: 'propertyTax',
       label: 'Property Tax (Est.)',
       amount: calculatePercentageCost(normalizedPropertyPrice, PROPERTY_TAX_ESTIMATE_RATE),
     },
-    { label: 'Building Insurance (Est.)', amount: ESTIMATED_BUILDING_INSURANCE },
-    { label: 'Heating & Utilities (Est.)', amount: ESTIMATED_HEATING_AND_UTILITIES },
-    { label: 'Other Costs', amount: ESTIMATED_ANNUAL_OTHER_COSTS },
+    { id: 'buildingInsurance', label: 'Building Insurance (Est.)', amount: ESTIMATED_BUILDING_INSURANCE },
+    { id: 'heatingAndUtilities', label: 'Heating & Utilities (Est.)', amount: ESTIMATED_HEATING_AND_UTILITIES },
+    { id: 'annualOtherCosts', label: 'Other Costs', amount: ESTIMATED_ANNUAL_OTHER_COSTS },
   ];
+  const oneTimeCosts = defaultOneTimeCosts.map((item) => applyMortgageCostAmount(item, costAmounts));
+  const ongoingAnnualCosts = defaultOngoingAnnualCosts.map((item) => applyMortgageCostAmount(item, costAmounts));
   const totalOneTimeCosts = sumMortgageCostItems(oneTimeCosts);
   const totalOngoingAnnualCosts = sumMortgageCostItems(ongoingAnnualCosts);
 
@@ -477,6 +499,13 @@ function calculateNiceThousandsStep(value: number) {
 
 function calculatePercentageCost(amount: number, rate: number) {
   return Math.round(normalizeMoney(amount) * normalizeRatio(rate));
+}
+
+function applyMortgageCostAmount(item: MortgageCostItem, costAmounts: MortgageCostAmounts): MortgageCostItem {
+  return {
+    ...item,
+    amount: normalizeMoney(costAmounts[item.id] ?? item.amount),
+  };
 }
 
 function sumMortgageCostItems(items: MortgageCostItem[]) {
