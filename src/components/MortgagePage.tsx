@@ -1,5 +1,6 @@
 import {
   Banknote,
+  BookOpenText,
   BriefcaseBusiness,
   ChartPie,
   Check,
@@ -23,6 +24,7 @@ import {
   MIN_HARD_EQUITY_RATIO,
   type MortgageAsset,
 } from '../calculations/mortgageCalculations';
+import { buttonClasses } from '../constants/buttonStyles';
 import { colorClasses, type ChartPalette } from '../constants/colors';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
@@ -265,34 +267,69 @@ function AffordabilityPanel({
   propertyPrice: number;
   onPropertyPriceChange: (value: number) => void;
 }) {
+  const [isStructureOpen, setIsStructureOpen] = useState(false);
   const statusTextClassName = mortgage.canAffordProperty ? 'text-emerald-600' : 'text-red-500';
   const statusIconClassName = mortgage.canAffordProperty ? 'border-emerald-500/70 text-emerald-600' : 'text-red-500';
   const StatusIcon = mortgage.canAffordProperty ? Check : CircleAlert;
 
   return (
-    <section className={`glass-panel flex h-full flex-col p-4 ${className}`}>
-      <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
-        <div
-          className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${mortgage.canAffordProperty ? 'border-4' : ''} ${statusIconClassName}`}
-        >
-          <StatusIcon className="h-7 w-7" />
+    <>
+      <section className={`glass-panel flex h-full flex-col p-4 ${className}`}>
+        <div className="flex flex-col gap-4 text-center md:flex-row md:items-start md:justify-between md:text-left">
+          <div className="flex flex-col items-center gap-4 md:min-w-0 md:flex-row">
+            <div
+              className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${mortgage.canAffordProperty ? 'border-4' : ''} ${statusIconClassName}`}
+            >
+              <StatusIcon className="h-7 w-7" />
+            </div>
+            <div className="min-w-0">
+              <p className={`text-lg font-semibold md:text-xl ${statusTextClassName}`}>
+                {mortgage.canAffordProperty ? 'Yes, you can afford this property!' : 'This property needs more review.'}
+              </p>
+            </div>
+          </div>
+          <div className="relative shrink-0 self-center md:self-start">
+            <button
+              aria-controls="mortgage-structure-popover"
+              aria-expanded={isStructureOpen}
+              aria-label="Show mortgage structure"
+              className={buttonClasses({ size: 'icon' })}
+              type="button"
+              onClick={() => setIsStructureOpen((isOpen) => !isOpen)}
+            >
+              <BookOpenText className="h-4 w-4" />
+            </button>
+            {isStructureOpen && <MortgageStructurePopover />}
+          </div>
         </div>
-        <div className="min-w-0">
-          <p className={`text-lg font-semibold md:text-xl ${statusTextClassName}`}>
-            {mortgage.canAffordProperty ? 'Yes, you can afford this property!' : 'This property needs more review.'}
-          </p>
+        <p className={`my-4 text-center text-3xl font-bold tracking-normal md:text-4xl ${statusTextClassName}`}>
+          {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
+        </p>
+        <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
+        <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-2 xl:grid-cols-4">
+          {metrics.map((metric) => (
+            <MortgageMetricTile key={metric.label} {...metric} />
+          ))}
         </div>
-      </div>
-      <p className={`my-4 text-center text-3xl font-bold tracking-normal md:text-4xl ${statusTextClassName}`}>
-        {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
-      </p>
-      <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
-      <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => (
-          <MortgageMetricTile key={metric.label} {...metric} />
-        ))}
-      </div>
-    </section>
+      </section>
+    </>
+  );
+}
+
+function MortgageStructurePopover() {
+  return (
+    <div
+      id="mortgage-structure-popover"
+      role="dialog"
+      aria-label="Mortgage structure"
+      className="absolute right-0 top-12 z-50 w-[min(calc(100vw-2rem),56rem)] rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+    >
+      <img
+        alt="Mortgage structure"
+        className="max-h-[min(78vh,48rem)] w-full rounded-md object-contain"
+        src="/images/MortgageStructure.webp"
+      />
+    </div>
   );
 }
 
