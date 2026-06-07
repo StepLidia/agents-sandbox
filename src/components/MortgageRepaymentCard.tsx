@@ -18,7 +18,7 @@ const DEFAULT_INTEREST_RATE = 1.68;
 const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
-const INTEREST_COST_COLOR = '#42ba85';
+const INTEREST_COST_COLOR = '#f0869f';
 const CHART_MARKER_SIZE = 8;
 
 const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
@@ -85,10 +85,9 @@ export function MortgageRepaymentCard({
         ))}
       </div>
 
-      <div className="mt-3 grid gap-3 rounded-lg border border-blue-300/30 bg-blue-500/10 p-3 text-sm font-bold text-blue-700 md:grid-cols-3">
+      <div className="mt-3 grid gap-3 rounded-lg border border-orange-300/30 bg-orange-200/20 p-3 text-sm font-semibold text-slate-600 md:grid-cols-3">
         <p>Direct amortization lowers debt and interest costs over time.</p>
         <p>Indirect amortization keeps debt stable while building pledged 3a assets.</p>
-        <p>Target after {DEFAULT_REPAYMENT_YEARS} years: {DEFAULT_TARGET_LTV}% loan-to-value.</p>
       </div>
     </section>
   );
@@ -311,7 +310,7 @@ function RepaymentLineChart({
             <Line
               dataKey="annualInterestCost"
               dot={<FiveYearDiamondDot color={INTEREST_COST_COLOR} />}
-              name="Annual Interest Cost"
+              name="Projected next year interest cost"
               stroke={INTEREST_COST_COLOR}
               strokeWidth={3}
               type="monotone"
@@ -376,7 +375,7 @@ function RepaymentSummaryStrip({
         <span className="text-slate-500">({loanToValue.toFixed(0)}% LTV)</span>
       </p>
       <p>
-        Total Interest Paid: <span className="text-emerald-700">{currency(projection.totalInterestPaid)} CHF</span>
+        Total Interest Paid: <span className="text-rose-400">{currency(projection.totalInterestPaid)} CHF</span>
       </p>
       <p className="text-slate-600">{strategySummary}</p>
     </div>
