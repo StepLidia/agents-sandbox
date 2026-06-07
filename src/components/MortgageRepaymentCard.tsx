@@ -8,7 +8,6 @@ import {
   type MortgageAmortizationStrategy,
   type MortgageRepaymentProjection,
 } from '../calculations/mortgageCalculations';
-import { colorClasses } from '../constants/colors';
 import { tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 
@@ -18,8 +17,8 @@ const INTEREST_RATE_STEP = 0.01;
 const DEFAULT_INTEREST_RATE = 1.68;
 const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
-const MORTGAGE_BALANCE_COLOR = colorClasses.blue.stroke;
-const INTEREST_COST_COLOR = colorClasses.emerald.stroke;
+const MORTGAGE_BALANCE_COLOR = '#2563eb';
+const INTEREST_COST_COLOR = '#42ba85';
 
 const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
   direct: 'Direct Amortization',
@@ -266,75 +265,61 @@ function RepaymentLineChart({
           { label: 'Annual Interest Cost', color: INTEREST_COST_COLOR },
         ]}
       />
-      <ResponsiveContainer width="100%" height={260}>
-        <ComposedChart data={chartData} margin={{ bottom: 4, left: 16, right: 16, top: 8 }}>
-          <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical />
-          <XAxis
-            axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
-            dataKey="name"
-            interval={0}
-            tick={{ fill: '#475569', fontSize: 12, fontWeight: 700 }}
-            tickLine={false}
-            ticks={xAxisTicks}
-          />
-          <YAxis
-            axisLine={{ stroke: MORTGAGE_BALANCE_COLOR, strokeOpacity: 0.8 }}
-            label={{
-              angle: -90,
-              fill: MORTGAGE_BALANCE_COLOR,
-              fontSize: 12,
-              fontWeight: 700,
-              offset: 2,
-              position: 'insideLeft',
-              value: 'Mortgage Balance (CHF)',
-            }}
-            tick={{ fill: MORTGAGE_BALANCE_COLOR, fontSize: 12, fontWeight: 700 }}
-            tickFormatter={formatThousandsAxis}
-            tickLine={false}
-            ticks={balanceTicks}
-            width={72}
-            yAxisId="balance"
-          />
-          <YAxis
-            axisLine={{ stroke: INTEREST_COST_COLOR, strokeOpacity: 0.8 }}
-            label={{
-              angle: -90,
-              fill: INTEREST_COST_COLOR,
-              fontSize: 12,
-              fontWeight: 700,
-              offset: 2,
-              position: 'insideRight',
-              value: 'Interest Cost per Year (CHF)',
-            }}
-            orientation="right"
-            tick={{ fill: INTEREST_COST_COLOR, fontSize: 12, fontWeight: 700 }}
-            tickFormatter={formatThousandsAxis}
-            tickLine={false}
-            ticks={interestTicks}
-            width={72}
-            yAxisId="interest"
-          />
-          <Tooltip content={<RepaymentTooltip />} cursor={{ stroke: 'rgba(37,99,235,.18)', strokeWidth: 2 }} />
-          <Line
-            dataKey="mortgageBalance"
-            dot={{ fill: MORTGAGE_BALANCE_COLOR, r: 3, stroke: MORTGAGE_BALANCE_COLOR, strokeWidth: 1 }}
-            name="Mortgage Balance"
-            stroke={MORTGAGE_BALANCE_COLOR}
-            strokeWidth={3}
-            type="monotone"
-            yAxisId="balance"
-          />
-          <Line
-            dataKey="annualInterestCost"
-            dot={{ fill: INTEREST_COST_COLOR, r: 3, stroke: INTEREST_COST_COLOR, strokeWidth: 1 }}
-            name="Annual Interest Cost"
-            stroke={INTEREST_COST_COLOR}
-            strokeWidth={3}
-            type="monotone"
-            yAxisId="interest"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+      <div className="grid grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-1">
+        <ChartAxisLabel color={MORTGAGE_BALANCE_COLOR} text="Mortgage Balance (CHF)" />
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart data={chartData} margin={{ bottom: 4, left: 4, right: 4, top: 8 }}>
+            <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical />
+            <XAxis
+              axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+              dataKey="name"
+              interval={0}
+              tick={{ fill: '#475569', fontSize: 12, fontWeight: 700 }}
+              tickLine={false}
+              ticks={xAxisTicks}
+            />
+            <YAxis
+              axisLine={{ stroke: MORTGAGE_BALANCE_COLOR, strokeOpacity: 0.8 }}
+              tick={{ fill: MORTGAGE_BALANCE_COLOR, fontSize: 12, fontWeight: 700 }}
+              tickFormatter={formatThousandsAxis}
+              tickLine={false}
+              ticks={balanceTicks}
+              width={58}
+              yAxisId="balance"
+            />
+            <YAxis
+              axisLine={{ stroke: INTEREST_COST_COLOR, strokeOpacity: 0.8 }}
+              orientation="right"
+              tick={{ fill: INTEREST_COST_COLOR, fontSize: 12, fontWeight: 700 }}
+              tickFormatter={formatThousandsAxis}
+              tickLine={false}
+              ticks={interestTicks}
+              width={44}
+              yAxisId="interest"
+            />
+            <Tooltip content={<RepaymentTooltip />} cursor={{ stroke: 'rgba(37,99,235,.18)', strokeWidth: 2 }} />
+            <Line
+              dataKey="mortgageBalance"
+              dot={{ fill: MORTGAGE_BALANCE_COLOR, r: 3, stroke: MORTGAGE_BALANCE_COLOR, strokeWidth: 1 }}
+              name="Mortgage Balance"
+              stroke={MORTGAGE_BALANCE_COLOR}
+              strokeWidth={3}
+              type="monotone"
+              yAxisId="balance"
+            />
+            <Line
+              dataKey="annualInterestCost"
+              dot={{ fill: INTEREST_COST_COLOR, r: 3, stroke: INTEREST_COST_COLOR, strokeWidth: 1 }}
+              name="Annual Interest Cost"
+              stroke={INTEREST_COST_COLOR}
+              strokeWidth={3}
+              type="monotone"
+              yAxisId="interest"
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+        <ChartAxisLabel color={INTEREST_COST_COLOR} text="Cost per Year (CHF)" />
+      </div>
     </div>
   );
 }
@@ -382,6 +367,23 @@ function ChartLegend({ items }: { items: Array<{ color: string; label: string }>
         </span>
       ))}
     </div>
+  );
+}
+
+function ChartAxisLabel({
+  color,
+  text,
+}: {
+  color: string;
+  text: string;
+}) {
+  return (
+    <span
+      className="pointer-events-none flex h-65 w-4 items-center justify-center overflow-visible text-sm font-bold leading-none whitespace-nowrap"
+      style={{ color }}
+    >
+      <span className="-rotate-90">{text}</span>
+    </span>
   );
 }
 
