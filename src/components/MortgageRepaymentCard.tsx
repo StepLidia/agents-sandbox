@@ -181,8 +181,8 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
     {
       icon: Banknote,
       iconClassName: 'bg-blue-600/10 text-blue-600',
-      label: 'Monthly repayment',
-      value: `${currency(projection.monthlyPayment)} CHF`,
+      label: 'Monthly amortization',
+      value: `${currency(projection.annualAmortization / 12)} CHF`,
     },
     {
       icon: PiggyBank,
@@ -343,7 +343,7 @@ function RepaymentLineChart({
             />
           </ComposedChart>
         </ResponsiveContainer>
-        <ChartAxisLabel color={INTEREST_COST_COLOR} text="Cost per Year (CHF)" />
+        <ChartAxisLabel color={INTEREST_COST_COLOR} text="Interest Cost per Year (CHF)" />
       </div>
     </div>
   );

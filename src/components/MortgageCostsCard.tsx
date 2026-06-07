@@ -25,7 +25,7 @@ export function MortgageCostsCard({
   const costs = calculateMortgageCosts({ costAmounts, maintenanceRate, propertyPrice });
 
   return (
-    <section className="glass-panel p-4">
+    <section className="glass-panel p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">3. Costs & Fees</h2>
@@ -43,7 +43,7 @@ export function MortgageCostsCard({
         </button>
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
         <MortgageCostPanel
           color={colorClasses.cyan}
           icon={ReceiptText}
@@ -91,10 +91,10 @@ function MortgageCostPanel({
   onCostAmountChange: (id: MortgageCostItemId, amount: number) => void;
 }) {
   return (
-    <article className="glass-panel flex h-full flex-col p-4">
-      <div className="flex items-center gap-3">
-        <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${color.bg} ${color.text}`}>
-          <Icon className="h-5 w-5" />
+    <article className="glass-panel flex h-full flex-col p-3">
+      <div className="flex items-center gap-2.5">
+        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl ${color.bg} ${color.text}`}>
+          <Icon className="h-4 w-4" />
         </span>
         <h3 className="text-sm font-bold text-slate-950">
           {title}
@@ -102,13 +102,13 @@ function MortgageCostPanel({
         </h3>
       </div>
 
-      <div className="mt-4 space-y-2 border-b border-slate-300/50 pb-4">
+      <div className="mt-3 space-y-1.5 border-b border-slate-300/50 pb-3">
         {items.map((item) => (
           <MortgageCostRow key={item.id} item={item} onCostAmountChange={onCostAmountChange} />
         ))}
       </div>
 
-      <div className={`mt-auto flex items-center justify-between gap-4 pt-4 text-sm font-bold ${color.text}`}>
+      <div className={`mt-auto flex items-center justify-between gap-4 pt-3 text-sm font-bold ${color.text}`}>
         <span>{totalLabel}</span>
         <span className="text-right whitespace-nowrap">
           {currency(totalValue)} CHF
@@ -133,7 +133,7 @@ function MortgageCostRow({
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
       <span className="font-bold text-slate-600">{item.label}</span>
-      <span className="glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1">
+      <span className="glass-input h-8 w-40 shrink-0 justify-between gap-2 px-2 py-1">
         <input
           aria-label={`${item.label} cost amount`}
           className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
