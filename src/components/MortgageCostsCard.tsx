@@ -17,7 +17,7 @@ export function MortgageCostsCard({
       <div>
         <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">3. Costs & Fees</h2>
         <p className="mt-1 text-sm font-semibold text-slate-600">
-          One-time purchasing costs and ongoing annual ownership costs.
+          One-time purchasing costs and ongoing annual ownership costs
         </p>
       </div>
 

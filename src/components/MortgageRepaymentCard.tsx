@@ -61,7 +61,7 @@ export function MortgageRepaymentCard({
       <div>
         <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">2. Repaying Your Mortgage</h2>
         <p className="mt-1 text-sm font-semibold text-slate-600">
-          Compare repayment strategies and adjust the interest rate.
+          Compare repayment strategies and adjust the interest rate
         </p>
       </div>
 
