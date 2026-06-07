@@ -30,6 +30,37 @@ export type MortgageOverview = {
   canAffordProperty: boolean;
 };
 
+export type MortgageAmortizationStrategy = 'direct' | 'indirect';
+
+export type MortgageRepaymentInputs = {
+  mortgageAmount: number;
+  propertyPrice: number;
+  annualInterestRate: number;
+  targetLoanToValueRatio: number;
+  years: number;
+  strategy: MortgageAmortizationStrategy;
+};
+
+export type MortgageRepaymentYear = {
+  year: number;
+  mortgageBalance: number;
+  annualInterestCost: number;
+  annualAmortization: number;
+  pillar3Assets: number;
+};
+
+export type MortgageRepaymentProjection = {
+  strategy: MortgageAmortizationStrategy;
+  targetMortgageBalance: number;
+  annualAmortization: number;
+  totalInterestPaid: number;
+  totalAmortization: number;
+  monthlyPayment: number;
+  endingMortgageBalance: number;
+  endingPillar3Assets: number;
+  schedule: MortgageRepaymentYear[];
+};
+
 export const MIN_HARD_EQUITY_RATIO = 10;
 
 const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
@@ -133,6 +164,85 @@ export function calculateMonthlyHousingPayment({
   return (annualInterest + annualMaintenance + annualAmortization) / 12;
 }
 
+export function calculateMortgageRepaymentProjection({
+  annualInterestRate,
+  mortgageAmount,
+  propertyPrice,
+  strategy,
+  targetLoanToValueRatio,
+  years,
+}: MortgageRepaymentInputs): MortgageRepaymentProjection {
+  const normalizedYears = normalizeYears(years);
+  const startingBalance = normalizeMoney(mortgageAmount);
+  const targetMortgageBalance = Math.min(
+    startingBalance,
+    normalizeMoney(propertyPrice) * normalizeRatio(targetLoanToValueRatio),
+  );
+  const totalAmortization = Math.max(startingBalance - targetMortgageBalance, 0);
+  const annualAmortization = normalizedYears > 0 ? totalAmortization / normalizedYears : 0;
+  const schedule = Array.from({ length: normalizedYears + 1 }, (_, year) =>
+    calculateMortgageRepaymentYear({
+      annualAmortization,
+      annualInterestRate,
+      startingBalance,
+      strategy,
+      targetMortgageBalance,
+      year,
+    }),
+  );
+  const totalInterestPaid = schedule
+    .slice(0, -1)
+    .reduce((total, year) => total + year.annualInterestCost, 0);
+  const firstPaymentYear = schedule[0] ?? {
+    annualAmortization: 0,
+    annualInterestCost: 0,
+  };
+  const lastYear = schedule.at(-1) ?? {
+    mortgageBalance: startingBalance,
+    pillar3Assets: 0,
+  };
+
+  return {
+    strategy,
+    targetMortgageBalance,
+    annualAmortization,
+    totalInterestPaid,
+    totalAmortization,
+    monthlyPayment: (firstPaymentYear.annualInterestCost + firstPaymentYear.annualAmortization) / 12,
+    endingMortgageBalance: lastYear.mortgageBalance,
+    endingPillar3Assets: lastYear.pillar3Assets,
+    schedule,
+  };
+}
+
+function calculateMortgageRepaymentYear({
+  annualAmortization,
+  annualInterestRate,
+  startingBalance,
+  strategy,
+  targetMortgageBalance,
+  year,
+}: {
+  annualAmortization: number;
+  annualInterestRate: number;
+  startingBalance: number;
+  strategy: MortgageAmortizationStrategy;
+  targetMortgageBalance: number;
+  year: number;
+}): MortgageRepaymentYear {
+  const directBalance = Math.max(startingBalance - annualAmortization * year, targetMortgageBalance);
+  const mortgageBalance = strategy === 'direct' ? directBalance : startingBalance;
+  const pillar3Assets = strategy === 'indirect' ? annualAmortization * year : 0;
+
+  return {
+    year,
+    mortgageBalance,
+    annualInterestCost: mortgageBalance * normalizeRatio(annualInterestRate),
+    annualAmortization: year < 1 ? annualAmortization : 0,
+    pillar3Assets,
+  };
+}
+
 export function calculateAffordabilityRatio(monthlyPayment: number, grossAnnualIncome: number) {
   return calculateRatio(normalizeMoney(monthlyPayment) * 12, grossAnnualIncome);
 }
@@ -179,6 +289,10 @@ function normalizeRatio(value: number) {
 
 function normalizeMoney(value: number) {
   return Number.isFinite(value) ? Math.max(value, 0) : 0;
+}
+
+function normalizeYears(value: number) {
+  return Number.isFinite(value) ? Math.max(Math.round(value), 0) : 0;
 }
 
 function getHardEquity(assets: MortgageAsset[]) {

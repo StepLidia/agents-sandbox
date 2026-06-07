@@ -29,6 +29,7 @@ import { buttonClasses } from '../constants/buttonStyles';
 import { colorClasses, type ChartPalette } from '../constants/colors';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
+import { MortgageRepaymentCard } from './MortgageRepaymentCard';
 
 const assetIconById: Record<string, LucideIcon> = {
   cash: PiggyBank,
@@ -253,6 +254,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           <MortgageSummaryCard key={card.label} {...card} />
         ))}
       </section>
+      <MortgageRepaymentCard mortgageAmount={mortgage.mortgageAmount} propertyPrice={propertyPrice} />
     </div>
   );
 }
@@ -261,7 +263,7 @@ function MortgageHeader() {
   return (
     <header>
       <h1 className="text-3xl font-semibold tracking-normal text-slate-950">Mortgage</h1>
-      <p className="mt-2 text-sm text-slate-700">Plan your home financing in Switzerland. All calculations in CHF.</p>
+      <p className="mt-2 text-sm text-slate-700">Plan your home financing in Switzerland</p>
     </header>
   );
 }
@@ -367,7 +369,7 @@ function MortgageStructurePopover({ style }: { style: CSSProperties }) {
       id="mortgage-structure-popover"
       role="dialog"
       aria-label="Mortgage structure"
-      className="fixed z-[999] rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+      className="fixed z-999 rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
       style={style}
     >
       <img

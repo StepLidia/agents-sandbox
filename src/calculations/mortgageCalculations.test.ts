@@ -4,6 +4,7 @@ import {
   calculateDownPayment,
   calculateLoanToValueRatio,
   calculateMonthlyHousingPayment,
+  calculateMortgageRepaymentProjection,
   calculateMortgageAmount,
   calculateMortgageOverview,
   defaultMortgageInputs,
@@ -57,5 +58,39 @@ describe('mortgage calculations', () => {
     });
 
     expect(overview.maxAffordablePropertyPrice).toBeCloseTo(729484, 0);
+  });
+
+  it('projects direct mortgage amortization to the target LTV', () => {
+    const projection = calculateMortgageRepaymentProjection({
+      annualInterestRate: 1.68,
+      mortgageAmount: 640000,
+      propertyPrice: 800000,
+      strategy: 'direct',
+      targetLoanToValueRatio: 65,
+      years: 20,
+    });
+
+    expect(projection.targetMortgageBalance).toBe(520000);
+    expect(projection.annualAmortization).toBe(6000);
+    expect(projection.endingMortgageBalance).toBe(520000);
+    expect(projection.endingPillar3Assets).toBe(0);
+    expect(projection.monthlyPayment).toBeCloseTo(1396, 0);
+    expect(projection.totalInterestPaid).toBeCloseTo(195888, 0);
+  });
+
+  it('projects indirect amortization as stable debt with 3a assets', () => {
+    const projection = calculateMortgageRepaymentProjection({
+      annualInterestRate: 1.68,
+      mortgageAmount: 640000,
+      propertyPrice: 800000,
+      strategy: 'indirect',
+      targetLoanToValueRatio: 65,
+      years: 20,
+    });
+
+    expect(projection.endingMortgageBalance).toBe(640000);
+    expect(projection.endingPillar3Assets).toBe(120000);
+    expect(projection.monthlyPayment).toBeCloseTo(1396, 0);
+    expect(projection.totalInterestPaid).toBeCloseTo(215040, 0);
   });
 });
