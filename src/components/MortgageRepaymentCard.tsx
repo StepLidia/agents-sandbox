@@ -19,7 +19,7 @@ const DEFAULT_INTEREST_RATE = 1.68;
 const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
-const INTEREST_COST_COLOR = '#ed5c75';
+const INTEREST_COST_COLOR = '#ed859f';
 const PILLAR_3_ASSETS_COLOR = colorClasses.cyan.stroke;
 const CHART_MARKER_SIZE = 8;
 
@@ -87,8 +87,8 @@ export function MortgageRepaymentCard({
         ))}
       </div>
 
-      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-400/30 bg-slate-300/20 p-3 text-sm font-semibold text-slate-600">
-        <Lightbulb className="h-5 w-5 shrink-0 text-orange-500" />
+      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-400/30 bg-slate-300/20 p-3 text-sm font-medium text-slate-700">
+        <Lightbulb className="h-5 w-5 shrink-0 text-yellow-500" />
         <p>
           Direct amortization lowers debt and interest costs over time. Indirect amortization keeps debt stable
           while building pledged 3a assets.
@@ -185,7 +185,7 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
       icon: PiggyBank,
       iconClassName:
         projection.strategy === 'indirect' ? 'bg-cyan-500/10 text-cyan-600' : 'bg-emerald-500/10 text-emerald-600',
-      label: projection.strategy === 'indirect' ? '3a assets' : 'Debt repaid',
+      label: projection.strategy === 'indirect' ? '3a assets' : 'Debt repaid:',
       value: `${currency(projection.strategy === 'indirect' ? projection.endingPillar3Assets : projection.totalAmortization)} CHF`,
     },
   ];
@@ -262,8 +262,10 @@ function RepaymentLineChart({
     pillar3Assets: Math.round(year.pillar3Assets),
     year: year.year,
   }));
-  const balanceTicks = buildMortgageChartTicks(chartData.flatMap((year) => [year.mortgageBalance, year.pillar3Assets]));
-  const interestTicks = buildMortgageChartTicks(chartData.map((year) => year.annualInterestCost));
+  const balanceTicks = buildMortgageChartTicks(chartData.map((year) => year.mortgageBalance));
+  const interestTicks = buildMortgageChartTicks(
+    chartData.flatMap((year) => [year.annualInterestCost, year.pillar3Assets]),
+  );
   const legendItems = [
     { label: 'Mortgage Balance', color: MORTGAGE_BALANCE_COLOR },
     ...(projection.strategy === 'indirect' ? [{ label: '3a Assets', color: PILLAR_3_ASSETS_COLOR }] : []),
@@ -324,7 +326,7 @@ function RepaymentLineChart({
                 stroke={PILLAR_3_ASSETS_COLOR}
                 strokeWidth={3}
                 type="monotone"
-                yAxisId="balance"
+                yAxisId="interest"
               />
             )}
             <Line
@@ -393,9 +395,9 @@ function RepaymentSummaryStrip({
         Total Interest Paid: <span className="text-rose-500">{currency(projection.totalInterestPaid)} CHF</span>
       </p>
       {projection.strategy === 'indirect' ? (
-        <p className={colorClasses.cyan.text}>3a assets {currency(projection.endingPillar3Assets)} CHF</p>
+        <p className={colorClasses.cyan.text}>3a assets: {currency(projection.endingPillar3Assets)} CHF</p>
       ) : (
-        <p className="text-slate-600">Debt repaid {currency(projection.totalAmortization)} CHF</p>
+        <p className="text-slate-600">Debt repaid: {currency(projection.totalAmortization)} CHF</p>
       )}
     </div>
   );
