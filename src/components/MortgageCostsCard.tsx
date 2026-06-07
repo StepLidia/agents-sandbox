@@ -131,9 +131,9 @@ function MortgageCostRow({
   });
 
   return (
-    <div className="flex items-center justify-between gap-4 text-sm font-semibold text-slate-600">
-      <span>{item.label}</span>
-      <span className="glass-input w-36 shrink-0 justify-between gap-2 px-2 py-1">
+    <div className="flex items-center justify-between gap-4 text-sm">
+      <span className="font-bold text-slate-600">{item.label}</span>
+      <span className="glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1">
         <input
           aria-label={`${item.label} cost amount`}
           className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
