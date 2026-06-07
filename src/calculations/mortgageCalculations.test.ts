@@ -67,10 +67,10 @@ describe('mortgage calculations', () => {
     });
 
     expect(costs.oneTimeCosts.map((cost) => cost.amount)).toEqual([14400, 2000, 1000, 500, 1100]);
-    expect(costs.ongoingAnnualCosts.map((cost) => cost.amount)).toEqual([8000, 1200, 600, 300]);
+    expect(costs.ongoingAnnualCosts.map((cost) => cost.amount)).toEqual([8000, 1200, 600, 1200, 300]);
     expect(costs.totalOneTimeCosts).toBe(19000);
-    expect(costs.totalOngoingAnnualCosts).toBe(10100);
-    expect(costs.monthlyOngoingCosts).toBeCloseTo(841.67, 2);
+    expect(costs.totalOngoingAnnualCosts).toBe(11300);
+    expect(costs.monthlyOngoingCosts).toBeCloseTo(941.67, 2);
   });
 
   it('calculates affordability ratio against gross income', () => {

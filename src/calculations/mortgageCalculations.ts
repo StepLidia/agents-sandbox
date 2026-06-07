@@ -85,6 +85,7 @@ export const ESTIMATED_MORTGAGE_REGISTRATION_FEES = 1000;
 export const ESTIMATED_ADMINISTRATIVE_FEES = 500;
 export const ESTIMATED_ONE_TIME_OTHER_COSTS = 1100;
 export const ESTIMATED_BUILDING_INSURANCE = 600;
+export const ESTIMATED_HEATING_AND_UTILITIES = 1200;
 export const ESTIMATED_ANNUAL_OTHER_COSTS = 300;
 
 const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
@@ -273,6 +274,7 @@ export function calculateMortgageCosts({
       amount: calculatePercentageCost(normalizedPropertyPrice, PROPERTY_TAX_ESTIMATE_RATE),
     },
     { label: 'Building Insurance (Est.)', amount: ESTIMATED_BUILDING_INSURANCE },
+    { label: 'Heating & Utilities (Est.)', amount: ESTIMATED_HEATING_AND_UTILITIES },
     { label: 'Other Costs', amount: ESTIMATED_ANNUAL_OTHER_COSTS },
   ];
   const totalOneTimeCosts = sumMortgageCostItems(oneTimeCosts);

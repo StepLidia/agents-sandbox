@@ -32,7 +32,7 @@ export function MortgageCostsCard({
           totalValue={costs.totalOneTimeCosts}
         />
         <MortgageCostPanel
-          color={colorClasses.violet}
+          color={colorClasses.coral}
           icon={Calculator}
           items={costs.ongoingAnnualCosts}
           monthlyValue={costs.monthlyOngoingCosts}
@@ -86,7 +86,7 @@ function MortgageCostPanel({
         <span>{totalLabel}</span>
         <span className="text-right whitespace-nowrap">
           {currency(totalValue)} CHF
-          {monthlyValue !== undefined && ` / ${currency(monthlyValue)} CHF / month`}
+          {monthlyValue !== undefined && ` (${currency(monthlyValue)} CHF / month)`}
         </span>
       </div>
     </article>
