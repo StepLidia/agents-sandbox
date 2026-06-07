@@ -215,6 +215,19 @@ export function calculateMortgageRepaymentProjection({
   };
 }
 
+export function buildMortgageChartTicks(values: number[]) {
+  const maxValue = Math.max(...values.map(normalizeMoney), 0);
+
+  if (maxValue === 0) {
+    return [0, 1000, 2000, 3000, 4000];
+  }
+
+  const step = calculateNiceThousandsStep(maxValue / 4);
+  const maxTick = Math.ceil(maxValue / step) * step;
+
+  return Array.from({ length: Math.floor(maxTick / step) + 1 }, (_, index) => index * step);
+}
+
 function calculateMortgageRepaymentYear({
   annualAmortization,
   annualInterestRate,
@@ -293,6 +306,15 @@ function normalizeMoney(value: number) {
 
 function normalizeYears(value: number) {
   return Number.isFinite(value) ? Math.max(Math.round(value), 0) : 0;
+}
+
+function calculateNiceThousandsStep(value: number) {
+  const normalizedValue = Math.max(value, 1000);
+  const magnitude = 10 ** Math.floor(Math.log10(normalizedValue));
+  const normalizedStep = normalizedValue / magnitude;
+  const multiplier = normalizedStep <= 1 ? 1 : normalizedStep <= 2 ? 2 : normalizedStep <= 5 ? 5 : 10;
+
+  return multiplier * magnitude;
 }
 
 function getHardEquity(assets: MortgageAsset[]) {

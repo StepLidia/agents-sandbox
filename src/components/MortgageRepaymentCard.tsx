@@ -1,12 +1,15 @@
 import { Banknote, Landmark, Percent, PiggyBank } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
+import { CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
+  buildMortgageChartTicks,
   calculateMortgageRepaymentProjection,
   clampPercent,
   type MortgageAmortizationStrategy,
   type MortgageRepaymentProjection,
-  type MortgageRepaymentYear,
 } from '../calculations/mortgageCalculations';
+import { colorClasses } from '../constants/colors';
+import { tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 
 const MIN_INTEREST_RATE = 0.5;
@@ -15,6 +18,8 @@ const INTEREST_RATE_STEP = 0.01;
 const DEFAULT_INTEREST_RATE = 1.68;
 const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
+const MORTGAGE_BALANCE_COLOR = colorClasses.blue.stroke;
+const INTEREST_COST_COLOR = colorClasses.emerald.stroke;
 
 const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
   direct: 'Direct Amortization',
@@ -105,7 +110,7 @@ function InterestRateControl({
           <h3 className="text-sm font-bold text-slate-950">Interest Rate</h3>
           <p className="mt-2 text-2xl font-bold tracking-normal text-blue-600">{interestRate.toFixed(2)}%</p>
         </div>
-        <span className="rounded-lg border border-blue-300/30 bg-blue-500/10 px-2 py-1 text-sm font-bold text-blue-700">
+        <span className="rounded-lg border border-blue-300/30 bg-blue-500/10 px-2 py-1 text-sm font-bold text-blue-600">
           Current
         </span>
       </div>
@@ -142,11 +147,10 @@ function StrategyControl({
         {(['direct', 'indirect'] as const).map((strategyOption) => (
           <button
             key={strategyOption}
-            className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
-              strategy === strategyOption
-                ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-600/20'
-                : 'border-slate-300/40 bg-white/40 text-slate-700 hover:border-blue-300/50 hover:text-blue-700'
-            }`}
+            className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${strategy === strategyOption
+              ? 'border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-600/20'
+              : 'border-slate-300/40 bg-white/40 text-slate-700 hover:border-blue-300/50 hover:text-blue-600'
+              }`}
             type="button"
             onClick={() => onStrategyChange(strategyOption)}
           >
@@ -217,9 +221,8 @@ function RepaymentChartCard({
 
   return (
     <button
-      className={`glass-panel w-full p-3 text-left transition ${
-        isSelected ? 'ring-2 ring-blue-500/70' : 'hover:ring-2 hover:ring-blue-300/40'
-      }`}
+      className={`glass-panel w-full p-3 text-left transition ${isSelected ? 'ring-2 ring-blue-500/70' : 'hover:ring-2 hover:ring-blue-300/40'
+        }`}
       type="button"
       onClick={onSelect}
     >
@@ -234,86 +237,179 @@ function RepaymentChartCard({
           {loanToValue.toFixed(0)}% LTV
         </span>
       </div>
-      <RepaymentLineChart projection={projection} propertyPrice={propertyPrice} />
-      <div className="mt-3 grid gap-2 rounded-lg bg-white/40 p-2 text-sm font-bold text-slate-700 md:grid-cols-2">
-        <p>Balance {currency(projection.endingMortgageBalance)} CHF</p>
-        <p>
-          {projection.strategy === 'indirect'
-            ? `3a assets ${currency(projection.endingPillar3Assets)} CHF`
-            : `Debt repaid ${currency(projection.totalAmortization)} CHF`}
-        </p>
-      </div>
+      <RepaymentLineChart projection={projection} />
+      <RepaymentSummaryStrip loanToValue={loanToValue} projection={projection} />
     </button>
   );
 }
 
 function RepaymentLineChart({
   projection,
-  propertyPrice,
 }: {
   projection: MortgageRepaymentProjection;
-  propertyPrice: number;
 }) {
-  const maxAmount = Math.max(propertyPrice, ...projection.schedule.map((year) => year.pillar3Assets));
-  const balancePoints = buildChartPoints(projection.schedule, maxAmount, 'mortgageBalance');
-  const pillar3Points = buildChartPoints(projection.schedule, maxAmount, 'pillar3Assets');
-  const interestPoints = buildChartPoints(projection.schedule, maxAmount, 'annualInterestCost');
+  const chartData = projection.schedule.map((year) => ({
+    annualInterestCost: Math.round(year.annualInterestCost),
+    mortgageBalance: Math.round(year.mortgageBalance),
+    name: year.year === 0 ? 'Now' : `Year ${year.year}`,
+    year: year.year,
+  }));
+  const balanceTicks = buildMortgageChartTicks(chartData.map((year) => year.mortgageBalance));
+  const interestTicks = buildMortgageChartTicks(chartData.map((year) => year.annualInterestCost));
+  const xAxisTicks = ['Now', 'Year 5', 'Year 10', 'Year 15', 'Year 20'];
 
   return (
-    <svg aria-label={`${strategyLabels[projection.strategy]} projection chart`} className="mt-3 h-48 w-full" role="img" viewBox="0 0 360 180">
-      <g stroke="#e2e8f0" strokeWidth="1">
-        {[40, 80, 120, 160].map((y) => (
-          <line key={y} x1="24" x2="350" y1={y} y2={y} />
-        ))}
-        {[24, 105, 187, 268, 350].map((x) => (
-          <line key={x} x1={x} x2={x} y1="16" y2="154" />
-        ))}
-      </g>
-      <polyline fill="none" points={balancePoints} stroke="#2563eb" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
-      {projection.strategy === 'indirect' && (
-        <polyline fill="none" points={pillar3Points} stroke="#047857" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />
-      )}
-      <polyline
-        fill="none"
-        points={interestPoints}
-        stroke="#fb7185"
-        strokeDasharray="5 5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
+    <div className="mt-3">
+      <ChartLegend
+        items={[
+          { label: 'Mortgage Balance', color: MORTGAGE_BALANCE_COLOR },
+          { label: 'Annual Interest Cost', color: INTEREST_COST_COLOR },
+        ]}
       />
-      <ChartLabel x={24} y={172} text="Now" />
-      <ChartLabel x={105} y={172} text="Year 5" />
-      <ChartLabel x={187} y={172} text="Year 10" />
-      <ChartLabel x={268} y={172} text="Year 15" />
-      <ChartLabel x={350} y={172} text="Year 20" />
-    </svg>
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart data={chartData} margin={{ bottom: 4, left: 16, right: 16, top: 8 }}>
+          <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical />
+          <XAxis
+            axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
+            dataKey="name"
+            interval={0}
+            tick={{ fill: '#475569', fontSize: 12, fontWeight: 700 }}
+            tickLine={false}
+            ticks={xAxisTicks}
+          />
+          <YAxis
+            axisLine={{ stroke: MORTGAGE_BALANCE_COLOR, strokeOpacity: 0.8 }}
+            label={{
+              angle: -90,
+              fill: MORTGAGE_BALANCE_COLOR,
+              fontSize: 12,
+              fontWeight: 700,
+              offset: 2,
+              position: 'insideLeft',
+              value: 'Mortgage Balance (CHF)',
+            }}
+            tick={{ fill: MORTGAGE_BALANCE_COLOR, fontSize: 12, fontWeight: 700 }}
+            tickFormatter={formatThousandsAxis}
+            tickLine={false}
+            ticks={balanceTicks}
+            width={72}
+            yAxisId="balance"
+          />
+          <YAxis
+            axisLine={{ stroke: INTEREST_COST_COLOR, strokeOpacity: 0.8 }}
+            label={{
+              angle: -90,
+              fill: INTEREST_COST_COLOR,
+              fontSize: 12,
+              fontWeight: 700,
+              offset: 2,
+              position: 'insideRight',
+              value: 'Interest Cost per Year (CHF)',
+            }}
+            orientation="right"
+            tick={{ fill: INTEREST_COST_COLOR, fontSize: 12, fontWeight: 700 }}
+            tickFormatter={formatThousandsAxis}
+            tickLine={false}
+            ticks={interestTicks}
+            width={72}
+            yAxisId="interest"
+          />
+          <Tooltip content={<RepaymentTooltip />} cursor={{ stroke: 'rgba(37,99,235,.18)', strokeWidth: 2 }} />
+          <Line
+            dataKey="mortgageBalance"
+            dot={{ fill: MORTGAGE_BALANCE_COLOR, r: 3, stroke: MORTGAGE_BALANCE_COLOR, strokeWidth: 1 }}
+            name="Mortgage Balance"
+            stroke={MORTGAGE_BALANCE_COLOR}
+            strokeWidth={3}
+            type="monotone"
+            yAxisId="balance"
+          />
+          <Line
+            dataKey="annualInterestCost"
+            dot={{ fill: INTEREST_COST_COLOR, r: 3, stroke: INTEREST_COST_COLOR, strokeWidth: 1 }}
+            name="Annual Interest Cost"
+            stroke={INTEREST_COST_COLOR}
+            strokeWidth={3}
+            type="monotone"
+            yAxisId="interest"
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
-function ChartLabel({ text, x, y }: { text: string; x: number; y: number }) {
+function RepaymentSummaryStrip({
+  loanToValue,
+  projection,
+}: {
+  loanToValue: number;
+  projection: MortgageRepaymentProjection;
+}) {
+  const strategySummary =
+    projection.strategy === 'indirect'
+      ? `3a assets ${currency(projection.endingPillar3Assets)} CHF`
+      : `Debt repaid ${currency(projection.totalAmortization)} CHF`;
+
   return (
-    <text fill="#475569" fontSize="10" fontWeight="700" textAnchor="middle" x={x} y={y}>
-      {text}
-    </text>
+    <div className="mt-3 flex flex-col gap-2 rounded-lg border border-slate-200/50 bg-slate-200/35 px-3 py-3 text-xs font-bold text-slate-700 shadow-inner shadow-white/40 backdrop-blur-md md:flex-row md:items-center md:justify-between">
+      <p>
+        After {DEFAULT_REPAYMENT_YEARS} years:{' '}
+        <span className="text-blue-600">Balance {currency(projection.endingMortgageBalance)} CHF</span>{' '}
+        <span className="text-slate-500">({loanToValue.toFixed(0)}% LTV)</span>
+      </p>
+      <p>
+        Total Interest Paid: <span className="text-emerald-700">{currency(projection.totalInterestPaid)} CHF</span>
+      </p>
+      <p className="text-slate-600">{strategySummary}</p>
+    </div>
   );
 }
 
-function buildChartPoints(
-  schedule: MortgageRepaymentYear[],
-  maxAmount: number,
-  key: keyof Pick<MortgageRepaymentYear, 'annualInterestCost' | 'mortgageBalance' | 'pillar3Assets'>,
-) {
-  const maxYear = Math.max(schedule.at(-1)?.year ?? 0, 1);
-  const chartWidth = 326;
-  const chartHeight = 138;
+function ChartLegend({ items }: { items: Array<{ color: string; label: string }> }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-bold text-slate-700">
+      {items.map((item) => (
+        <span key={item.label} className="flex items-center gap-2">
+          <span className="relative h-2.5 w-6">
+            <span className="absolute left-0 right-0 top-1/2 h-0.5 -translate-y-1/2" style={{ backgroundColor: item.color }} />
+            <span
+              className="absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
+          </span>
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
 
-  return schedule
-    .map((year) => {
-      const x = 24 + (year.year / maxYear) * chartWidth;
-      const y = 154 - (maxAmount > 0 ? year[key] / maxAmount : 0) * chartHeight;
+function RepaymentTooltip({
+  active,
+  label,
+  payload,
+}: {
+  active?: boolean;
+  label?: string;
+  payload?: Array<{ color?: string; dataKey?: string | number; name?: string; value?: number }>;
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
 
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
+  return (
+    <div className={tooltipContentClasses('px-3 py-2')}>
+      {label && <p className="mb-2 font-bold text-slate-950">{label}</p>}
+      {payload.map((item) => (
+        <p key={`${item.name}-${item.dataKey}`} className="text-sm font-semibold text-slate-700">
+          <span style={{ color: item.color }}>{item.name}:</span> {currency(item.value ?? 0)} CHF
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function formatThousandsAxis(value: number) {
+  return value >= 1000 ? `${Math.round(value / 1000)}k` : `${value}`;
 }

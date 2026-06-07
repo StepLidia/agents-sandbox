@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildMortgageChartTicks,
   calculateAffordabilityRatio,
   calculateDownPayment,
   calculateLoanToValueRatio,
@@ -92,5 +93,10 @@ describe('mortgage calculations', () => {
     expect(projection.endingPillar3Assets).toBe(120000);
     expect(projection.monthlyPayment).toBeCloseTo(1396, 0);
     expect(projection.totalInterestPaid).toBeCloseTo(215040, 0);
+  });
+
+  it('builds readable thousands ticks for mortgage charts', () => {
+    expect(buildMortgageChartTicks([640000, 520000])).toEqual([0, 200000, 400000, 600000, 800000]);
+    expect(buildMortgageChartTicks([10752, 8064])).toEqual([0, 5000, 10000, 15000]);
   });
 });
