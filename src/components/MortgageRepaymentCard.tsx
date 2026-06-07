@@ -1,4 +1,4 @@
-import { Banknote, Landmark, Percent, PiggyBank } from 'lucide-react';
+import { Banknote, Landmark, Lightbulb, PiggyBank } from 'lucide-react';
 import { useMemo, useState, type CSSProperties } from 'react';
 import { CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import {
@@ -85,9 +85,12 @@ export function MortgageRepaymentCard({
         ))}
       </div>
 
-      <div className="mt-3 grid gap-3 rounded-lg border border-orange-300/30 bg-orange-200/20 p-3 text-sm font-semibold text-slate-600 md:grid-cols-3">
-        <p>Direct amortization lowers debt and interest costs over time.</p>
-        <p>Indirect amortization keeps debt stable while building pledged 3a assets.</p>
+      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-400/30 bg-slate-300/20 p-3 text-sm font-semibold text-slate-600">
+        <Lightbulb className="h-5 w-5 shrink-0 text-orange-500" />
+        <p>
+          Direct amortization lowers debt and interest costs over time. Indirect amortization keeps debt stable
+          while building pledged 3a assets.
+        </p>
       </div>
     </section>
   );
@@ -166,16 +169,20 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
   const metrics = [
     {
       icon: Landmark,
+      iconClassName: 'bg-amber-500/12 text-amber-500',
       label: 'After 20 years',
       value: `${currency(projection.endingMortgageBalance)} CHF`,
     },
     {
       icon: Banknote,
+      iconClassName: 'bg-blue-600/10 text-blue-600',
       label: 'Monthly repayment',
       value: `${currency(projection.monthlyPayment)} CHF`,
     },
     {
       icon: PiggyBank,
+      iconClassName:
+        projection.strategy === 'indirect' ? 'bg-cyan-500/10 text-cyan-600' : 'bg-emerald-500/10 text-emerald-600',
       label: projection.strategy === 'indirect' ? '3a assets' : 'Debt repaid',
       value: `${currency(projection.strategy === 'indirect' ? projection.endingPillar3Assets : projection.totalAmortization)} CHF`,
     },
@@ -186,18 +193,17 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-bold text-slate-950">Amortization to</h3>
         <span className="flex items-center gap-1 text-sm font-bold text-emerald-700">
-          <Percent className="h-4 w-4" />
           65% LTV
         </span>
       </div>
       <div className="mt-3 space-y-2">
         {metrics.map((metric) => (
           <div key={metric.label} className="flex items-center justify-between gap-3 text-sm">
-            <span className="flex min-w-0 items-center gap-2 font-bold text-slate-600">
-              <metric.icon className="h-4 w-4 shrink-0 text-blue-600" />
+            <span className="flex min-w-0 items-center gap-3 font-semibold text-slate-600">
+              <metric.icon className={`h-5 w-5 shrink-0 rounded-lg ${metric.iconClassName}`} />
               <span className="truncate">{metric.label}</span>
             </span>
-            <span className="whitespace-nowrap font-black text-slate-950">{metric.value}</span>
+            <span className="whitespace-nowrap font-bold text-slate-950">{metric.value}</span>
           </div>
         ))}
       </div>
