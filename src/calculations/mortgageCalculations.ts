@@ -62,9 +62,30 @@ export type MortgageRepaymentProjection = {
   schedule: MortgageRepaymentYear[];
 };
 
+export type MortgageCostItem = {
+  label: string;
+  amount: number;
+};
+
+export type MortgageCosts = {
+  oneTimeCosts: MortgageCostItem[];
+  ongoingAnnualCosts: MortgageCostItem[];
+  totalOneTimeCosts: number;
+  totalOngoingAnnualCosts: number;
+  monthlyOngoingCosts: number;
+};
+
 export const MIN_HARD_EQUITY_RATIO = 10;
 export const DEFAULT_REPAYMENT_YEARS = 20;
 export const DEFAULT_TARGET_LOAN_TO_VALUE_RATIO = 65;
+export const LAND_REGISTRY_FEE_RATE = 1.8;
+export const PROPERTY_TAX_ESTIMATE_RATE = 0.15;
+export const ESTIMATED_NOTARY_FEES = 2000;
+export const ESTIMATED_MORTGAGE_REGISTRATION_FEES = 1000;
+export const ESTIMATED_ADMINISTRATIVE_FEES = 500;
+export const ESTIMATED_ONE_TIME_OTHER_COSTS = 1100;
+export const ESTIMATED_BUILDING_INSURANCE = 600;
+export const ESTIMATED_ANNUAL_OTHER_COSTS = 300;
 
 const HARD_EQUITY_ASSET_IDS = ['cash', 'pillar3', 'securities'];
 
@@ -222,6 +243,48 @@ export function calculateRequiredAnnualAmortizationRate({
       }),
       normalizedMortgageAmount,
     );
+}
+
+export function calculateMortgageCosts({
+  maintenanceRate,
+  propertyPrice,
+}: {
+  maintenanceRate: number;
+  propertyPrice: number;
+}): MortgageCosts {
+  const normalizedPropertyPrice = normalizeMoney(propertyPrice);
+  const oneTimeCosts = [
+    {
+      label: `Land Registry Fee (${LAND_REGISTRY_FEE_RATE.toFixed(1)}%)`,
+      amount: calculatePercentageCost(normalizedPropertyPrice, LAND_REGISTRY_FEE_RATE),
+    },
+    { label: 'Notary Fees', amount: ESTIMATED_NOTARY_FEES },
+    { label: 'Mortgage Registration', amount: ESTIMATED_MORTGAGE_REGISTRATION_FEES },
+    { label: 'Administrative Fees', amount: ESTIMATED_ADMINISTRATIVE_FEES },
+    { label: 'Other Costs', amount: ESTIMATED_ONE_TIME_OTHER_COSTS },
+  ];
+  const ongoingAnnualCosts = [
+    {
+      label: `Maintenance (${maintenanceRate.toFixed(1)}%)`,
+      amount: calculatePercentageCost(normalizedPropertyPrice, maintenanceRate),
+    },
+    {
+      label: 'Property Tax (Est.)',
+      amount: calculatePercentageCost(normalizedPropertyPrice, PROPERTY_TAX_ESTIMATE_RATE),
+    },
+    { label: 'Building Insurance (Est.)', amount: ESTIMATED_BUILDING_INSURANCE },
+    { label: 'Other Costs', amount: ESTIMATED_ANNUAL_OTHER_COSTS },
+  ];
+  const totalOneTimeCosts = sumMortgageCostItems(oneTimeCosts);
+  const totalOngoingAnnualCosts = sumMortgageCostItems(ongoingAnnualCosts);
+
+  return {
+    oneTimeCosts,
+    ongoingAnnualCosts,
+    totalOneTimeCosts,
+    totalOngoingAnnualCosts,
+    monthlyOngoingCosts: totalOngoingAnnualCosts / 12,
+  };
 }
 
 export function calculateMortgageRepaymentProjection({
@@ -408,6 +471,14 @@ function calculateNiceThousandsStep(value: number) {
   const multiplier = normalizedStep <= 1 ? 1 : normalizedStep <= 2 ? 2 : normalizedStep <= 5 ? 5 : 10;
 
   return multiplier * magnitude;
+}
+
+function calculatePercentageCost(amount: number, rate: number) {
+  return Math.round(normalizeMoney(amount) * normalizeRatio(rate));
+}
+
+function sumMortgageCostItems(items: MortgageCostItem[]) {
+  return items.reduce((total, item) => total + normalizeMoney(item.amount), 0);
 }
 
 function getHardEquity(assets: MortgageAsset[]) {

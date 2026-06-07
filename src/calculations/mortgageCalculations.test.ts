@@ -5,6 +5,7 @@ import {
   calculateDownPayment,
   calculateLoanToValueRatio,
   calculateMonthlyHousingPayment,
+  calculateMortgageCosts,
   calculateMortgageRepaymentProjection,
   calculateMortgageAmount,
   calculateMortgageOverview,
@@ -57,6 +58,19 @@ describe('mortgage calculations', () => {
         years: 20,
       }),
     ).toBeCloseTo(0.9375, 4);
+  });
+
+  it('calculates one-time and ongoing mortgage costs', () => {
+    const costs = calculateMortgageCosts({
+      maintenanceRate: 1,
+      propertyPrice: 800000,
+    });
+
+    expect(costs.oneTimeCosts.map((cost) => cost.amount)).toEqual([14400, 2000, 1000, 500, 1100]);
+    expect(costs.ongoingAnnualCosts.map((cost) => cost.amount)).toEqual([8000, 1200, 600, 300]);
+    expect(costs.totalOneTimeCosts).toBe(19000);
+    expect(costs.totalOngoingAnnualCosts).toBe(10100);
+    expect(costs.monthlyOngoingCosts).toBeCloseTo(841.67, 2);
   });
 
   it('calculates affordability ratio against gross income', () => {

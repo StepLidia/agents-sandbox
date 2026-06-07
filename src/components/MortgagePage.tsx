@@ -31,6 +31,7 @@ import { colorClasses, type ChartPalette } from '../constants/colors';
 import { tooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
+import { MortgageCostsCard } from './MortgageCostsCard';
 import { MortgageRepaymentCard } from './MortgageRepaymentCard';
 
 const assetIconById: Record<string, LucideIcon> = {
@@ -258,6 +259,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
         ))}
       </section>
       <MortgageRepaymentCard mortgageAmount={mortgage.mortgageAmount} propertyPrice={propertyPrice} />
+      <MortgageCostsCard maintenanceRate={mortgageInputs.maintenanceRate} propertyPrice={propertyPrice} />
     </div>
   );
 }
