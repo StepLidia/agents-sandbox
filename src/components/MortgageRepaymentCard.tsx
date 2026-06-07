@@ -8,6 +8,7 @@ import {
   type MortgageAmortizationStrategy,
   type MortgageRepaymentProjection,
 } from '../calculations/mortgageCalculations';
+import { colorClasses } from '../constants/colors';
 import { tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 
@@ -18,7 +19,8 @@ const DEFAULT_INTEREST_RATE = 1.68;
 const DEFAULT_REPAYMENT_YEARS = 20;
 const DEFAULT_TARGET_LTV = 65;
 const MORTGAGE_BALANCE_COLOR = '#2563eb';
-const INTEREST_COST_COLOR = '#f0869f';
+const INTEREST_COST_COLOR = '#ed5c75';
+const PILLAR_3_ASSETS_COLOR = colorClasses.cyan.stroke;
 const CHART_MARKER_SIZE = 8;
 
 const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
@@ -203,7 +205,7 @@ function RepaymentMetricPanel({ projection }: { projection: MortgageRepaymentPro
               <metric.icon className={`h-5 w-5 shrink-0 rounded-lg ${metric.iconClassName}`} />
               <span className="truncate">{metric.label}</span>
             </span>
-            <span className="whitespace-nowrap font-bold text-slate-950">{metric.value}</span>
+            <span className="whitespace-nowrap font-semibold text-slate-950">{metric.value}</span>
           </div>
         ))}
       </div>
@@ -257,20 +259,21 @@ function RepaymentLineChart({
     annualInterestCost: Math.round(year.annualInterestCost),
     mortgageBalance: Math.round(year.mortgageBalance),
     name: year.year === 0 ? 'Now' : `Year ${year.year}`,
+    pillar3Assets: Math.round(year.pillar3Assets),
     year: year.year,
   }));
-  const balanceTicks = buildMortgageChartTicks(chartData.map((year) => year.mortgageBalance));
+  const balanceTicks = buildMortgageChartTicks(chartData.flatMap((year) => [year.mortgageBalance, year.pillar3Assets]));
   const interestTicks = buildMortgageChartTicks(chartData.map((year) => year.annualInterestCost));
+  const legendItems = [
+    { label: 'Mortgage Balance', color: MORTGAGE_BALANCE_COLOR },
+    ...(projection.strategy === 'indirect' ? [{ label: '3a Assets', color: PILLAR_3_ASSETS_COLOR }] : []),
+    { label: 'Annual Interest Cost', color: INTEREST_COST_COLOR },
+  ];
   const xAxisTicks = ['Now', 'Year 5', 'Year 10', 'Year 15', 'Year 20'];
 
   return (
     <div className="mt-3">
-      <ChartLegend
-        items={[
-          { label: 'Mortgage Balance', color: MORTGAGE_BALANCE_COLOR },
-          { label: 'Annual Interest Cost', color: INTEREST_COST_COLOR },
-        ]}
-      />
+      <ChartLegend items={legendItems} />
       <div className="grid grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-1">
         <ChartAxisLabel color={MORTGAGE_BALANCE_COLOR} text="Mortgage Balance (CHF)" />
         <ResponsiveContainer width="100%" height={260}>
@@ -313,6 +316,17 @@ function RepaymentLineChart({
               type="monotone"
               yAxisId="balance"
             />
+            {projection.strategy === 'indirect' && (
+              <Line
+                dataKey="pillar3Assets"
+                dot={<FiveYearDiamondDot color={PILLAR_3_ASSETS_COLOR} />}
+                name="3a Assets"
+                stroke={PILLAR_3_ASSETS_COLOR}
+                strokeWidth={3}
+                type="monotone"
+                yAxisId="balance"
+              />
+            )}
             <Line
               dataKey="annualInterestCost"
               dot={<FiveYearDiamondDot color={INTEREST_COST_COLOR} />}
@@ -368,11 +382,6 @@ function RepaymentSummaryStrip({
   loanToValue: number;
   projection: MortgageRepaymentProjection;
 }) {
-  const strategySummary =
-    projection.strategy === 'indirect'
-      ? `3a assets ${currency(projection.endingPillar3Assets)} CHF`
-      : `Debt repaid ${currency(projection.totalAmortization)} CHF`;
-
   return (
     <div className="mt-3 flex flex-col gap-2 rounded-lg border border-slate-200/50 bg-slate-200/35 px-3 py-3 text-xs font-bold text-slate-700 shadow-inner shadow-white/40 backdrop-blur-md md:flex-row md:items-center md:justify-between">
       <p>
@@ -381,9 +390,13 @@ function RepaymentSummaryStrip({
         <span className="text-slate-500">({loanToValue.toFixed(0)}% LTV)</span>
       </p>
       <p>
-        Total Interest Paid: <span className="text-rose-400">{currency(projection.totalInterestPaid)} CHF</span>
+        Total Interest Paid: <span className="text-rose-500">{currency(projection.totalInterestPaid)} CHF</span>
       </p>
-      <p className="text-slate-600">{strategySummary}</p>
+      {projection.strategy === 'indirect' ? (
+        <p className={colorClasses.cyan.text}>3a assets {currency(projection.endingPillar3Assets)} CHF</p>
+      ) : (
+        <p className="text-slate-600">Debt repaid {currency(projection.totalAmortization)} CHF</p>
+      )}
     </div>
   );
 }
