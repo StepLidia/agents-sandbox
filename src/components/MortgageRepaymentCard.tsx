@@ -281,7 +281,7 @@ function RepaymentLineChart({
       <div className="grid grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-1">
         <ChartAxisLabel color={MORTGAGE_BALANCE_COLOR} text="Mortgage Balance (CHF)" />
         <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={chartData} margin={{ bottom: 4, left: 4, right: projection.strategy === 'indirect' ? 18 : 4, top: 8 }}>
+          <ComposedChart data={chartData} margin={{ bottom: 4, left: 4, right: 4, top: 8 }}>
             <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical />
             <XAxis
               axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
@@ -297,7 +297,7 @@ function RepaymentLineChart({
               tickFormatter={formatThousandsAxis}
               tickLine={false}
               ticks={balanceTicks}
-              width={58}
+              width={38}
               yAxisId="balance"
             />
             <YAxis
@@ -305,21 +305,22 @@ function RepaymentLineChart({
               orientation="right"
               tick={{ fill: INTEREST_COST_COLOR, fontSize: 12, fontWeight: 700 }}
               tickFormatter={formatThousandsAxis}
+              tickMargin={2}
               tickLine={false}
               ticks={interestTicks}
-              width={44}
+              width={28}
               yAxisId="interest"
             />
             {projection.strategy === 'indirect' && (
               <YAxis
                 axisLine={{ stroke: PILLAR_3_ASSETS_COLOR, strokeOpacity: 0.8 }}
-                dx={14}
                 orientation="right"
                 tick={{ fill: PILLAR_3_ASSETS_COLOR, fontSize: 12, fontWeight: 700 }}
                 tickFormatter={formatThousandsAxis}
+                tickMargin={2}
                 tickLine={false}
                 ticks={pillar3Ticks}
-                width={44}
+                width={34}
                 yAxisId="pillar3"
               />
             )}
