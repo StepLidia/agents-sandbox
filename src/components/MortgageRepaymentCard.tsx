@@ -266,9 +266,8 @@ function RepaymentLineChart({
     year: year.year,
   }));
   const balanceTicks = buildMortgageChartTicks(chartData.map((year) => year.mortgageBalance));
-  const interestTicks = buildMortgageChartTicks(
-    chartData.flatMap((year) => [year.annualInterestCost, year.pillar3Assets]),
-  );
+  const interestTicks = buildMortgageChartTicks(chartData.map((year) => year.annualInterestCost));
+  const pillar3Ticks = buildMortgageChartTicks(chartData.map((year) => year.pillar3Assets));
   const legendItems = [
     { label: 'Mortgage Balance', color: MORTGAGE_BALANCE_COLOR },
     ...(projection.strategy === 'indirect' ? [{ label: '3a Assets', color: PILLAR_3_ASSETS_COLOR }] : []),
@@ -282,7 +281,7 @@ function RepaymentLineChart({
       <div className="grid grid-cols-[1rem_minmax(0,1fr)_1rem] items-center gap-1">
         <ChartAxisLabel color={MORTGAGE_BALANCE_COLOR} text="Mortgage Balance (CHF)" />
         <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={chartData} margin={{ bottom: 4, left: 4, right: 4, top: 8 }}>
+          <ComposedChart data={chartData} margin={{ bottom: 4, left: 4, right: projection.strategy === 'indirect' ? 18 : 4, top: 8 }}>
             <CartesianGrid horizontal stroke="#cbd5e1" strokeDasharray="3 3" strokeOpacity={0.6} vertical />
             <XAxis
               axisLine={{ stroke: '#cbd5e1', strokeOpacity: 0.65 }}
@@ -311,6 +310,19 @@ function RepaymentLineChart({
               width={44}
               yAxisId="interest"
             />
+            {projection.strategy === 'indirect' && (
+              <YAxis
+                axisLine={{ stroke: PILLAR_3_ASSETS_COLOR, strokeOpacity: 0.8 }}
+                dx={14}
+                orientation="right"
+                tick={{ fill: PILLAR_3_ASSETS_COLOR, fontSize: 12, fontWeight: 700 }}
+                tickFormatter={formatThousandsAxis}
+                tickLine={false}
+                ticks={pillar3Ticks}
+                width={44}
+                yAxisId="pillar3"
+              />
+            )}
             <Tooltip content={<RepaymentTooltip />} cursor={{ stroke: 'rgba(37,99,235,.18)', strokeWidth: 2 }} />
             <Line
               dataKey="mortgageBalance"
@@ -329,7 +341,7 @@ function RepaymentLineChart({
                 stroke={PILLAR_3_ASSETS_COLOR}
                 strokeWidth={3}
                 type="monotone"
-                yAxisId="interest"
+                yAxisId="pillar3"
               />
             )}
             <Line
