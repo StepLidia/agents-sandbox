@@ -46,6 +46,10 @@ const PROPERTY_PRICE_STEP = 1000;
 const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
 const mortgageMoneyInputClasses = 'glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1';
 
+function formatMortgagePercent(value: number) {
+  return `${value.toFixed(1)}%`;
+}
+
 type SavedMortgageInputs = {
   assets?: Record<string, number>;
   assetsEdited?: boolean;
@@ -120,7 +124,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       icon: Percent,
       iconClassName: 'bg-emerald-500/10 text-emerald-600',
       label: 'Affordability Ratio',
-      value: `${mortgage.affordabilityRatio.toFixed(1)}%`,
+      value: formatMortgagePercent(mortgage.affordabilityRatio),
       helper:
         mortgage.affordabilityRatio <= mortgageInputs.maxAffordabilityRatio
           ? `Well within the ${mortgageInputs.maxAffordabilityRatio}% limit`
@@ -132,7 +136,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       icon: ShieldCheck,
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: 'Stress Test Rate',
-      value: `${mortgageInputs.annualInterestRate.toFixed(1)}%`,
+      value: formatMortgagePercent(mortgageInputs.annualInterestRate),
       helper: 'Applied by banks',
       helperClassName: 'text-slate-600',
     },
@@ -140,7 +144,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       icon: ChartPie,
       iconClassName: 'bg-violet-500/10 text-violet-600',
       label: 'Loan-to-Value (LTV)',
-      value: `${mortgage.loanToValueRatio.toFixed(0)}%`,
+      value: formatMortgagePercent(mortgage.loanToValueRatio),
       helper:
         mortgage.loanToValueRatio <= mortgageInputs.maxLoanToValueRatio
           ? `Within the ${mortgageInputs.maxLoanToValueRatio}% limit`
@@ -152,7 +156,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       icon: PiggyBank,
       iconClassName: 'bg-cyan-500/10 text-cyan-600',
       label: 'Hard Equity',
-      value: `${hardEquityRatio.toFixed(1)}%`,
+      value: formatMortgagePercent(hardEquityRatio),
       helper:
         hardEquityRatio >= MIN_HARD_EQUITY_RATIO
           ? `Above ${MIN_HARD_EQUITY_RATIO}% limit`
@@ -171,9 +175,9 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     {
       icon: Percent,
       iconClassName: 'bg-emerald-500/10 text-emerald-600',
-      label: 'Down Payment (20%)',
+      label: `Down Payment (${formatMortgagePercent(mortgage.downPaymentRatio)})`,
       value: `${currency(mortgage.downPayment)} CHF`,
-      helper: `${mortgage.downPaymentRatio.toFixed(1)}%`,
+      helper: formatMortgagePercent(mortgage.downPaymentRatio),
       helperClassName: 'text-emerald-600',
     },
     {
@@ -181,7 +185,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       iconClassName: 'bg-amber-500/12 text-amber-500',
       label: 'Mortgage Amount',
       value: `${currency(mortgage.mortgageAmount)} CHF`,
-      helper: `${mortgage.loanToValueRatio.toFixed(1)}%`,
+      helper: formatMortgagePercent(mortgage.loanToValueRatio),
       helperClassName: 'text-amber-500',
     },
     {
@@ -189,7 +193,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       iconClassName: 'bg-blue-600/10 text-blue-600',
       label: `Monthly Payment (At ${mortgageInputs.annualInterestRate.toFixed(2)}%)`,
       value: `${currency(mortgage.monthlyPayment)} CHF`,
-      helper: `${mortgage.affordabilityRatio.toFixed(1)}% of gross income`,
+      helper: `${formatMortgagePercent(mortgage.affordabilityRatio)} of gross income`,
       helperClassName: 'text-slate-600',
     },
   ];
@@ -492,7 +496,7 @@ function DownPaymentPanel({
   return (
     <section className="glass-panel p-3">
       <div className="flex items-center justify-between gap-4">
-        <h2 className="text-base font-bold text-cyan-600">Down Payment ({downPaymentRatio.toFixed(0)}%)</h2>
+        <h2 className="text-base font-bold text-cyan-600">Down Payment ({formatMortgagePercent(downPaymentRatio)})</h2>
         <p className="whitespace-nowrap text-lg font-bold tracking-normal text-cyan-600">{currency(downPayment)} CHF</p>
       </div>
       <input
