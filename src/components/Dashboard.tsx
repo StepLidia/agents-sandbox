@@ -104,7 +104,7 @@ export function Dashboard() {
           {activeView === 'overview' ? (
             <>
               <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
-              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
                 {dashboard.assets.map((asset) => (
                   <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
                 ))}

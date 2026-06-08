@@ -73,7 +73,7 @@ export function AssetCard({
           onChange={(value) => onChange(asset.id, 'monthlyContribution', value)}
         />
         <EditableField
-          label="Expected Yearly Return (%)"
+          label="Expected Yearly Rate"
           value={asset.annualReturn}
           suffix="%"
           step={0.05}
@@ -116,7 +116,7 @@ export function AssetCard({
 
 function ReadonlyField({ label, value, suffix }: { label: string; value: number; suffix: string }) {
   return (
-    <div className="grid grid-cols-[1fr_9rem] items-center gap-3">
+    <div className="grid grid-cols-[1fr_8rem] items-center gap-3">
       <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
         <span className="truncate">{label}</span>
       </span>
@@ -149,7 +149,7 @@ function EditableField({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, isMoney ? { format: 'money' } : undefined);
 
   return (
-    <div className="grid grid-cols-[1fr_9rem] items-center gap-3">
+    <div className="grid grid-cols-[1fr_8rem] items-center gap-3">
       <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
         <span className="truncate">{label}</span>
         {labelExtra}
