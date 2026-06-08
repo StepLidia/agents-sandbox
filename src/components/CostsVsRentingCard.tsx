@@ -2,6 +2,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Label,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -288,8 +289,8 @@ function CostsVsRentingPlot({
         </ResponsiveContainer>
         <span
           className={`pointer-events-none absolute right-4 bottom-12 rounded-lg px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur-md ${strategy === 'direct'
-              ? 'border border-blue-500/45 bg-linear-to-br from-blue-500/10 to-white/10 text-blue-600'
-              : 'border border-emerald-500/45 bg-linear-to-br from-emerald-500/10 to-white/10 text-emerald-700'
+            ? 'border border-blue-500/45 bg-linear-to-br from-blue-500/10 to-white/10 text-blue-600'
+            : 'border border-emerald-500/45 bg-linear-to-br from-emerald-500/10 to-white/10 text-emerald-700'
             }`}
         >
           +{currency(badgeValue)} CHF {badgeLabel}
@@ -346,11 +347,10 @@ function InterestRateRentBreakEvenPlot({
           </p>
         </div>
         <span
-          className={`rounded-lg px-2 py-1 text-sm font-bold ${
-            currentRentPerMonth >= currentBreakEvenRent
+          className={`rounded-lg px-2 py-1 text-sm font-bold ${currentRentPerMonth >= currentBreakEvenRent
               ? 'bg-emerald-500/10 text-emerald-700'
               : 'bg-rose-400/10 text-rose-500'
-          }`}
+            }`}
         >
           {currentStatus}
         </span>
@@ -403,6 +403,13 @@ function InterestRateRentBreakEvenPlot({
             />
             <ReferenceLine
               y={currentRentPerMonth}
+              label={{
+                value: 'current rent',
+                position: 'insideTopRight',
+                fill: colorClasses.coral.stroke,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
               stroke={colorClasses.coral.stroke}
               strokeDasharray="5 5"
               strokeOpacity={0.72}
@@ -414,7 +421,16 @@ function InterestRateRentBreakEvenPlot({
               strokeDasharray="3 5"
               strokeOpacity={0.32}
               strokeWidth={1.5}
-            />
+            >
+              <Label
+                angle={-90}
+                fill={palette.stroke}
+                fontSize={11}
+                fontWeight={600}
+                position="centerTop"
+                value="current rate"
+              />
+            </ReferenceLine>
             <Area
               dataKey="breakEvenMonthlyRent"
               dot={false}
