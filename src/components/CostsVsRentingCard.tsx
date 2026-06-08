@@ -366,12 +366,12 @@ function InterestRateRentBreakEvenPlot({
           <AreaChart data={chartData} margin={{ top: 14, right: 12, bottom: 6, left: -6 }}>
             <defs>
               <linearGradient id={`negative-zone-${strategy}`} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={colorClasses.coral.stroke} stopOpacity={0.16} />
-                <stop offset="100%" stopColor={colorClasses.coral.stroke} stopOpacity={0.04} />
+                <stop offset="0%" stopColor={colorClasses.coral.stroke} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={colorClasses.coral.stroke} stopOpacity={0.07} />
               </linearGradient>
               <linearGradient id={`positive-zone-${strategy}`} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.18} />
-                <stop offset="100%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.04} />
+                <stop offset="0%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.24} />
+                <stop offset="100%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.07} />
               </linearGradient>
             </defs>
             <CartesianGrid stroke="rgba(100,116,139,.18)" strokeDasharray="0" vertical={false} />
