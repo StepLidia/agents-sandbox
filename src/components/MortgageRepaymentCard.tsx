@@ -91,7 +91,9 @@ export function MortgageRepaymentCard({
       </div>
 
       <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-400/30 bg-slate-300/20 p-3 text-sm font-medium text-slate-700">
-        <Lightbulb className="h-5 w-5 shrink-0 text-yellow-500" />
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-500">
+          <Lightbulb className="h-5 w-5" />
+        </span>
         <p>
           Direct amortization lowers debt and interest costs over time. Indirect amortization keeps debt stable
           while building pledged 3a assets.

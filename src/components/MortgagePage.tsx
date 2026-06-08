@@ -33,6 +33,7 @@ import { colorClasses, type ChartPalette } from '../constants/colors';
 import { tooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
+import { CostsVsRentingCard } from './CostsVsRentingCard';
 import { MortgageCostsCard } from './MortgageCostsCard';
 import { DEFAULT_REPAYMENT_INTEREST_RATE, MortgageRepaymentCard } from './MortgageRepaymentCard';
 
@@ -58,6 +59,7 @@ const MORTGAGE_STRUCTURE_POPOVER_MAX_WIDTH = 768;
 const MORTGAGE_STRUCTURE_POPOVER_MIN_WIDTH = 320;
 const MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP = 16;
 const MORTGAGE_STRUCTURE_POPOVER_BUTTON_GAP = 16;
+const DEFAULT_RENT_PER_MONTH = 2500;
 
 function formatMortgagePercent(value: number) {
   return `${value.toFixed(1)}%`;
@@ -85,6 +87,7 @@ type SavedMortgageInputs = {
   grossMonthlyIncome?: number;
   mortgageCostAmounts?: MortgageCostAmounts;
   propertyPrice?: number;
+  rentPerMonth?: number;
   repaymentInterestRate?: number;
 };
 
@@ -106,6 +109,9 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
   );
   const [repaymentInterestRate, setRepaymentInterestRate] = useState(() =>
     getSavedMortgageAmount(savedInputs.repaymentInterestRate, DEFAULT_REPAYMENT_INTEREST_RATE),
+  );
+  const [rentPerMonth, setRentPerMonth] = useState(() =>
+    getSavedMortgageAmount(savedInputs.rentPerMonth, DEFAULT_RENT_PER_MONTH),
   );
   const [mortgageAssets, setMortgageAssets] = useState(() =>
     mergeSavedMortgageAssets(savedInputs.assetsEdited ? savedInputs.assets : undefined, dashboardAssets),
@@ -132,6 +138,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
       grossMonthlyIncome,
       mortgageCostAmounts,
       propertyPrice,
+      rentPerMonth,
       repaymentInterestRate,
     });
   }, [
@@ -142,6 +149,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
     mortgageCostAmounts,
     mortgageAssets,
     propertyPrice,
+    rentPerMonth,
     repaymentInterestRate,
   ]);
 
@@ -306,6 +314,15 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
         propertyPrice={propertyPrice}
         onCostAmountChange={updateMortgageCostAmount}
         onResetCosts={resetMortgageCostAmounts}
+      />
+      <CostsVsRentingCard
+        costAmounts={mortgageCostAmounts}
+        interestRate={repaymentInterestRate}
+        maintenanceRate={mortgageInputs.maintenanceRate}
+        mortgageAmount={mortgage.mortgageAmount}
+        propertyPrice={propertyPrice}
+        rentPerMonth={rentPerMonth}
+        onRentPerMonthChange={setRentPerMonth}
       />
     </div>
   );
@@ -726,6 +743,7 @@ function saveMortgageInputs({
   grossMonthlyIncome,
   mortgageCostAmounts,
   propertyPrice,
+  rentPerMonth,
   repaymentInterestRate,
 }: {
   assets: MortgageAsset[];
@@ -735,6 +753,7 @@ function saveMortgageInputs({
   grossMonthlyIncome: number;
   mortgageCostAmounts: MortgageCostAmounts;
   propertyPrice: number;
+  rentPerMonth: number;
   repaymentInterestRate: number;
 }) {
   try {
@@ -748,6 +767,7 @@ function saveMortgageInputs({
         grossMonthlyIncome,
         mortgageCostAmounts,
         propertyPrice,
+        rentPerMonth,
         repaymentInterestRate,
       } satisfies SavedMortgageInputs),
     );
