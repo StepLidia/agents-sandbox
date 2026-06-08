@@ -328,7 +328,12 @@ function InterestRateRentBreakEvenPlot({
     owningWinsArea: Math.max(maxRent - point.breakEvenMonthlyRent, 0),
   }));
   const currentBreakEvenRent = interpolateBreakEvenRent(points, currentInterestRate);
-  const currentStatus = currentRentPerMonth >= currentBreakEvenRent ? 'Owning net gain' : 'Renting net gain';
+  const rentDifference = currentRentPerMonth - currentBreakEvenRent;
+  const rentDifferencePercent = currentBreakEvenRent > 0 ? (Math.abs(rentDifference) / currentBreakEvenRent) * 100 : 0;
+  const currentStatus =
+    rentDifference >= 0
+      ? `Rent is ${rentDifferencePercent.toFixed(0)}% (${currency(rentDifference)} CHF) above break-even`
+      : `Rent is ${rentDifferencePercent.toFixed(0)}% (${currency(Math.abs(rentDifference))} CHF) below break-even`;
 
   return (
     <article className="glass-panel p-3">
