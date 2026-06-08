@@ -219,11 +219,20 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
           <div className="mt-3 grid gap-3 xl:grid-cols-2">
             <section className="glass-panel flex min-h-0 flex-col p-4 md:max-h-100">
               <h2 className="text-sm font-bold text-slate-950">Monthly Expense Distribution</h2>
-              <div className="mt-3 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,14rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(12rem,18rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(16rem,20rem)_minmax(9rem,20rem)] md:gap-10">
+              <div className="mt-2 grid flex-1 place-content-center items-center gap-4 grid-cols-[minmax(9rem,13rem)_minmax(8rem,1fr)] sm:grid-cols-[minmax(11rem,15rem)_minmax(10rem,1fr)] md:grid-cols-[minmax(14rem,17rem)_minmax(9rem,18rem)] md:gap-7">
                 <ExpenseDonut categories={categories} totalExpenses={totalExpenses} />
                 <CategoryLegend categories={categories} />
               </div>
-              <div className="mt-auto flex justify-end pt-3">
+              <div className="mt-auto grid gap-3 pt-3 sm:grid-cols-[minmax(0,1fr)_2.5rem] sm:items-center">
+                <div className="flex items-center gap-3 rounded-lg border border-slate-400/45 bg-slate-200/25 px-3 py-2 text-xs font-medium text-slate-700 shadow-inner shadow-white/40 backdrop-blur-md">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-amber-500/12 text-amber-500">
+                    <CalendarClock className="h-5 w-5" />
+                  </span>
+                  <p>
+                    Return each month to build your spending history and uncover long-term trends. Stored locally in
+                    your browser.
+                  </p>
+                </div>
                 <span className="group relative">
                   <button
                     className={buttonClasses({ className: 'pulse-blue-border', size: 'icon' })}
@@ -527,7 +536,7 @@ function ExpenseSector(props: PieSectorShapeProps & { fill: string }) {
 }
 
 function CategoryLegend({ categories }: { categories: ExpenseCategory[] }) {
-  const columns = chunkCategories(categories, 9);
+  const columns = chunkCategories(categories, 8);
 
   return (
     <div className="grid grid-flow-col auto-cols-fr items-start justify-center gap-x-5 gap-y-2.5">
