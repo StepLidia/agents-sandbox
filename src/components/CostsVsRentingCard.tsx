@@ -2,6 +2,8 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -17,7 +19,10 @@ import {
   type MortgageCostAmounts,
 } from '../calculations/mortgageCalculations';
 import {
+  calculateMortgageRentBreakEvenPoints,
   calculateMortgageRentComparison,
+  calculateMortgageRentNetGain,
+  type MortgageRentBreakEvenPoint,
   type MortgageRentComparisonPoint,
 } from '../calculations/mortgageRentComparisonCalculations';
 import { colorClasses, type ChartPalette } from '../constants/colors';
@@ -29,6 +34,9 @@ const strategyLabels: Record<MortgageAmortizationStrategy, string> = {
   direct: 'Direct Amortization',
   indirect: 'Indirect Amortization (3a)',
 };
+const MIN_BREAK_EVEN_INTEREST_RATE = 0.5;
+const MAX_BREAK_EVEN_INTEREST_RATE = 6;
+const BREAK_EVEN_INTEREST_RATE_STEP = 0.25;
 
 export function CostsVsRentingCard({
   costAmounts,
@@ -62,6 +70,29 @@ export function CostsVsRentingCard({
     return {
       badgeLabel: strategy === 'direct' ? 'Equity' : '3rd pillar',
       badgeValue: strategy === 'direct' ? projection.totalAmortization : projection.endingPillar3Assets,
+      breakEvenPoints: calculateMortgageRentBreakEvenPoints({
+        maxInterestRate: MAX_BREAK_EVEN_INTEREST_RATE,
+        minInterestRate: MIN_BREAK_EVEN_INTEREST_RATE,
+        mortgageAmount,
+        propertyPrice,
+        step: BREAK_EVEN_INTEREST_RATE_STEP,
+        strategy,
+        targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
+        totalOngoingAnnualCosts: costs.totalOngoingAnnualCosts,
+        totalOneTimeCosts: costs.totalOneTimeCosts,
+        years: DEFAULT_REPAYMENT_YEARS,
+      }),
+      netGain: calculateMortgageRentNetGain({
+        annualInterestRate: interestRate,
+        mortgageAmount,
+        monthlyRent: rentPerMonth,
+        propertyPrice,
+        strategy,
+        targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
+        totalOngoingAnnualCosts: costs.totalOngoingAnnualCosts,
+        totalOneTimeCosts: costs.totalOneTimeCosts,
+        years: DEFAULT_REPAYMENT_YEARS,
+      }),
       points: calculateMortgageRentComparison({
         annualInterestRate: interestRate,
         mortgageAmount,
@@ -107,8 +138,22 @@ export function CostsVsRentingCard({
             key={chart.strategy}
             badgeLabel={chart.badgeLabel}
             badgeValue={chart.badgeValue}
+            netGain={chart.netGain}
             palette={chart.strategy === 'direct' ? colorClasses.blue : colorClasses.cyan}
             points={chart.points}
+            strategy={chart.strategy}
+          />
+        ))}
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        {charts.map((chart) => (
+          <InterestRateRentBreakEvenPlot
+            key={`${chart.strategy}-break-even`}
+            currentInterestRate={interestRate}
+            currentRentPerMonth={rentPerMonth}
+            palette={chart.strategy === 'direct' ? colorClasses.blue : colorClasses.cyan}
+            points={chart.breakEvenPoints}
             strategy={chart.strategy}
           />
         ))}
@@ -130,12 +175,14 @@ export function CostsVsRentingCard({
 function CostsVsRentingPlot({
   badgeLabel,
   badgeValue,
+  netGain,
   palette,
   points,
   strategy,
 }: {
   badgeLabel: string;
   badgeValue: number;
+  netGain: number;
   palette: ChartPalette;
   points: MortgageRentComparisonPoint[];
   strategy: MortgageAmortizationStrategy;
@@ -153,9 +200,6 @@ function CostsVsRentingPlot({
   }));
   const firstYearCost = points[0]?.mortgageCost ?? 0;
   const annualRentCost = points[0]?.rentCost ?? 0;
-  const totalRentCost = points.reduce((total, point) => total + point.rentCost, 0);
-  const totalMortgageCost = points.reduce((total, point) => total + point.mortgageCost, 0);
-  const netGain = totalRentCost - totalMortgageCost + badgeValue;
 
   return (
     <article className="glass-panel p-3">
@@ -262,21 +306,172 @@ function CostsVsRentingPlot({
   );
 }
 
+function InterestRateRentBreakEvenPlot({
+  currentInterestRate,
+  currentRentPerMonth,
+  palette,
+  points,
+  strategy,
+}: {
+  currentInterestRate: number;
+  currentRentPerMonth: number;
+  palette: ChartPalette;
+  points: MortgageRentBreakEvenPoint[];
+  strategy: MortgageAmortizationStrategy;
+}) {
+  const rawMaxRent = Math.max(...points.map((point) => point.breakEvenMonthlyRent), currentRentPerMonth, 1);
+  const ticks = buildValueTicks(rawMaxRent * 1.18);
+  const maxRent = ticks.at(-1) ?? rawMaxRent;
+  const chartData = points.map((point) => ({
+    annualInterestRate: point.annualInterestRate,
+    breakEvenMonthlyRent: Math.round(point.breakEvenMonthlyRent),
+    owningWinsArea: Math.max(maxRent - point.breakEvenMonthlyRent, 0),
+  }));
+  const currentBreakEvenRent = interpolateBreakEvenRent(points, currentInterestRate);
+  const currentStatus = currentRentPerMonth >= currentBreakEvenRent ? 'Owning net gain' : 'Renting net gain';
+
+  return (
+    <article className="glass-panel p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-bold text-slate-950">{strategyLabels[strategy]} - Break-even</h3>
+          <p className="mt-1 text-sm font-semibold text-slate-600">
+            At {currentInterestRate.toFixed(2)}%:{' '}
+            <span className={palette.text}>{currency(currentBreakEvenRent)} CHF rent</span>
+          </p>
+        </div>
+        <span
+          className={`rounded-lg px-2 py-1 text-sm font-bold ${
+            currentRentPerMonth >= currentBreakEvenRent
+              ? 'bg-emerald-500/10 text-emerald-700'
+              : 'bg-rose-400/10 text-rose-500'
+          }`}
+        >
+          {currentStatus}
+        </span>
+      </div>
+
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-bold text-slate-700">
+        <ChartLegendItem color={colorClasses.emerald.stroke} label="Owning wins" variant="swatch" />
+        <ChartLegendItem color={colorClasses.coral.stroke} label="Renting wins" variant="swatch" />
+        <ChartLegendItem color={palette.stroke} label="Break-even rent" />
+      </div>
+
+      <div className="mt-2 h-56 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 14, right: 12, bottom: 6, left: -6 }}>
+            <defs>
+              <linearGradient id={`negative-zone-${strategy}`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={colorClasses.coral.stroke} stopOpacity={0.16} />
+                <stop offset="100%" stopColor={colorClasses.coral.stroke} stopOpacity={0.04} />
+              </linearGradient>
+              <linearGradient id={`positive-zone-${strategy}`} x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.18} />
+                <stop offset="100%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.04} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(100,116,139,.18)" strokeDasharray="0" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="annualInterestRate"
+              domain={[MIN_BREAK_EVEN_INTEREST_RATE, MAX_BREAK_EVEN_INTEREST_RATE]}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
+              tickFormatter={(value) => `${value}%`}
+              tickLine={false}
+              ticks={[0.5, 1, 2, 3, 4, 5, 6]}
+              type="number"
+            />
+            <YAxis
+              axisLine={false}
+              domain={[0, maxRent]}
+              tick={{ fill: '#475569', fontSize: 10, fontWeight: 500 }}
+              tickFormatter={formatAxisValue}
+              tickLine={false}
+              ticks={ticks}
+              width={48}
+            />
+            <Tooltip
+              content={<BreakEvenTooltip />}
+              cursor={{ stroke: palette.stroke, strokeDasharray: '3 5', strokeOpacity: 0.45, strokeWidth: 1.5 }}
+              isAnimationActive={false}
+              wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+            />
+            <ReferenceLine
+              y={currentRentPerMonth}
+              stroke={colorClasses.coral.stroke}
+              strokeDasharray="5 5"
+              strokeOpacity={0.72}
+              strokeWidth={2}
+            />
+            <ReferenceLine
+              x={currentInterestRate}
+              stroke={palette.stroke}
+              strokeDasharray="3 5"
+              strokeOpacity={0.32}
+              strokeWidth={1.5}
+            />
+            <Area
+              dataKey="breakEvenMonthlyRent"
+              dot={false}
+              fill={`url(#negative-zone-${strategy})`}
+              isAnimationActive={false}
+              stackId="break-even-zone"
+              stroke="transparent"
+              type="monotone"
+            />
+            <Area
+              dataKey="owningWinsArea"
+              dot={false}
+              fill={`url(#positive-zone-${strategy})`}
+              isAnimationActive={false}
+              stackId="break-even-zone"
+              stroke="transparent"
+              type="monotone"
+            />
+            <Line
+              activeDot={{ r: 5, fill: palette.stroke, stroke: 'white', strokeWidth: 2 }}
+              dataKey="breakEvenMonthlyRent"
+              dot={false}
+              isAnimationActive={false}
+              name="Break-even rent"
+              stroke={palette.stroke}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              type="monotone"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="mt-1 text-center text-sm font-semibold text-slate-600">Interest rate</p>
+      <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-200/35 px-3 py-3 text-sm font-bold text-slate-700 shadow-inner shadow-white/40 backdrop-blur-md">
+        Break-even means net gain is 0 CHF after {DEFAULT_REPAYMENT_YEARS} years.
+      </div>
+    </article>
+  );
+}
+
 function ChartLegendItem({
   color,
   dashed = false,
   label,
+  variant = 'line',
 }: {
   color: string;
   dashed?: boolean;
   label: string;
+  variant?: 'line' | 'swatch';
 }) {
   return (
     <span className="flex items-center gap-2">
-      <span
-        className={`h-0.5 w-6 ${dashed ? 'border-t-2 border-dashed bg-transparent' : ''}`}
-        style={dashed ? { borderColor: color } : { backgroundColor: color }}
-      />
+      {variant === 'swatch' ? (
+        <span className="h-3 w-4 rounded-sm border" style={{ backgroundColor: `${color}24`, borderColor: `${color}66` }} />
+      ) : (
+        <span
+          className={`h-0.5 w-6 ${dashed ? 'border-t-2 border-dashed bg-transparent' : ''}`}
+          style={dashed ? { borderColor: color } : { backgroundColor: color }}
+        />
+      )}
       {label}
     </span>
   );
@@ -303,6 +498,53 @@ function CostsVsRentingTooltip({ active, payload, label }: CostsVsRentingTooltip
       {typeof rentCost === 'number' && <p className="text-slate-600">Renting: {currency(rentCost)} CHF</p>}
     </div>
   );
+}
+
+type BreakEvenTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ dataKey?: string; value?: number }>;
+  label?: number | string;
+};
+
+function BreakEvenTooltip({ active, payload, label }: BreakEvenTooltipProps) {
+  const breakEvenMonthlyRent = payload?.find(({ dataKey }) => dataKey === 'breakEvenMonthlyRent')?.value;
+
+  if (!active || typeof breakEvenMonthlyRent !== 'number') {
+    return null;
+  }
+
+  return (
+    <div className={tooltipContentClasses('-translate-y-3 px-3 py-2')}>
+      <p className="font-bold text-slate-950">{Number(label).toFixed(2)}% interest</p>
+      <p className="mt-1 text-slate-700">Break-even rent: {currency(breakEvenMonthlyRent)} CHF / month</p>
+    </div>
+  );
+}
+
+function interpolateBreakEvenRent(points: MortgageRentBreakEvenPoint[], annualInterestRate: number) {
+  if (points.length === 0) {
+    return 0;
+  }
+
+  const sortedPoints = [...points].sort((first, second) => first.annualInterestRate - second.annualInterestRate);
+  const firstPoint = sortedPoints[0];
+  const lastPoint = sortedPoints.at(-1) ?? firstPoint;
+
+  if (annualInterestRate <= firstPoint.annualInterestRate) {
+    return firstPoint.breakEvenMonthlyRent;
+  }
+
+  if (annualInterestRate >= lastPoint.annualInterestRate) {
+    return lastPoint.breakEvenMonthlyRent;
+  }
+
+  const upperPoint = sortedPoints.find((point) => point.annualInterestRate >= annualInterestRate) ?? lastPoint;
+  const upperIndex = sortedPoints.indexOf(upperPoint);
+  const lowerPoint = sortedPoints[Math.max(upperIndex - 1, 0)];
+  const rateSpan = upperPoint.annualInterestRate - lowerPoint.annualInterestRate;
+  const progress = rateSpan > 0 ? (annualInterestRate - lowerPoint.annualInterestRate) / rateSpan : 0;
+
+  return lowerPoint.breakEvenMonthlyRent + (upperPoint.breakEvenMonthlyRent - lowerPoint.breakEvenMonthlyRent) * progress;
 }
 
 function buildValueTicks(maxValue: number) {
