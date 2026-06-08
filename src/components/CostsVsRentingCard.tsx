@@ -2,7 +2,6 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
-  Label,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -348,8 +347,8 @@ function InterestRateRentBreakEvenPlot({
         </div>
         <span
           className={`rounded-lg px-2 py-1 text-sm font-bold ${currentRentPerMonth >= currentBreakEvenRent
-              ? 'bg-emerald-500/10 text-emerald-700'
-              : 'bg-rose-400/10 text-rose-500'
+            ? 'bg-emerald-500/10 text-emerald-700'
+            : 'bg-rose-400/10 text-rose-500'
             }`}
         >
           {currentStatus}
@@ -417,20 +416,18 @@ function InterestRateRentBreakEvenPlot({
             />
             <ReferenceLine
               x={currentInterestRate}
+              label={{
+                value: 'current rate',
+                position: 'insideTopRight',
+                fill: palette.stroke,
+                fontSize: 11,
+                fontWeight: 600,
+              }}
               stroke={palette.stroke}
               strokeDasharray="3 5"
               strokeOpacity={0.32}
               strokeWidth={1.5}
-            >
-              <Label
-                angle={-90}
-                fill={palette.stroke}
-                fontSize={11}
-                fontWeight={600}
-                position="centerTop"
-                value="current rate"
-              />
-            </ReferenceLine>
+            />
             <Area
               dataKey="breakEvenMonthlyRent"
               dot={false}
