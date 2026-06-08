@@ -7,10 +7,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { Lightbulb } from 'lucide-react';
 import {
   DEFAULT_REPAYMENT_YEARS,
   DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
   calculateMortgageCosts,
+  calculateMortgageRepaymentProjection,
   type MortgageAmortizationStrategy,
   type MortgageCostAmounts,
 } from '../calculations/mortgageCalculations';
@@ -47,20 +49,33 @@ export function CostsVsRentingCard({
 }) {
   const costs = calculateMortgageCosts({ costAmounts, maintenanceRate, propertyPrice });
   const { inputValue, onInputChange } = useEditableNumber(rentPerMonth, onRentPerMonthChange, { format: 'money' });
-  const charts = (['direct', 'indirect'] as const).map((strategy) => ({
-    points: calculateMortgageRentComparison({
+  const charts = (['direct', 'indirect'] as const).map((strategy) => {
+    const projection = calculateMortgageRepaymentProjection({
       annualInterestRate: interestRate,
       mortgageAmount,
-      monthlyRent: rentPerMonth,
       propertyPrice,
       strategy,
       targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
-      totalOngoingAnnualCosts: costs.totalOngoingAnnualCosts,
-      totalOneTimeCosts: costs.totalOneTimeCosts,
       years: DEFAULT_REPAYMENT_YEARS,
-    }),
-    strategy,
-  }));
+    });
+
+    return {
+      badgeLabel: strategy === 'direct' ? 'Equity' : '3rd pillar',
+      badgeValue: strategy === 'direct' ? projection.totalAmortization : projection.endingPillar3Assets,
+      points: calculateMortgageRentComparison({
+        annualInterestRate: interestRate,
+        mortgageAmount,
+        monthlyRent: rentPerMonth,
+        propertyPrice,
+        strategy,
+        targetLoanToValueRatio: DEFAULT_TARGET_LOAN_TO_VALUE_RATIO,
+        totalOngoingAnnualCosts: costs.totalOngoingAnnualCosts,
+        totalOneTimeCosts: costs.totalOneTimeCosts,
+        years: DEFAULT_REPAYMENT_YEARS,
+      }),
+      strategy,
+    };
+  });
 
   return (
     <section className="glass-panel p-4">
@@ -90,21 +105,37 @@ export function CostsVsRentingCard({
         {charts.map((chart) => (
           <CostsVsRentingPlot
             key={chart.strategy}
+            badgeLabel={chart.badgeLabel}
+            badgeValue={chart.badgeValue}
             palette={chart.strategy === 'direct' ? colorClasses.blue : colorClasses.cyan}
             points={chart.points}
             strategy={chart.strategy}
           />
         ))}
       </div>
+
+      <div className="mt-3 flex items-center gap-3 rounded-lg border border-slate-400/30 bg-slate-300/20 p-3 text-sm font-medium text-slate-700">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-yellow-500/10 text-yellow-500">
+          <Lightbulb className="h-5 w-5" />
+        </span>
+        <p>
+          Indirect amortization can be advantageous when returns on 3rd pillar investments exceed mortgage costs
+          and provide additional tax benefits.
+        </p>
+      </div>
     </section>
   );
 }
 
 function CostsVsRentingPlot({
+  badgeLabel,
+  badgeValue,
   palette,
   points,
   strategy,
 }: {
+  badgeLabel: string;
+  badgeValue: number;
   palette: ChartPalette;
   points: MortgageRentComparisonPoint[];
   strategy: MortgageAmortizationStrategy;
@@ -122,6 +153,9 @@ function CostsVsRentingPlot({
   }));
   const firstYearCost = points[0]?.mortgageCost ?? 0;
   const annualRentCost = points[0]?.rentCost ?? 0;
+  const totalRentCost = points.reduce((total, point) => total + point.rentCost, 0);
+  const totalMortgageCost = points.reduce((total, point) => total + point.mortgageCost, 0);
+  const netGain = totalRentCost - totalMortgageCost + badgeValue;
 
   return (
     <article className="glass-panel p-3">
@@ -142,7 +176,7 @@ function CostsVsRentingPlot({
         <ChartLegendItem color={colorClasses.coral.stroke} dashed label="Renting costs" />
       </div>
 
-      <div className="mt-2 h-56 w-full">
+      <div className="relative mt-2 h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 14, right: 12, bottom: 6, left: -6 }}>
             <defs>
@@ -208,8 +242,22 @@ function CostsVsRentingPlot({
             />
           </AreaChart>
         </ResponsiveContainer>
+        <span
+          className={`pointer-events-none absolute right-4 bottom-12 rounded-lg px-3 py-2 text-sm font-semibold shadow-sm backdrop-blur-md ${strategy === 'direct'
+              ? 'border border-blue-500/45 bg-linear-to-br from-blue-500/10 to-white/10 text-blue-600'
+              : 'border border-emerald-500/45 bg-linear-to-br from-emerald-500/10 to-white/10 text-emerald-700'
+            }`}
+        >
+          +{currency(badgeValue)} CHF {badgeLabel}
+        </span>
       </div>
       <p className="mt-1 text-center text-sm font-semibold text-slate-600">Years</p>
+      <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-200/35 px-3 py-3 text-sm font-bold text-slate-700 shadow-inner shadow-white/40 backdrop-blur-md">
+        After {DEFAULT_REPAYMENT_YEARS} years net gain:{' '}
+        <span className={netGain >= 0 ? 'text-emerald-700' : 'text-rose-500'}>
+          {currency(netGain)} CHF
+        </span>
+      </div>
     </article>
   );
 }
