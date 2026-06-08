@@ -67,13 +67,13 @@ export function CostsVsRentingCard({
       <div>
         <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">4. Costs vs Renting</h2>
         <p className="mt-1 text-sm font-semibold text-slate-600">
-          Compare annual costs of mortgage with renting costs
+          Compare annual mortgage costs with rental expenses
         </p>
       </div>
 
-      <label className="mt-4 flex flex-col gap-2 text-sm font-bold text-slate-600 md:w-80">
-        <span>Rent per month</span>
-        <span className="glass-input h-10 justify-between gap-2 px-3 py-2">
+      <label className="mt-4 flex w-fit items-center gap-4 text-sm">
+        <span className="font-bold text-slate-600">Rent per month</span>
+        <span className="glass-input h-8 w-40 shrink-0 justify-between gap-2 px-2 py-1">
           <input
             aria-label="Rent per month"
             className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
@@ -139,7 +139,7 @@ function CostsVsRentingPlot({
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-bold text-slate-700">
         <ChartLegendItem color={palette.stroke} label="Mortgage costs" />
-        <ChartLegendItem color="#64748b" dashed label="Renting costs" />
+        <ChartLegendItem color={colorClasses.coral.stroke} dashed label="Renting costs" />
       </div>
 
       <div className="mt-2 h-56 w-full">
@@ -158,7 +158,7 @@ function CostsVsRentingPlot({
               dataKey="year"
               domain={[1, maxYear]}
               interval="preserveStartEnd"
-              tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickLine={false}
               ticks={yearTicks}
               type="number"
@@ -166,7 +166,7 @@ function CostsVsRentingPlot({
             <YAxis
               axisLine={false}
               domain={[0, maxValue]}
-              tick={{ fill: '#475569', fontSize: 10, fontWeight: 700 }}
+              tick={{ fill: '#475569', fontSize: 10, fontWeight: 500 }}
               tickFormatter={formatAxisValue}
               tickLine={false}
               ticks={ticks}
@@ -192,13 +192,13 @@ function CostsVsRentingPlot({
               type="monotone"
             />
             <Area
-              activeDot={{ r: 4, fill: '#64748b', stroke: 'white', strokeWidth: 2 }}
+              activeDot={{ r: 4, fill: colorClasses.coral.stroke, stroke: 'white', strokeWidth: 2 }}
               dataKey="rentCost"
               dot={false}
               fill="transparent"
               isAnimationActive={false}
               name="Renting costs"
-              stroke="#64748b"
+              stroke={colorClasses.coral.stroke}
               strokeDasharray="5 5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -209,6 +209,7 @@ function CostsVsRentingPlot({
           </AreaChart>
         </ResponsiveContainer>
       </div>
+      <p className="mt-1 text-center text-sm font-semibold text-slate-600">Years</p>
     </article>
   );
 }
