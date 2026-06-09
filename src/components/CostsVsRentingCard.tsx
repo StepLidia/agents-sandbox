@@ -216,7 +216,7 @@ function CostsVsRentingPlot({
       </div>
 
       <div className="mt-2 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-bold text-slate-700">
-        <ChartLegendItem color={palette.stroke} label="Mortgage costs" />
+        <ChartLegendItem color={palette.stroke} label="Mortgage payments" />
         <ChartLegendItem color={colorClasses.coral.stroke} dashed label="Renting costs" />
       </div>
 
@@ -262,7 +262,7 @@ function CostsVsRentingPlot({
               dot={false}
               fill={`url(#${gradientId})`}
               isAnimationActive={false}
-              name="Mortgage costs"
+              name="Mortgage payments"
               stroke={palette.stroke}
               strokeLinecap="round"
               strokeLinejoin="round"
