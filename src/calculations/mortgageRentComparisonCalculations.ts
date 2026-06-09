@@ -74,7 +74,6 @@ export function calculateMortgageRentComparison({
 }
 
 export function calculateMortgageRentNetGain(inputs: MortgageRentComparisonInputs) {
-  const comparison = calculateMortgageRentComparison(inputs);
   const projection = calculateMortgageRepaymentProjection({
     annualInterestRate: inputs.annualInterestRate,
     mortgageAmount: inputs.mortgageAmount,
@@ -83,11 +82,15 @@ export function calculateMortgageRentNetGain(inputs: MortgageRentComparisonInput
     targetLoanToValueRatio: inputs.targetLoanToValueRatio,
     years: inputs.years,
   });
-  const assetValue = inputs.strategy === 'direct' ? projection.totalAmortization : projection.endingPillar3Assets;
-  const totalRentCost = comparison.reduce((total, point) => total + point.rentCost, 0);
-  const totalMortgageCost = comparison.reduce((total, point) => total + point.mortgageCost, 0);
+  const normalizedYears = Math.max(Math.round(inputs.years), 0);
+  const totalRentCost = calculateAnnualRentCost(inputs.monthlyRent) * normalizedYears;
+  const totalOngoingOwnershipCosts = normalizeMoney(inputs.totalOngoingAnnualCosts) * normalizedYears;
+  const totalLostMortgageCosts =
+    normalizeMoney(projection.totalInterestPaid) +
+    totalOngoingOwnershipCosts +
+    normalizeMoney(inputs.totalOneTimeCosts);
 
-  return totalRentCost - totalMortgageCost + assetValue;
+  return totalRentCost - totalLostMortgageCosts;
 }
 
 export function calculateMortgageRentBreakEvenPoints({

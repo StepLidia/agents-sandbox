@@ -54,7 +54,7 @@ describe('mortgage rent comparison calculations', () => {
     expect(comparison.slice(0, 2).map((point) => point.mortgageCost)).toEqual([28800, 28800]);
   });
 
-  it('calculates net gain from rent savings and owned assets', () => {
+  it('calculates net gain from rent cost minus lost mortgage costs', () => {
     expect(
       calculateMortgageRentNetGain({
         annualInterestRate: 2,
@@ -68,6 +68,22 @@ describe('mortgage rent comparison calculations', () => {
         years: 20,
       }),
     ).toBeCloseTo(146800, 0);
+  });
+
+  it('does not subtract amortization from net gain', () => {
+    expect(
+      calculateMortgageRentNetGain({
+        annualInterestRate: 0,
+        mortgageAmount: 640000,
+        monthlyRent: 1000,
+        propertyPrice: 800000,
+        strategy: 'direct',
+        targetLoanToValueRatio: 65,
+        totalOngoingAnnualCosts: 0,
+        totalOneTimeCosts: 0,
+        years: 20,
+      }),
+    ).toBe(240000);
   });
 
   it('builds break-even rent points across interest rates', () => {
