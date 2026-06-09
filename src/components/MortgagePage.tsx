@@ -54,7 +54,7 @@ const assetColorById: Record<string, ChartPalette> = {
 const MAX_PROPERTY_PRICE = 3000000;
 const PROPERTY_PRICE_STEP = 1000;
 const MORTGAGE_STORAGE_KEY = 'growly-mortgage-inputs-v1';
-const mortgageMoneyInputClasses = 'glass-input w-40 shrink-0 justify-between gap-2 px-2 py-1';
+const mortgageMoneyInputClasses = 'glass-input min-w-0 w-full justify-between gap-2 px-2 py-1 sm:w-40 sm:shrink-0';
 const MORTGAGE_STRUCTURE_POPOVER_MAX_WIDTH = 768;
 const MORTGAGE_STRUCTURE_POPOVER_MIN_WIDTH = 320;
 const MORTGAGE_STRUCTURE_POPOVER_EDGE_GAP = 16;
@@ -269,14 +269,14 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4 overflow-hidden">
       <MortgageHeader />
-      <section className="glass-panel p-4">
+      <section className="glass-panel min-w-0 p-3 sm:p-4">
         <div>
           <h2 className="text-base font-bold tracking-normal text-slate-950 md:text-lg">1. Can You Afford This Property?</h2>
           <p className="mt-1 text-sm font-semibold text-slate-600">Based on your income and available assets</p>
         </div>
-        <div className="mt-4 grid items-stretch gap-3 md:grid-cols-5">
+        <div className="mt-4 grid min-w-0 items-stretch gap-3 md:grid-cols-5">
           <AffordabilityPanel
             className="md:col-span-3"
             metrics={topMetrics}
@@ -297,7 +297,7 @@ export function MortgagePage({ dashboardAssets }: { dashboardAssets: FinancialAs
           </div>
         </div>
       </section>
-      <section className="glass-panel grid items-start gap-3 p-3 md:grid-cols-2 md:p-4 xl:grid-cols-4">
+      <section className="glass-panel grid min-w-0 items-start gap-3 p-3 md:grid-cols-2 md:p-4 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <MortgageSummaryCard key={card.label} {...card} />
         ))}
@@ -389,7 +389,7 @@ function AffordabilityPanel({
 
   return (
     <>
-      <section className={`glass-panel flex h-full flex-col p-4 ${className}`}>
+      <section className={`glass-panel flex h-full min-w-0 flex-col overflow-hidden p-3 sm:p-4 ${className}`}>
         <div className="flex flex-col gap-4 text-center md:flex-row md:items-start md:justify-between md:text-left">
           <div className="flex flex-col items-center gap-4 md:min-w-0 md:flex-row">
             <div
@@ -398,7 +398,7 @@ function AffordabilityPanel({
               <StatusIcon className="h-7 w-7" />
             </div>
             <div className="min-w-0">
-              <p className={`text-lg font-semibold md:text-xl ${statusTextClassName}`}>
+              <p className={`wrap-break-word text-base font-semibold sm:text-lg md:text-xl ${statusTextClassName}`}>
                 {mortgage.canAffordProperty ? 'Yes, you can afford this property!' : 'This property needs more review.'}
               </p>
             </div>
@@ -418,11 +418,11 @@ function AffordabilityPanel({
             {isStructureOpen && structurePopoverStyle && <MortgageStructurePopover style={structurePopoverStyle} />}
           </div>
         </div>
-        <p className={`my-4 text-center text-3xl font-bold tracking-normal md:text-4xl ${statusTextClassName}`}>
-          {currency(propertyPrice)} <span className="text-xl md:text-2xl">CHF</span>
+        <p className={`my-4 text-center text-2xl font-bold tracking-normal sm:text-3xl md:text-4xl ${statusTextClassName}`}>
+          {currency(propertyPrice)} <span className="text-lg sm:text-xl md:text-2xl">CHF</span>
         </p>
         <MortgageProgress mortgage={mortgage} propertyPrice={propertyPrice} onPropertyPriceChange={onPropertyPriceChange} />
-        <div className="mt-auto grid gap-3 pt-4 pb-2 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-auto grid min-w-0 gap-3 pt-4 pb-2 sm:grid-cols-2 xl:grid-cols-4">
           {metrics.map((metric) => (
             <MortgageMetricTile key={metric.label} {...metric} />
           ))}
@@ -468,7 +468,7 @@ function MortgageProgress({
       : 'years-slider mortgage-slider';
 
   return (
-    <div className="mt-4">
+    <div className="mt-4 min-w-0">
       <div className="relative pt-2">
         <span
           className="pointer-events-none absolute top-1/2 z-10 -translate-x-1/8 -translate-y-3/4 drop-shadow-sm"
@@ -489,11 +489,11 @@ function MortgageProgress({
           onChange={(event) => onPropertyPriceChange(Number(event.currentTarget.value))}
         />
       </div>
-      <div className="mt-3 flex items-center justify-between text-sm font-bold text-slate-600">
+      <div className="mt-3 flex items-center justify-between gap-3 text-sm font-bold text-slate-600">
         <span>0 CHF</span>
-        <span>{currency(MAX_PROPERTY_PRICE)} CHF</span>
+        <span className="min-w-0 text-right">{currency(MAX_PROPERTY_PRICE)} CHF</span>
       </div>
-      <div className="mt-1 text-center text-sm font-bold text-emerald-700">
+      <div className="mt-1 wrap-break-word text-center text-sm font-bold text-emerald-700">
         <span>Max affordable: {currency(mortgage.maxAffordablePropertyPrice)} CHF</span>
       </div>
     </div>
@@ -526,7 +526,7 @@ function MortgageMetricTile({
   value: string;
 }) {
   return (
-    <article className="glass-panel flex h-full min-h-24 flex-col p-3">
+    <article className="glass-panel flex h-full min-h-24 min-w-0 flex-col p-3">
       <div className="flex items-start gap-3">
         <div className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
           <Icon className="h-6 w-6" />
@@ -535,7 +535,7 @@ function MortgageMetricTile({
           <h3 className="min-h-9 text-sm font-bold leading-4 text-slate-950">{label}</h3>
         </div>
       </div>
-      <p className="mt-1 text-center whitespace-nowrap text-xl font-bold tracking-normal text-slate-950 2xl:text-2xl">{value}</p>
+      <p className="mt-1 wrap-break-word text-center text-xl font-bold tracking-normal text-slate-950 2xl:text-2xl">{value}</p>
       <div className="mt-auto pt-2 text-sm">
         <span className={helperClassName}>{helper}</span>
       </div>
@@ -553,9 +553,9 @@ function GrossIncomePanel({
   const { inputValue, onInputChange } = useEditableNumber(grossMonthlyIncome, onChange, { format: 'money' });
 
   return (
-    <section className="glass-panel p-3">
+    <section className="glass-panel min-w-0 p-3">
       <h2 className="text-base font-bold text-slate-950">Gross Income per Month</h2>
-      <div className="mt-2 flex items-center justify-between gap-4 text-sm">
+      <div className="mt-2 flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <span className="flex min-w-0 items-center gap-3">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-blue-500/20 bg-blue-600/10 text-blue-600">
             <BriefcaseBusiness className="h-5 w-5" />
@@ -588,16 +588,16 @@ function AssetsPanel({
   onChange: (id: string, amount: number) => void;
 }) {
   return (
-    <section className="glass-panel flex flex-1 flex-col p-3">
+    <section className="glass-panel flex min-w-0 flex-1 flex-col p-3">
       <h2 className="text-base font-bold text-slate-950">Available Assets</h2>
       <div className="my-2 flex flex-1 flex-col justify-center gap-1.5">
         {assets.map((asset) => (
           <AssetRow key={asset.id} asset={asset} onChange={onChange} />
         ))}
       </div>
-      <div className="mt-1 flex items-center justify-between gap-4 border-t border-slate-300/50 pt-2">
+      <div className="mt-1 flex flex-col gap-1 border-t border-slate-300/50 pt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <p className="text-base font-bold text-emerald-600">Total Available Assets</p>
-        <p className="whitespace-nowrap text-lg font-bold tracking-normal text-emerald-600">{currency(total)} CHF</p>
+        <p className="wrap-break-word text-lg font-bold tracking-normal text-emerald-600 sm:whitespace-nowrap">{currency(total)} CHF</p>
       </div>
     </section>
   );
@@ -611,7 +611,7 @@ function AssetRow({ asset, onChange }: { asset: MortgageAsset; onChange: (id: st
   });
 
   return (
-    <div className="flex items-center justify-between gap-4 text-sm">
+    <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <span className="flex min-w-0 items-center gap-3">
         <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border ${colors.border} ${colors.bg} ${colors.text}`}>
           <Icon className="h-5 w-5" />
@@ -649,10 +649,10 @@ function DownPaymentPanel({
   const progressPercent = totalAvailableAssets > 0 ? clampPercent((downPayment / totalAvailableAssets) * 100) : 0;
 
   return (
-    <section className="glass-panel p-3">
-      <div className="flex items-center justify-between gap-4">
+    <section className="glass-panel min-w-0 p-3">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <h2 className="text-base font-bold text-cyan-600">Down Payment ({formatMortgagePercent(downPaymentRatio)})</h2>
-        <p className="whitespace-nowrap text-lg font-bold tracking-normal text-cyan-600">{currency(downPayment)} CHF</p>
+        <p className="wrap-break-word text-lg font-bold tracking-normal text-cyan-600 sm:whitespace-nowrap">{currency(downPayment)} CHF</p>
       </div>
       <input
         aria-label="Down payment amount"
@@ -665,7 +665,7 @@ function DownPaymentPanel({
         value={downPayment}
         onChange={(event) => onChange(Number(event.currentTarget.value))}
       />
-      <p className="mt-2 text-sm font-semibold text-slate-600">
+      <p className="mt-2 wrap-break-word text-sm font-semibold text-slate-600">
         Min. required: {currency(requiredDownPayment)} CHF ({defaultMortgageInputs.requiredDownPaymentRatio}%)
       </p>
     </section>
@@ -692,13 +692,13 @@ function MortgageSummaryCard({
   const tooltipId = tooltip ? `summary-tooltip-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}` : undefined;
 
   return (
-    <article className="flex items-start gap-3 border-slate-300/50 py-1 md:border-r md:last:border-r-0">
+    <article className="flex min-w-0 items-start gap-3 border-slate-300/50 py-1 md:border-r md:last:border-r-0">
       <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${iconClassName}`}>
         <Icon className="h-6 w-6" />
       </div>
       <div className="min-w-0">
-        <p className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
-          <span>{label}</span>
+        <p className="flex min-w-0 items-center gap-1.5 text-sm font-bold text-slate-600">
+          <span className="min-w-0 wrap-break-word">{label}</span>
           {tooltip && tooltipId && (
             <span className="group relative inline-flex">
               <button
@@ -719,7 +719,7 @@ function MortgageSummaryCard({
             </span>
           )}
         </p>
-        <p className="mt-1 text-xl font-bold tracking-normal text-slate-950">{value}</p>
+        <p className="mt-1 wrap-break-word text-xl font-bold tracking-normal text-slate-950">{value}</p>
         {helper && <p className={`mt-1 text-sm font-bold ${helperClassName}`}>{helper}</p>}
       </div>
     </article>
