@@ -94,6 +94,7 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
     baselineWealth: baseline?.totalWealth ?? currentWealth,
     monthlyPlanContribution,
+    optimisticAssets: assets,
     projectionYears: PROGRESS_CHART_YEARS,
   });
 
@@ -538,6 +539,19 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               strokeWidth={3}
               type="monotone"
             />
+            <Line
+              activeDot={{ r: 5, fill: '#64748b', stroke: 'white', strokeWidth: 2 }}
+              dataKey="optimisticWealth"
+              dot={false}
+              isAnimationActive={false}
+              name="Optimistic"
+              stroke="#64748b"
+              strokeDasharray="3 5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              type="monotone"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -549,13 +563,21 @@ function ProgressChartLegend() {
   const items = [
     { color: colorClasses.blue.stroke, label: 'Planned' },
     { color: colorClasses.emerald.stroke, label: 'Actual' },
+    { color: '#64748b', dashed: true, label: 'Optimistic' },
   ];
 
   return (
     <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-bold text-slate-700">
       {items.map((item) => (
         <span key={item.label} className="flex items-center gap-2">
-          <span className="h-0.5 w-7 rounded-full" style={{ backgroundColor: item.color }} />
+          <span
+            className={`h-0.5 w-7 rounded-full ${item.dashed ? 'bg-repeat-x' : ''}`}
+            style={{
+              backgroundColor: item.dashed ? undefined : item.color,
+              backgroundImage: item.dashed ? `linear-gradient(to right, ${item.color} 0 45%, transparent 45% 100%)` : undefined,
+              backgroundSize: item.dashed ? '8px 2px' : undefined,
+            }}
+          />
           {item.label}
         </span>
       ))}

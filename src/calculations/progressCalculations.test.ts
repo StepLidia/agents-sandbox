@@ -9,6 +9,7 @@ import {
   calculateTotalBalance,
   calculateYearsTracked,
   buildProgressChartData,
+  buildOptimisticProgressProjection,
 } from './progressCalculations';
 
 describe('progress calculations', () => {
@@ -66,13 +67,32 @@ describe('progress calculations', () => {
       baselineDate: new Date(2026, 0, 1),
       baselineWealth: 100000,
       monthlyPlanContribution: 1000,
+      optimisticAssets: [
+        { amount: 100000, annualReturn: 0, id: 'savings', monthlyContribution: 1000 },
+      ],
       projectionYears: 1,
     });
 
     expect(points).toEqual([
-      { actualWealth: 100000, plannedWealth: 100000, year: 0 },
-      { actualWealth: 108000, plannedWealth: 105000, year: 5 / 12 },
-      { actualWealth: null, plannedWealth: 112000, year: 1 },
+      { actualWealth: 100000, optimisticWealth: 100000, plannedWealth: 100000, year: 0 },
+      { actualWealth: 108000, optimisticWealth: 105000, plannedWealth: 105000, year: 5 / 12 },
+      { actualWealth: null, optimisticWealth: 112000, plannedWealth: 112000, year: 1 },
+    ]);
+  });
+
+  it('builds an optimistic projection with boosted investment and pension returns', () => {
+    const points = buildOptimisticProgressProjection({
+      assets: [
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
+      ],
+      baselineWealth: 100000,
+      projectionYears: 1,
+    });
+
+    expect(points).toEqual([
+      { value: 100000, year: 0 },
+      { value: 102000, year: 1 },
     ]);
   });
 });
