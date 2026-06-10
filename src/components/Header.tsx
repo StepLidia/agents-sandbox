@@ -10,7 +10,7 @@ export function Header({
   title = 'Overview',
 }: {
   isExporting?: boolean;
-  onExportPdf: () => void;
+  onExportPdf?: () => void;
   showActions?: boolean;
   subtitle?: string;
   title?: string;
@@ -25,7 +25,7 @@ export function Header({
       </div>
       {showActions && (
         <div className="flex items-center gap-2" data-pdf-exclude="true">
-          <button className={buttonClasses()} disabled={isExporting} onClick={onExportPdf}>
+          <button className={buttonClasses()} disabled={isExporting} onClick={onExportPdf} type="button">
             <Download className="h-4 w-4" />
             {isExporting ? 'Exporting...' : 'Export PDF'}
           </button>

@@ -1,17 +1,16 @@
 import { BarChart3, CircleUserRound, Footprints, Home, ReceiptText, X } from 'lucide-react';
-
-export type DashboardView = 'overview' | 'expenses' | 'mortgage' | 'contact';
+import { NavLink } from 'react-router-dom';
 
 const navItems = [
-  { id: 'overview', label: 'Overview', icon: BarChart3 },
-  { id: 'expenses', label: 'Expenses', icon: ReceiptText },
-  { id: 'mortgage', label: 'Mortgage', icon: Home },
-  { id: 'contact', label: 'Contact', icon: CircleUserRound },
-] satisfies Array<{ id: DashboardView; label: string; icon: typeof BarChart3 }>;
+  { label: 'Overview', icon: BarChart3, to: '/', end: true },
+  { label: 'Expenses', icon: ReceiptText, to: '/expenses', end: true },
+  { label: 'Expenses Trending', icon: BarChart3, to: '/expenses/trends', end: true },
+  { label: 'Mortgage', icon: Home, to: '/mortgage', end: true },
+  { label: 'Contact', icon: CircleUserRound, to: '/contact', end: true },
+] satisfies Array<{ label: string; icon: typeof BarChart3; to: string; end: boolean }>;
 
 type SidebarProps = {
-  activeView: DashboardView;
-  onViewChange: (view: DashboardView) => void;
+  onNavigate?: () => void;
 };
 
 type MobileSidebarDrawerProps = SidebarProps & {
@@ -19,20 +18,15 @@ type MobileSidebarDrawerProps = SidebarProps & {
   onClose: () => void;
 };
 
-export function Sidebar({ activeView, onViewChange }: SidebarProps) {
+export function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <aside className="glass-panel glass-panel-square m-0 hidden flex-col border-y-0 border-l-0 px-4 py-5 md:flex">
-      <SidebarContent activeView={activeView} onViewChange={onViewChange} />
+      <SidebarContent onNavigate={onNavigate} />
     </aside>
   );
 }
 
-export function MobileSidebarDrawer({ activeView, isOpen, onClose, onViewChange }: MobileSidebarDrawerProps) {
-  function handleViewChange(view: DashboardView) {
-    onViewChange(view);
-    onClose();
-  }
-
+export function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDrawerProps) {
   return (
     <div className={`fixed inset-0 z-40 md:hidden ${isOpen ? '' : 'pointer-events-none'}`}>
       <button
@@ -52,13 +46,13 @@ export function MobileSidebarDrawer({ activeView, isOpen, onClose, onViewChange 
         >
           <X className="h-5 w-5" />
         </button>
-        <SidebarContent activeView={activeView} onViewChange={handleViewChange} />
+        <SidebarContent onNavigate={onClose} />
       </aside>
     </div>
   );
 }
 
-function SidebarContent({ activeView, onViewChange }: SidebarProps) {
+function SidebarContent({ onNavigate }: SidebarProps) {
   return (
     <>
       <div className="flex items-center gap-3 px-2">
@@ -71,19 +65,22 @@ function SidebarContent({ activeView, onViewChange }: SidebarProps) {
         </div>
       </div>
       <nav className="mt-8 space-y-1.5">
-        {navItems.map(({ id, label, icon: Icon }) => (
-          <button
+        {navItems.map(({ end, label, icon: Icon, to }) => (
+          <NavLink
             key={label}
-            className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${activeView === id
-              ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
-              : 'text-slate-700 hover:bg-white/45'
-              }`}
-            type="button"
-            onClick={() => onViewChange(id)}
+            className={({ isActive }) =>
+              `flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${isActive
+                ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
+                : 'text-slate-700 hover:bg-white/45'
+              }`
+            }
+            end={end}
+            to={to}
+            onClick={onNavigate}
           >
             <Icon className="h-5 w-5" />
             {label}
-          </button>
+          </NavLink>
         ))}
       </nav>
       <div className="glass-panel mt-10 p-4 text-center">

@@ -24,17 +24,17 @@ export function AssetCard({
   const isPillar2 = asset.id === 'pillar2';
 
   return (
-    <article className="glass-panel overflow-visible p-4 hover:z-30 focus-within:z-30">
-      <div className="flex items-center gap-3">
+    <article className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 overflow-visible p-4 hover:z-30 focus-within:z-30 sm:max-w-full">
+      <div className="flex min-w-0 items-center gap-3">
         <div className={`grid h-10 w-10 place-items-center rounded-2xl border ${colors.border} ${colors.bg} ${colors.text}`}>
           <Icon className="h-5 w-5" />
         </div>
-        <div>
+        <div className="min-w-0">
           <h2 className="text-sm font-bold text-slate-950">{asset.label}</h2>
-          <p className="text-xs text-slate-600">{asset.subtitle}</p>
+          <p className="text-sm text-slate-600">{asset.subtitle}</p>
         </div>
       </div>
-      <div className="mt-4 space-y-2.5 text-xs">
+      <div className="mt-4 space-y-2.5 text-sm">
         <EditableField
           label="Current Amount"
           value={asset.amount}
@@ -82,8 +82,8 @@ export function AssetCard({
         <ReadonlyField label="Years" value={asset.years} suffix="years" />
       </div>
       <div className="mt-4 border-t border-slate-300/45 pt-4">
-        <div className="flex min-h-7 items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs font-bold">
+        <div className="flex min-h-7 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2 text-sm font-bold">
             <Goal className={`h-4 w-4 ${colors.text}`} />
             Future Value
             <span className="group relative">
@@ -104,9 +104,9 @@ export function AssetCard({
               </span>
             </span>
           </div>
-          <div className={`text-right text-xl font-bold leading-none ${colors.text}`}>
+          <div className={`wrap-break-word text-left text-xl font-bold leading-none sm:text-right ${colors.text}`}>
             {currency(asset.futureValue)}
-            <span className="ml-1 text-xs">CHF</span>
+            <span className="ml-1 text-sm">CHF</span>
           </div>
         </div>
       </div>
@@ -116,11 +116,11 @@ export function AssetCard({
 
 function ReadonlyField({ label, value, suffix }: { label: string; value: number; suffix: string }) {
   return (
-    <div className="grid grid-cols-[1fr_8rem] items-center gap-3">
-      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
+    <div className="grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_8rem] sm:gap-3">
+      <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-slate-800">
         <span className="truncate">{label}</span>
       </span>
-      <span className="glass-input grid grid-cols-[1fr_auto] items-center gap-2 py-2 text-[14px] font-normal text-slate-700">
+      <span className="glass-input grid w-[calc(100vw-5rem)] max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2 text-sm font-normal text-slate-700 sm:w-full">
         <span className="min-w-0 flex-1 text-right">{value}</span>
         <span className="whitespace-nowrap text-sm font-normal text-slate-600">{suffix}</span>
       </span>
@@ -149,12 +149,12 @@ function EditableField({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, isMoney ? { format: 'money' } : undefined);
 
   return (
-    <div className="grid grid-cols-[1fr_8rem] items-center gap-3">
-      <span className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-slate-800">
+    <div className="grid min-w-0 grid-cols-1 items-center gap-2 sm:grid-cols-[1fr_8rem] sm:gap-3">
+      <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-slate-800">
         <span className="truncate">{label}</span>
         {labelExtra}
       </span>
-      <span className="glass-input grid grid-cols-[1fr_auto] items-center gap-2 py-2 text-[14px]">
+      <span className="glass-input grid w-[calc(100vw-5rem)] max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2 text-sm sm:w-full">
         <input
           aria-label={label}
           className="w-full min-w-0 bg-transparent text-right font-black text-slate-950 outline-none"

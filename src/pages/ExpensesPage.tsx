@@ -22,8 +22,8 @@ import { buttonClasses } from '../constants/buttonStyles';
 import { hoverTooltipClasses, tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
-import { ExpenseTrendAnalysis } from './ExpenseTrendAnalysis';
-import { InsightValue } from './InsightValue';
+import { ExpenseTrendAnalysis } from '../components/ExpenseTrendAnalysis';
+import { InsightValue } from '../components/InsightValue';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
@@ -73,12 +73,20 @@ const defaultCategories: ExpenseCategory[] = [
   { id: 'utilities', label: 'Utilities', value: 30, color: '#dbe3ef', kind: 'essential' },
 ];
 
-export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { monthlyIncome?: number }) {
+export function ExpensesPage({
+  initialTrendVisible = false,
+  monthlyIncome = DEFAULT_MONTHLY_INCOME,
+  onTrendVisibilityChange,
+}: {
+  initialTrendVisible?: boolean;
+  monthlyIncome?: number;
+  onTrendVisibilityChange?: (isVisible: boolean) => void;
+}) {
   const [expenseMonth, setExpenseMonth] = useState(getCurrentExpenseMonth);
   const shouldSkipNextSave = useRef(false);
   const [categories, setCategories] = useState<ExpenseCategory[]>(() => readSavedExpenses(expenseMonth.key));
   const [draftCategory, setDraftCategory] = useState<{ name: string; value: number } | null>(null);
-  const [isTrendVisible, setIsTrendVisible] = useState(false);
+  const [isTrendVisible, setIsTrendVisible] = useState(initialTrendVisible);
   const totalExpenses = useMemo(() => categories.reduce((sum, category) => sum + category.value, 0), [categories]);
   const essentialExpenses = useMemo(
     () => categories.filter(({ kind }) => kind === 'essential').reduce((sum, category) => sum + category.value, 0),
@@ -106,6 +114,15 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
 
     saveExpenses(expenseMonth.key, categories);
   }, [categories, expenseMonth.key]);
+
+  useEffect(() => {
+    setIsTrendVisible(initialTrendVisible);
+  }, [initialTrendVisible]);
+
+  function updateTrendVisibility(isVisible: boolean) {
+    setIsTrendVisible(isVisible);
+    onTrendVisibilityChange?.(isVisible);
+  }
 
   function updateCategory(id: string, value: number) {
     setCategories((currentCategories) =>
@@ -165,7 +182,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
         isTrendVisible={isTrendVisible}
         onMonthChange={selectExpenseMonth}
         onResetMonth={resetCurrentMonth}
-        onToggleTrend={() => setIsTrendVisible((isVisible) => !isVisible)}
+        onToggleTrend={() => updateTrendVisibility(!isTrendVisible)}
       />
       {isTrendVisible && (
         <ExpenseTrendAnalysis
@@ -229,7 +246,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
                     <CalendarClock className="h-5 w-5" />
                   </span>
                   <p>
-                    Return each month to build your spending history and uncover long-term trends. Stored locally in
+                    Come back each month to build your spending history and uncover long-term trends. Stored locally in
                     your browser.
                   </p>
                 </div>
@@ -239,7 +256,7 @@ export function ExpensesPage({ monthlyIncome = DEFAULT_MONTHLY_INCOME }: { month
                     aria-describedby="distribution-trend-tooltip"
                     aria-label="View expenses trend"
                     type="button"
-                    onClick={() => setIsTrendVisible(true)}
+                    onClick={() => updateTrendVisibility(true)}
                   >
                     <ChartLine className="h-4 w-4" />
                   </button>

@@ -11,6 +11,7 @@
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-router-dom": "^7.17.0",
     "recharts": "^3.8.1",
     "tailwindcss": "latest"
   },

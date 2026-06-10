@@ -33,9 +33,9 @@ import { colorClasses, type ChartPalette } from '../constants/colors';
 import { tooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
-import { CostsVsRentingCard } from './CostsVsRentingCard';
-import { MortgageCostsCard } from './MortgageCostsCard';
-import { DEFAULT_REPAYMENT_INTEREST_RATE, MortgageRepaymentCard } from './MortgageRepaymentCard';
+import { CostsVsRentingCard } from '../components/CostsVsRentingCard';
+import { MortgageCostsCard } from '../components/MortgageCostsCard';
+import { DEFAULT_REPAYMENT_INTEREST_RATE, MortgageRepaymentCard } from '../components/MortgageRepaymentCard';
 
 const assetIconById: Record<string, LucideIcon> = {
   cash: PiggyBank,

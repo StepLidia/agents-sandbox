@@ -19,7 +19,7 @@ import {
 import { formatPercent, getPercent } from '../calculations/percent';
 import { tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
-import type { ExpenseCategory, ExpenseMonth } from './ExpensesPage';
+import type { ExpenseCategory, ExpenseMonth } from '../pages/ExpensesPage';
 
 type ExpenseTrendAnalysisProps = {
   currentCategories: ExpenseCategory[];

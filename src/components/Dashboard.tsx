@@ -1,21 +1,15 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Menu } from 'lucide-react';
-import { getPercent } from '../calculations/percent';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { buttonClasses } from '../constants/buttonStyles';
-import { colorClasses } from '../constants/colors';
-import { ContactContent } from './ContactCard';
-import { ExpensesPage } from './ExpensesPage';
-import { Header } from './Header';
-import { IncomeCard } from './IncomeCard';
-import { InsightsCard } from './InsightsCard';
-import { ProjectionCard } from './ProjectionCard';
-import { MobileSidebarDrawer, Sidebar, type DashboardView } from './Sidebar';
-import { MortgagePage } from './MortgagePage';
-import { SummaryCard } from './SummaryCard';
-import { AssetCard } from './AssetCard';
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { MobileSidebarDrawer, Sidebar } from './Sidebar';
 import { tooltipClasses } from '../constants/tooltipStyles';
+import { ContactPage } from '../pages/ContactPage';
+import { ExpensesPage } from '../pages/ExpensesPage';
+import { MortgagePage } from '../pages/MortgagePage';
+import { OverviewPage } from '../pages/OverviewPage';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
 
@@ -26,12 +20,12 @@ type SavedDashboardInputs = {
 };
 
 export function Dashboard() {
+  const navigate = useNavigate();
   const savedInputs = useMemo(readSavedDashboardInputs, []);
   const [assets, setAssets] = useState<FinancialAsset[]>(() => mergeSavedAssets(savedInputs.assets));
   const [income, setIncome] = useState<IncomePlan>(() => mergeSavedIncome(savedInputs.income));
   const [projectionYears, setProjectionYears] = useState(() => getSavedNumber(savedInputs.projectionYears, 30));
   const [isExporting, setIsExporting] = useState(false);
-  const [activeView, setActiveView] = useState<DashboardView>('overview');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
@@ -93,88 +87,59 @@ export function Dashboard() {
         <Menu className="h-5 w-5" />
       </button>
       <MobileSidebarDrawer
-        activeView={activeView}
         isOpen={isMobileNavOpen}
         onClose={() => setIsMobileNavOpen(false)}
-        onViewChange={setActiveView}
       />
       <div className="grid min-h-screen grid-cols-1 md:grid-cols-[232px_1fr]">
-        <Sidebar activeView={activeView} onViewChange={setActiveView} />
-        <section className="flex min-h-screen min-w-0 flex-col px-4 pb-4 pt-20 sm:px-5 md:py-4 xl:px-6">
-          {activeView === 'overview' ? (
-            <>
-              <Header isExporting={isExporting} onExportPdf={handleExportPdf} />
-              <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
-                {dashboard.assets.map((asset) => (
-                  <AssetCard key={asset.id} asset={asset} onChange={updateAsset} />
-                ))}
-              </div>
-              <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-4">
-                <div className="h-full xl:col-span-2">
-                  <IncomeCard
-                    income={dashboard.income}
-                    futureBuildingPercent={dashboard.futureBuildingPercent}
-                    onChange={updateIncome}
-                  />
-                </div>
-                <div className="h-full">
-                  <SummaryCard
-                    totalWealth={dashboard.totalWealth}
-                    pensionWealth={dashboard.pensionWealth}
-                    liquidWealth={dashboard.liquidWealth}
-                    projectionYears={projectionYears}
-                  />
-                </div>
-                <div className="h-full">
-                  <InsightsCard insightAmounts={dashboard.insightAmounts} projectionYears={projectionYears} />
-                </div>
-              </div>
-              <YearsSlider value={projectionYears} onChange={setProjectionYears} />
-              <div className="mt-3 grid gap-3 xl:grid-cols-3">
-                <ProjectionCard
-                  title="Total Wealth Over Time"
-                  amount={dashboard.totalWealth}
-                  subtitle="All accounts combined"
-                  points={dashboard.totalProjection}
-                  comparisonPoints={dashboard.zeroReturnTotalProjection}
-                  palette={colorClasses.blue}
+        <Sidebar />
+        <section className="flex min-h-screen min-w-0 flex-col pb-4 pl-4 pr-8 pt-20 sm:px-5 md:py-4 xl:px-6">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <OverviewPage
+                  dashboard={dashboard}
+                  isExporting={isExporting}
+                  projectionYears={projectionYears}
+                  onAssetChange={updateAsset}
+                  onExportPdf={handleExportPdf}
+                  onIncomeChange={updateIncome}
+                  onProjectionYearsChange={setProjectionYears}
                 />
-                <ProjectionCard
-                  title="Pension Wealth"
-                  note="2nd + 3rd Pillar"
-                  amount={dashboard.pensionWealth}
-                  subtitle="Future pension capital"
-                  points={dashboard.pensionProjection}
-                  comparisonPoints={dashboard.zeroReturnPensionProjection}
-                  palette={colorClasses.violet}
+              }
+            />
+            <Route
+              path="/expenses"
+              element={
+                <ExpensesPage
+                  initialTrendVisible={false}
+                  monthlyIncome={dashboard.income.monthlyNetIncome}
+                  onTrendVisibilityChange={(isVisible) => {
+                    if (isVisible) {
+                      navigate('/expenses/trends');
+                    }
+                  }}
                 />
-                <ProjectionCard
-                  title="Savings + Investments"
-                  amount={dashboard.liquidWealth}
-                  subtitle="Liquid and accessible wealth"
-                  points={dashboard.savingsInvestmentProjection}
-                  comparisonPoints={dashboard.zeroReturnSavingsInvestmentProjection}
-                  palette={colorClasses.emerald}
+              }
+            />
+            <Route
+              path="/expenses/trends"
+              element={
+                <ExpensesPage
+                  initialTrendVisible
+                  monthlyIncome={dashboard.income.monthlyNetIncome}
+                  onTrendVisibilityChange={(isVisible) => {
+                    if (!isVisible) {
+                      navigate('/expenses');
+                    }
+                  }}
                 />
-              </div>
-            </>
-          ) : activeView === 'expenses' ? (
-            <ExpensesPage monthlyIncome={dashboard.income.monthlyNetIncome} />
-          ) : activeView === 'mortgage' ? (
-            <MortgagePage dashboardAssets={assets} />
-          ) : (
-            <>
-              <Header
-                title="Contact"
-                subtitle="Form for your inquiries"
-                showActions={false}
-                onExportPdf={handleExportPdf}
-              />
-              <div className="mt-6 max-w-2xl">
-                <ContactContent />
-              </div>
-            </>
-          )}
+              }
+            />
+            <Route path="/mortgage" element={<MortgagePage dashboardAssets={assets} />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
           <Footer />
         </section>
       </div>
@@ -279,37 +244,5 @@ function Footer() {
         </span>
       </span>
     </footer>
-  );
-}
-
-function YearsSlider({ value, onChange }: { value: number; onChange: (value: number) => void }) {
-  const percent = getPercent(value, 40);
-
-  return (
-    <section className="glass-panel mt-3 px-5 py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="flex min-w-32 items-baseline justify-between gap-3 sm:block">
-          <p className="text-sm font-bold text-slate-900">Years</p>
-          <p className="mt-1 text-sm text-slate-600">
-            <span className="font-extrabold text-slate-950">{value}</span> years
-          </p>
-        </div>
-        <div className="flex flex-1 items-center gap-4">
-          <span className="text-xs font-bold text-slate-500">0</span>
-          <input
-            aria-label="Projection years"
-            className="years-slider"
-            max={40}
-            min={0}
-            step={1}
-            style={{ '--slider-progress': `${percent}%` } as CSSProperties}
-            type="range"
-            value={value}
-            onChange={(event) => onChange(Number(event.currentTarget.value))}
-          />
-          <span className="text-xs font-bold text-slate-500">40</span>
-        </div>
-      </div>
-    </section>
   );
 }
