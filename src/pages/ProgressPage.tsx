@@ -173,17 +173,17 @@ function BaselineCard({
             {baseline ? 'Reset baseline' : 'Start tracking'}
           </span>
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+          <div className="min-w-0">
             <h2 className="text-sm font-bold leading-5 text-slate-950">{baseline ? 'Started' : 'Start'}</h2>
-            {baseline && (
-              <div className="ml-auto flex w-fit shrink-0 items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/12 px-3 py-1 text-sm font-bold text-emerald-700">
-                <CheckCircle2 className="h-4 w-4" />
-                Baseline set
-              </div>
-            )}
+            <p className="mt-2 text-sm font-semibold text-slate-600">{baseline?.monthLabel ?? currentMonthLabel}</p>
           </div>
-          <p className="mt-2 text-sm font-semibold text-slate-600">{baseline?.monthLabel ?? currentMonthLabel}</p>
+          {baseline && (
+            <div className="flex w-fit shrink-0 items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/12 px-3 py-1 text-sm font-bold text-emerald-700">
+              <CheckCircle2 className="h-4 w-4" />
+              Baseline set
+            </div>
+          )}
         </div>
       </div>
       <p className="mt-4 max-w-xs wrap-break-word text-sm leading-6 text-slate-700">
