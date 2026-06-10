@@ -1,14 +1,20 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
   CalendarDays,
+  CalendarCheck2,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Coins,
+  Info,
+  ListChecks,
   RefreshCcw,
+  Save,
+  Sparkles,
   TrendingUp,
   type LucideIcon,
 } from 'lucide-react';
+import { colorClasses } from '../constants/colors';
 import {
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
@@ -21,8 +27,10 @@ import {
 import { hoverTooltipClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { Header } from '../components/Header';
+import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
+const PROGRESS_MONTHLY_RECORD_STORAGE_KEY = 'growly-progress-monthly-record-v1';
 
 type ProgressBaseline = {
   monthLabel: string;
@@ -36,8 +44,16 @@ type ProgressMonth = {
   shortLabel: string;
 };
 
+type ProgressMonthlyRecord = {
+  monthLabel: string;
+  recordedAt: string;
+  balances: Record<string, number>;
+};
+
 export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
   const [baseline, setBaseline] = useState<ProgressBaseline | null>(readSavedProgressBaseline);
+  const [monthlyRecord, setMonthlyRecord] = useState<ProgressMonthlyRecord | null>(readSavedProgressMonthlyRecord);
+  const [assetBalances, setAssetBalances] = useState(() => getInitialProgressAssetBalances(assets, monthlyRecord));
   const currentDate = useMemo(() => new Date(), []);
   const currentMonthLabel = formatProgressMonth(currentDate);
   const currentWealth = calculateCurrentWealth(assets);
@@ -63,6 +79,24 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
 
     setBaseline(nextBaseline);
     saveProgressBaseline(nextBaseline);
+  }
+
+  function updateAssetBalance(assetId: string, value: number) {
+    setAssetBalances((currentBalances) => ({
+      ...currentBalances,
+      [assetId]: value,
+    }));
+  }
+
+  function saveMonthlyRecord() {
+    const nextRecord = {
+      monthLabel: currentMonthLabel,
+      recordedAt: currentDate.toISOString(),
+      balances: assetBalances,
+    };
+
+    setMonthlyRecord(nextRecord);
+    saveProgressMonthlyRecord(nextRecord);
   }
 
   return (
@@ -107,6 +141,18 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
           helper={`as of ${currentMonthLabel}`}
           helperClassName="text-amber-500"
         />
+      </div>
+      <div className="mt-3 grid min-w-0 gap-3 md:grid-cols-5">
+        <MonthlyAssetBalancesCard
+          assets={assets}
+          balances={assetBalances}
+          className="md:col-span-3"
+          currentMonthLabel={currentMonthLabel}
+          savedMonthLabel={monthlyRecord?.monthLabel}
+          onBalanceChange={updateAssetBalance}
+          onSave={saveMonthlyRecord}
+        />
+        <HowProgressWorksCard className="md:col-span-2" />
       </div>
     </>
   );
@@ -251,6 +297,139 @@ function ProgressMonthPicker({
   );
 }
 
+function MonthlyAssetBalancesCard({
+  assets,
+  balances,
+  className = '',
+  currentMonthLabel,
+  savedMonthLabel,
+  onBalanceChange,
+  onSave,
+}: {
+  assets: FinancialAsset[];
+  balances: Record<string, number>;
+  className?: string;
+  currentMonthLabel: string;
+  savedMonthLabel?: string;
+  onBalanceChange: (assetId: string, value: number) => void;
+  onSave: () => void;
+}) {
+  return (
+    <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${className}`}>
+      <div className="flex min-w-0 items-start gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-300/40 bg-blue-500/12 text-blue-600">
+          <Info className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-slate-950">Record Current Month ({currentMonthLabel})</h2>
+          <p className="mt-3 text-sm font-semibold text-slate-600">
+            Enter your current asset balances to save your progress.
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {assets.map((asset) => (
+          <ProgressAssetBalanceField
+            key={asset.id}
+            asset={asset}
+            value={balances[asset.id] ?? asset.amount}
+            onChange={(value) => onBalanceChange(asset.id, value)}
+          />
+        ))}
+      </div>
+      <div className="mt-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm font-semibold text-slate-600">
+          {savedMonthLabel ? `Last saved for ${savedMonthLabel}` : 'No monthly record saved yet'}
+        </p>
+        <button
+          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
+          type="button"
+          onClick={onSave}
+        >
+          <Save className="h-4 w-4" />
+          Save
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ProgressAssetBalanceField({
+  asset,
+  value,
+  onChange,
+}: {
+  asset: FinancialAsset;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const colors = colorClasses[asset.color];
+  const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
+
+  return (
+    <label className="min-w-0">
+      <span className="flex min-h-10 min-w-0 items-start gap-2 text-sm font-bold text-slate-700">
+        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${colors.bg} ring-4 ring-white`} style={{ backgroundColor: colors.stroke }} />
+        <span className="min-w-0">
+          <span className="block truncate">{asset.label}</span>
+          <span className="block text-sm font-semibold text-slate-600">(CHF)</span>
+        </span>
+      </span>
+      <span className="glass-input mt-2 flex w-full min-w-0 items-center gap-2 py-2 text-sm">
+        <input
+          aria-label={`${asset.label} current balance`}
+          className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
+          inputMode="numeric"
+          type="text"
+          value={inputValue}
+          onChange={(event) => onInputChange(event.currentTarget.value)}
+        />
+        <span className="font-semibold text-slate-600">CHF</span>
+      </span>
+    </label>
+  );
+}
+
+function HowProgressWorksCard({ className = '' }: { className?: string }) {
+  const steps = [
+    {
+      icon: CalendarCheck2,
+      label: 'Set a baseline month',
+    },
+    {
+      icon: ListChecks,
+      label: 'Add your actual balances each month',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Compare actual vs. projected wealth',
+    },
+    {
+      icon: Sparkles,
+      label: 'Stay on track and achieve your goals',
+    },
+  ];
+
+  return (
+    <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${className}`}>
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-300/40 bg-blue-500/12 text-blue-600">
+          <Info className="h-5 w-5" />
+        </div>
+        <h2 className="text-sm font-bold text-slate-950">How it works</h2>
+      </div>
+      <div className="mt-5 space-y-4">
+        {steps.map(({ icon: Icon, label }) => (
+          <div key={label} className="flex min-w-0 items-center gap-3 text-sm font-semibold text-slate-700">
+            <Icon className="h-5 w-5 shrink-0 text-blue-600" />
+            <span className="min-w-0">{label}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function ProgressMetricCard({
   helper,
   icon: Icon,
@@ -317,6 +496,38 @@ function saveProgressBaseline(baseline: ProgressBaseline) {
   }
 }
 
+function readSavedProgressMonthlyRecord(): ProgressMonthlyRecord | null {
+  try {
+    const savedValue = window.localStorage.getItem(PROGRESS_MONTHLY_RECORD_STORAGE_KEY);
+    const record = savedValue ? JSON.parse(savedValue) : null;
+
+    return isProgressMonthlyRecord(record) ? record : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveProgressMonthlyRecord(record: ProgressMonthlyRecord) {
+  try {
+    window.localStorage.setItem(PROGRESS_MONTHLY_RECORD_STORAGE_KEY, JSON.stringify(record));
+  } catch {
+    // Keep monthly recording usable when browser storage is unavailable.
+  }
+}
+
+function getInitialProgressAssetBalances(assets: FinancialAsset[], savedRecord: ProgressMonthlyRecord | null) {
+  return Object.fromEntries(
+    assets.map((asset) => [
+      asset.id,
+      getSavedProgressBalance(savedRecord?.balances[asset.id], asset.amount),
+    ]),
+  );
+}
+
+function getSavedProgressBalance(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
 function isProgressBaseline(value: unknown): value is ProgressBaseline {
   if (!value || typeof value !== 'object') {
     return false;
@@ -330,6 +541,28 @@ function isProgressBaseline(value: unknown): value is ProgressBaseline {
     typeof baseline.totalWealth === 'number' &&
     Number.isFinite(baseline.totalWealth)
   );
+}
+
+function isProgressMonthlyRecord(value: unknown): value is ProgressMonthlyRecord {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const record = value as Partial<ProgressMonthlyRecord>;
+
+  return (
+    typeof record.monthLabel === 'string' &&
+    typeof record.recordedAt === 'string' &&
+    isProgressBalanceRecord(record.balances)
+  );
+}
+
+function isProgressBalanceRecord(value: unknown): value is Record<string, number> {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  return Object.values(value).every((balance) => typeof balance === 'number' && Number.isFinite(balance));
 }
 
 function formatProgressMonth(date: Date) {
