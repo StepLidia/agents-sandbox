@@ -22,7 +22,7 @@ import { buttonClasses } from '../constants/buttonStyles';
 import { hoverTooltipClasses, tooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
-import { ExpenseTrendAnalysis } from '../components/ExpenseTrendAnalysis';
+import { ExpenseTrendAnalysisPage } from './ExpenseTrendAnalysisPage';
 import { InsightValue } from '../components/InsightValue';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
@@ -185,7 +185,7 @@ export function ExpensesPage({
         onToggleTrend={() => updateTrendVisibility(!isTrendVisible)}
       />
       {isTrendVisible && (
-        <ExpenseTrendAnalysis
+        <ExpenseTrendAnalysisPage
           currentCategories={categories}
           expenseMonth={expenseMonth}
           initialMonthsBack={DEFAULT_TREND_MONTHS_BACK}

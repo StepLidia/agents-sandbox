@@ -3,11 +3,13 @@ import { NavLink } from 'react-router-dom';
 
 const navItems = [
   { label: 'Overview', icon: BarChart3, to: '/', end: true },
-  { label: 'Expenses', icon: ReceiptText, to: '/expenses', end: true },
-  { label: 'Expenses Trending', icon: BarChart3, to: '/expenses/trends', end: true },
+  { label: 'Expenses', icon: ReceiptText, to: '/expenses', end: false },
   { label: 'Mortgage', icon: Home, to: '/mortgage', end: true },
   { label: 'Contact', icon: CircleUserRound, to: '/contact', end: true },
 ] satisfies Array<{ label: string; icon: typeof BarChart3; to: string; end: boolean }>;
+
+const navLinkBaseClasses =
+  'flex h-11 w-full appearance-none items-center gap-3 rounded-lg px-4 text-left font-sans text-sm font-semibold leading-none no-underline transition';
 
 type SidebarProps = {
   onNavigate?: () => void;
@@ -69,7 +71,7 @@ function SidebarContent({ onNavigate }: SidebarProps) {
           <NavLink
             key={label}
             className={({ isActive }) =>
-              `flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${isActive
+              `${navLinkBaseClasses} ${isActive
                 ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
                 : 'text-slate-700 hover:bg-white/45'
               }`

@@ -21,7 +21,7 @@ import { tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency } from '../finance';
 import type { ExpenseCategory, ExpenseMonth } from '../pages/ExpensesPage';
 
-type ExpenseTrendAnalysisProps = {
+type ExpenseTrendAnalysisPageProps = {
   currentCategories: ExpenseCategory[];
   expenseMonth: ExpenseMonth;
   initialMonthsBack: number;
@@ -56,12 +56,12 @@ type ShareCategorySummary = CategoryTrendSummary & {
 
 const OTHERS_CATEGORY_COLOR = '#94a3b8';
 
-export function ExpenseTrendAnalysis({
+export function ExpenseTrendAnalysisPage({
   currentCategories,
   expenseMonth,
   initialMonthsBack,
   readExpenses,
-}: ExpenseTrendAnalysisProps) {
+}: ExpenseTrendAnalysisPageProps) {
   const gradientPrefix = useId().replaceAll(':', '');
   const [monthsBack, setMonthsBack] = useState(initialMonthsBack);
   const analyzedMonthCount = monthsBack + 1;
