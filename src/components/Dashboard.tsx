@@ -10,6 +10,7 @@ import { ContactPage } from '../pages/ContactPage';
 import { ExpensesPage } from '../pages/ExpensesPage';
 import { MortgagePage } from '../pages/MortgagePage';
 import { OverviewPage } from '../pages/OverviewPage';
+import { ProgressPage } from '../pages/ProgressPage';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
 
@@ -108,6 +109,7 @@ export function Dashboard() {
                 />
               }
             />
+            <Route path="/progress" element={<ProgressPage assets={assets} />} />
             <Route
               path="/expenses"
               element={

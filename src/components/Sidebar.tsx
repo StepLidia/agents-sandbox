@@ -1,8 +1,9 @@
-import { BarChart3, CircleUserRound, Footprints, Home, ReceiptText, X } from 'lucide-react';
+import { BarChart3, CircleUserRound, Footprints, Home, LineChart, ReceiptText, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const navItems = [
   { label: 'Overview', icon: BarChart3, to: '/', end: true },
+  { label: 'Progress', icon: LineChart, to: '/progress', end: true },
   { label: 'Expenses', icon: ReceiptText, to: '/expenses', end: false },
   { label: 'Mortgage', icon: Home, to: '/mortgage', end: true },
   { label: 'Contact', icon: CircleUserRound, to: '/contact', end: true },

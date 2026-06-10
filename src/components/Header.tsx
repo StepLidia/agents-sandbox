@@ -21,7 +21,7 @@ export function Header({
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h1 className="text-3xl font-semibold tracking-normal text-slate-950">{title}</h1>
-        <p className="mt-1 text-sm text-slate-700">{subtitle}</p>
+        <p className="mt-1 max-w-xs wrap-break-word text-sm text-slate-700 md:max-w-full">{subtitle}</p>
       </div>
       {showActions && (
         <div className="flex items-center gap-2" data-pdf-exclude="true">
@@ -105,7 +105,7 @@ function HelpTooltip() {
         <h2 className="text-base font-bold text-slate-950">Long-Term Investing</h2>
         <h3 className="mt-3 font-bold text-slate-900">The Power of Long-Term Investing</h3>
         <p className="mt-2">
-          Long-term investing allows savings to benefit from compound growth, where returns generate additional returns
+          Long-Term investing allows savings to benefit from compound growth, where returns generate additional returns
           over time. Even modest monthly contributions can grow significantly over several decades.
         </p>
         <p className="mt-2">
