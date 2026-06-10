@@ -1,5 +1,15 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
   CalendarDays,
   CalendarCheck2,
   CheckCircle2,
@@ -18,21 +28,24 @@ import {
 import { colorClasses } from '../constants/colors';
 import { buttonClasses } from '../constants/buttonStyles';
 import {
+  buildProgressChartData,
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
   calculateMonthsTracked,
   calculatePlannedWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateTotalBalance,
   calculateYearsTracked,
 } from '../calculations/progressCalculations';
-import { hoverTooltipClasses } from '../constants/tooltipStyles';
+import { hoverTooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { Header } from '../components/Header';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
 const PROGRESS_MONTHLY_RECORD_STORAGE_KEY = 'growly-progress-monthly-record-v1';
+const PROGRESS_CHART_YEARS = 30;
 
 type ProgressBaseline = {
   monthLabel: string;
@@ -71,6 +84,18 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
     : currentWealth;
   const progressDelta = calculateProgressDelta(currentWealth, plannedWealth);
   const progressDeltaPercent = calculateProgressDeltaPercent(currentWealth, plannedWealth);
+  const progressChartData = buildProgressChartData({
+    actualPoints: getProgressActualPoints({
+      baseline,
+      currentDate,
+      currentWealth,
+      monthlyRecord,
+    }),
+    baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
+    baselineWealth: baseline?.totalWealth ?? currentWealth,
+    monthlyPlanContribution,
+    projectionYears: PROGRESS_CHART_YEARS,
+  });
 
   function recordBaseline() {
     const nextBaseline = {
@@ -155,6 +180,9 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
           onSave={saveMonthlyRecord}
         />
         <HowProgressWorksCard className="md:col-span-2" />
+      </div>
+      <div className="mt-3">
+        <ProgressWealthChartCard data={progressChartData} />
       </div>
     </>
   );
@@ -327,7 +355,7 @@ function MonthlyAssetBalancesCard({
         </div>
       </div>
       <p className="mt-4 text-sm font-semibold text-slate-600">
-        Enter your current asset balances to save your progress.
+        Enter your current asset balances to save your progress
       </p>
       <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
         {assets.map((asset) => (
@@ -437,6 +465,138 @@ function HowProgressWorksCard({ className = '' }: { className?: string }) {
   );
 }
 
+function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgressChartData> }) {
+  return (
+    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h2 className="text-sm font-bold text-slate-950">Actual vs Planned Wealth</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-600">
+            Compare saved monthly balances with your planned wealth path
+          </p>
+        </div>
+      </div>
+      <ProgressChartLegend />
+      <div className="mt-3 h-80 w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data} margin={{ top: 14, right: 16, bottom: 6, left: -4 }}>
+            <defs>
+              <linearGradient id="progress-planned-gradient" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor={colorClasses.blue.stroke} stopOpacity={0.22} />
+                <stop offset="52%" stopColor={colorClasses.blue.stroke} stopOpacity={0.1} />
+                <stop offset="100%" stopColor={colorClasses.blue.stroke} stopOpacity={0.01} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(100,116,139,.18)" strokeDasharray="0" vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="year"
+              interval="preserveStartEnd"
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
+              tickFormatter={formatProgressYearAxis}
+              tickLine={false}
+              ticks={buildProgressYearTicks(PROGRESS_CHART_YEARS)}
+              type="number"
+            />
+            <YAxis
+              axisLine={false}
+              domain={[0, 'dataMax']}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
+              tickFormatter={formatChartAxisValue}
+              tickLine={false}
+              width={58}
+            />
+            <Tooltip
+              content={<ProgressChartTooltip />}
+              cursor={{ stroke: colorClasses.blue.stroke, strokeDasharray: '3 5', strokeOpacity: 0.45, strokeWidth: 1.5 }}
+              isAnimationActive={false}
+              wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+            />
+            <Area
+              activeDot={{ r: 5, fill: colorClasses.blue.stroke, stroke: 'white', strokeWidth: 2 }}
+              dataKey="plannedWealth"
+              dot={false}
+              fill="url(#progress-planned-gradient)"
+              isAnimationActive={false}
+              name="Planned"
+              stroke={colorClasses.blue.stroke}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              type="monotone"
+            />
+            <Line
+              activeDot={{ r: 5, fill: colorClasses.emerald.stroke, stroke: 'white', strokeWidth: 2 }}
+              connectNulls
+              dataKey="actualWealth"
+              dot={{ fill: colorClasses.emerald.stroke, r: 4, stroke: 'white', strokeWidth: 2 }}
+              isAnimationActive={false}
+              name="Actual"
+              stroke={colorClasses.emerald.stroke}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={3}
+              type="monotone"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+
+function ProgressChartLegend() {
+  const items = [
+    { color: colorClasses.blue.stroke, label: 'Planned' },
+    { color: colorClasses.emerald.stroke, label: 'Actual' },
+  ];
+
+  return (
+    <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-bold text-slate-700">
+      {items.map((item) => (
+        <span key={item.label} className="flex items-center gap-2">
+          <span className="h-0.5 w-7 rounded-full" style={{ backgroundColor: item.color }} />
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ProgressChartTooltip({
+  active,
+  label,
+  payload,
+}: {
+  active?: boolean;
+  label?: number | string;
+  payload?: Array<{ color?: string; dataKey?: string | number; name?: string; value?: number | null }>;
+}) {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const values = payload.filter((item) => typeof item.value === 'number');
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={tooltipContentClasses('px-3 py-2')}>
+      <p className="mb-2 font-bold text-slate-950">Year {formatProgressYearAxis(Number(label ?? 0))}</p>
+      {values.map((item) => (
+        <p key={`${item.name}-${item.dataKey}`} className="text-slate-700">
+          <span className="font-semibold" style={{ color: item.color }}>
+            {item.name}:
+          </span>{' '}
+          {currency(item.value ?? 0)} CHF
+        </p>
+      ))}
+    </div>
+  );
+}
+
 function ProgressMetricCard({
   helper,
   icon: Icon,
@@ -535,6 +695,34 @@ function getSavedProgressBalance(value: unknown, fallback: number) {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
+function getProgressActualPoints({
+  baseline,
+  currentDate,
+  currentWealth,
+  monthlyRecord,
+}: {
+  baseline: ProgressBaseline | null;
+  currentDate: Date;
+  currentWealth: number;
+  monthlyRecord: ProgressMonthlyRecord | null;
+}) {
+  const actualPoints = [
+    {
+      date: baseline ? new Date(baseline.recordedAt) : currentDate,
+      totalWealth: baseline?.totalWealth ?? currentWealth,
+    },
+  ];
+
+  if (monthlyRecord) {
+    actualPoints.push({
+      date: new Date(monthlyRecord.recordedAt),
+      totalWealth: calculateTotalBalance(monthlyRecord.balances),
+    });
+  }
+
+  return actualPoints;
+}
+
 function isProgressBaseline(value: unknown): value is ProgressBaseline {
   if (!value || typeof value !== 'object') {
     return false;
@@ -605,6 +793,34 @@ function getProgressMonthDate(month: ProgressMonth) {
   const [year, monthNumber] = month.key.split('-').map(Number);
 
   return new Date(year, monthNumber - 1, 1);
+}
+
+function buildProgressYearTicks(maxYear: number) {
+  return Array.from({ length: 7 }, (_, index) => index * 5).filter((year) => year <= maxYear);
+}
+
+function formatProgressYearAxis(value: number) {
+  if (value === 0) {
+    return 'Baseline';
+  }
+
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatChartAxisValue(value: number) {
+  if (value === 0) {
+    return '0';
+  }
+
+  if (value >= 1000000) {
+    return `${Number((value / 1000000).toFixed(value >= 10000000 ? 0 : 1))}M`;
+  }
+
+  if (value >= 1000) {
+    return `${Number((value / 1000).toFixed(value >= 100000 ? 0 : 1))}K`;
+  }
+
+  return String(Math.round(value));
 }
 
 function formatSignedCurrency(value: number) {

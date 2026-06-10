@@ -6,7 +6,9 @@ import {
   calculatePlannedWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateTotalBalance,
   calculateYearsTracked,
+  buildProgressChartData,
 } from './progressCalculations';
 
 describe('progress calculations', () => {
@@ -49,5 +51,28 @@ describe('progress calculations', () => {
     expect(plannedWealth).toBe(112000);
     expect(calculateProgressDelta(120000, plannedWealth)).toBe(8000);
     expect(calculateProgressDeltaPercent(120000, plannedWealth)).toBeCloseTo(7.14, 2);
+  });
+
+  it('calculates total balance from saved monthly balances', () => {
+    expect(calculateTotalBalance({ investments: 40000, pillar2: 85000, pillar3: 15000, savings: 25000 })).toBe(165000);
+  });
+
+  it('builds planned and actual progress chart points', () => {
+    const points = buildProgressChartData({
+      actualPoints: [
+        { date: new Date(2026, 0, 1), totalWealth: 100000 },
+        { date: new Date(2026, 5, 1), totalWealth: 108000 },
+      ],
+      baselineDate: new Date(2026, 0, 1),
+      baselineWealth: 100000,
+      monthlyPlanContribution: 1000,
+      projectionYears: 1,
+    });
+
+    expect(points).toEqual([
+      { actualWealth: 100000, plannedWealth: 100000, year: 0 },
+      { actualWealth: 108000, plannedWealth: 105000, year: 5 / 12 },
+      { actualWealth: null, plannedWealth: 112000, year: 1 },
+    ]);
   });
 });
