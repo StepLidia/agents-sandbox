@@ -93,7 +93,6 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
     }),
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
     baselineWealth: baseline?.totalWealth ?? currentWealth,
-    monthlyPlanContribution,
     optimisticAssets: assets,
     projectionYears: PROGRESS_CHART_YEARS,
   });
@@ -553,11 +552,24 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               type="monotone"
             />
             <Line
+              activeDot={{ r: 5, fill: colorClasses.coral.stroke, stroke: 'white', strokeWidth: 2 }}
+              dataKey="negativeWealth"
+              dot={false}
+              isAnimationActive={false}
+              name="Negative"
+              stroke={colorClasses.coral.stroke}
+              strokeDasharray="2 6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              type="monotone"
+            />
+            <Line
               activeDot={{ r: 5, fill: '#94a3b8', stroke: 'white', strokeWidth: 2 }}
               dataKey="pessimisticWealth"
               dot={false}
               isAnimationActive={false}
-              name="Pessimistic"
+              name="Neutral"
               stroke="#94a3b8"
               strokeDasharray="2 6"
               strokeLinecap="round"
@@ -576,8 +588,9 @@ function ProgressChartLegend() {
   const items = [
     { color: colorClasses.blue.stroke, label: 'Planned' },
     { color: colorClasses.emerald.stroke, label: 'Actual' },
-    { color: '#64748b', dashed: true, label: 'Optimistic' },
-    { color: '#94a3b8', dashed: true, label: 'Pessimistic' },
+    { color: '#64748b', dashed: true, label: 'Optimistic (+1%)' },
+    { color: colorClasses.coral.stroke, dashed: true, label: 'Negative (-1%)' },
+    { color: '#94a3b8', dashed: true, label: 'Neutral (0%)' },
   ];
 
   return (

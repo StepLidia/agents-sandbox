@@ -9,8 +9,10 @@ import {
   calculateTotalBalance,
   calculateYearsTracked,
   buildProgressChartData,
+  buildNegativeProgressProjection,
   buildOptimisticProgressProjection,
   buildPessimisticProgressProjection,
+  buildPlannedProgressProjection,
 } from './progressCalculations';
 
 describe('progress calculations', () => {
@@ -67,17 +69,50 @@ describe('progress calculations', () => {
       ],
       baselineDate: new Date(2026, 0, 1),
       baselineWealth: 100000,
-      monthlyPlanContribution: 1000,
       optimisticAssets: [
-        { amount: 100000, annualReturn: 0, id: 'savings', monthlyContribution: 1000 },
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 500 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 500 },
       ],
       projectionYears: 1,
     });
 
+    expect(points[0]).toEqual({
+      actualWealth: 100000,
+      negativeWealth: 100000,
+      optimisticWealth: 100000,
+      pessimisticWealth: 100000,
+      plannedWealth: 100000,
+      year: 0,
+    });
+    expect(points[1].actualWealth).toBe(108000);
+    expect(points[1].negativeWealth).toBeCloseTo(105416.67, 2);
+    expect(points[1].optimisticWealth).toBeCloseTo(105833.33, 2);
+    expect(points[1].pessimisticWealth).toBeCloseTo(105000, 2);
+    expect(points[1].plannedWealth).toBeCloseTo(105625, 2);
+    expect(points[1].year).toBe(5 / 12);
+    expect(points[2]).toEqual({
+      actualWealth: null,
+      negativeWealth: 113000,
+      optimisticWealth: 114000,
+      pessimisticWealth: 112000,
+      plannedWealth: 113500,
+      year: 1,
+    });
+  });
+
+  it('builds a planned projection with configured asset returns', () => {
+    const points = buildPlannedProgressProjection({
+      assets: [
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
+      ],
+      baselineWealth: 100000,
+      projectionYears: 1,
+    });
+
     expect(points).toEqual([
-      { actualWealth: 100000, optimisticWealth: 100000, pessimisticWealth: 100000, plannedWealth: 100000, year: 0 },
-      { actualWealth: 108000, optimisticWealth: 105000, pessimisticWealth: 105000, plannedWealth: 105000, year: 5 / 12 },
-      { actualWealth: null, optimisticWealth: 112000, pessimisticWealth: 112000, plannedWealth: 112000, year: 1 },
+      { value: 100000, year: 0 },
+      { value: 101500, year: 1 },
     ]);
   });
 
@@ -94,6 +129,22 @@ describe('progress calculations', () => {
     expect(points).toEqual([
       { value: 100000, year: 0 },
       { value: 102000, year: 1 },
+    ]);
+  });
+
+  it('builds a negative projection with reduced investment and pension returns', () => {
+    const points = buildNegativeProgressProjection({
+      assets: [
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
+      ],
+      baselineWealth: 100000,
+      projectionYears: 1,
+    });
+
+    expect(points).toEqual([
+      { value: 100000, year: 0 },
+      { value: 101000, year: 1 },
     ]);
   });
 
