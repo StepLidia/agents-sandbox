@@ -169,17 +169,17 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
           helperClassName="text-amber-500"
         />
       </div>
-      <div className="mt-3 grid min-w-0 gap-3 md:grid-cols-5">
+      <div className="mt-3 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
         <MonthlyAssetBalancesCard
           assets={assets}
           balances={assetBalances}
-          className="md:col-span-3"
+          className="2xl:col-span-3"
           currentMonthLabel={currentMonthLabel}
           savedMonthLabel={monthlyRecord?.monthLabel}
           onBalanceChange={updateAssetBalance}
           onSave={saveMonthlyRecord}
         />
-        <HowProgressWorksCard className="md:col-span-2" />
+        <HowProgressWorksCard />
       </div>
       <div className="mt-3">
         <ProgressWealthChartCard data={progressChartData} />
@@ -357,7 +357,7 @@ function MonthlyAssetBalancesCard({
       <p className="mt-4 text-sm font-semibold text-slate-600">
         Enter your current asset balances to save your progress
       </p>
-      <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
+      <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2 2xl:grid-cols-4 2xl:gap-5">
         {assets.map((asset) => (
           <ProgressAssetBalanceField
             key={asset.id}
@@ -492,7 +492,7 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               axisLine={false}
               dataKey="year"
               interval="preserveStartEnd"
-              tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickFormatter={formatProgressYearAxis}
               tickLine={false}
               ticks={buildProgressYearTicks(PROGRESS_CHART_YEARS)}
@@ -501,7 +501,7 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
             <YAxis
               axisLine={false}
               domain={[0, 'dataMax']}
-              tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickFormatter={formatChartAxisValue}
               tickLine={false}
               width={58}
