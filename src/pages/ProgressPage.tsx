@@ -8,6 +8,7 @@ import {
   Coins,
   Info,
   ListChecks,
+  Pencil,
   RefreshCcw,
   Save,
   Sparkles,
@@ -15,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { colorClasses } from '../constants/colors';
+import { buttonClasses } from '../constants/buttonStyles';
 import {
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
@@ -316,17 +318,17 @@ function MonthlyAssetBalancesCard({
 }) {
   return (
     <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${className}`}>
-      <div className="flex min-w-0 items-start gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-300/40 bg-blue-500/12 text-blue-600">
-          <Info className="h-5 w-5" />
+      <div className="flex min-w-0 items-center gap-3">
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-2xl border ${colorClasses.violet.border} ${colorClasses.violet.bg} ${colorClasses.violet.text}`}>
+          <Pencil className="h-5 w-5" />
         </div>
         <div className="min-w-0">
           <h2 className="text-sm font-bold text-slate-950">Record Current Month ({currentMonthLabel})</h2>
-          <p className="mt-3 text-sm font-semibold text-slate-600">
-            Enter your current asset balances to save your progress.
-          </p>
         </div>
       </div>
+      <p className="mt-4 text-sm font-semibold text-slate-600">
+        Enter your current asset balances to save your progress.
+      </p>
       <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {assets.map((asset) => (
           <ProgressAssetBalanceField
@@ -342,7 +344,7 @@ function MonthlyAssetBalancesCard({
           {savedMonthLabel ? `Last saved for ${savedMonthLabel}` : 'No monthly record saved yet'}
         </p>
         <button
-          className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
+          className={buttonClasses()}
           type="button"
           onClick={onSave}
         >
@@ -367,15 +369,14 @@ function ProgressAssetBalanceField({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
 
   return (
-    <label className="min-w-0">
-      <span className="flex min-h-10 min-w-0 items-start gap-2 text-sm font-bold text-slate-700">
-        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${colors.bg} ring-4 ring-white`} style={{ backgroundColor: colors.stroke }} />
+    <label className="block min-w-0">
+      <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-700">
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${colors.bg} ring-4 ring-white`} style={{ backgroundColor: colors.stroke }} />
         <span className="min-w-0">
           <span className="block truncate">{asset.label}</span>
-          <span className="block text-sm font-semibold text-slate-600">(CHF)</span>
         </span>
       </span>
-      <span className="glass-input mt-2 flex w-full min-w-0 items-center gap-2 py-2 text-sm">
+      <span className="glass-input mt-1.5 flex w-full min-w-0 items-center gap-2 py-2 text-sm">
         <input
           aria-label={`${asset.label} current balance`}
           className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
