@@ -1,5 +1,14 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { CalendarDays, CheckCircle2, Coins, TrendingUp, type LucideIcon } from 'lucide-react';
+import {
+  CalendarDays,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Coins,
+  RefreshCcw,
+  TrendingUp,
+  type LucideIcon,
+} from 'lucide-react';
 import {
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
@@ -19,6 +28,12 @@ type ProgressBaseline = {
   monthLabel: string;
   recordedAt: string;
   totalWealth: number;
+};
+
+type ProgressMonth = {
+  key: string;
+  label: string;
+  shortLabel: string;
 };
 
 export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
@@ -57,8 +72,17 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
         subtitle="Track your actual wealth over time and compare it to your plan"
         showActions={false}
       />
-      <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <BaselineCard baseline={baseline} currentMonthLabel={currentMonthLabel} onRecord={recordBaseline} />
+      <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
+        <BaselineCard
+          baseline={baseline}
+          currentMonthLabel={currentMonthLabel}
+          currentWealth={currentWealth}
+          onBaselineChange={(nextBaseline) => {
+            setBaseline(nextBaseline);
+            saveProgressBaseline(nextBaseline);
+          }}
+          onRecord={recordBaseline}
+        />
         <ProgressMetricCard
           icon={TrendingUp}
           iconClassName="bg-emerald-500/12 text-emerald-600"
@@ -91,48 +115,139 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
 function BaselineCard({
   baseline,
   currentMonthLabel,
+  currentWealth,
+  onBaselineChange,
   onRecord,
 }: {
   baseline: ProgressBaseline | null;
   currentMonthLabel: string;
+  currentWealth: number;
+  onBaselineChange: (baseline: ProgressBaseline) => void;
   onRecord: () => void;
 }) {
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false);
+  const selectedMonth = baseline ? getProgressMonthFromDate(new Date(baseline.recordedAt)) : getCurrentProgressMonth();
+
+  function resetBaselineMonth(month: ProgressMonth) {
+    onBaselineChange({
+      monthLabel: month.label,
+      recordedAt: getProgressMonthDate(month).toISOString(),
+      totalWealth: currentWealth,
+    });
+    setIsMonthPickerOpen(false);
+  }
+
   return (
-    <section className="glass-panel flex w-full max-w-[calc(100vw-3rem)] min-w-0 flex-col p-5 sm:max-w-full">
-      <div className="flex items-start gap-4">
+    <section className={`glass-panel flex w-full max-w-[calc(100vw-3rem)] min-w-0 flex-col p-5 sm:max-w-full ${isMonthPickerOpen ? 'z-30' : ''}`}>
+      <div className="glass-panel-floating-layer flex items-start gap-4">
         <span className="group relative">
           <button
-            className="pulse-red-border grid h-16 w-16 shrink-0 place-items-center rounded-full border border-slate-950 bg-red-50 shadow-inner shadow-red-100/70 transition hover:scale-102 hover:bg-red-50 focus:outline-none focus:ring-4 focus:ring-red-500/20"
+            className={`grid h-16 w-16 shrink-0 place-items-center rounded-full border bg-white transition hover:scale-102 hover:bg-white focus:outline-none focus:ring-4 ${baseline
+              ? 'border-blue-300 text-blue-700 shadow-sm shadow-blue-500/15 focus:ring-blue-500/20'
+              : 'pulse-red-border border-slate-950 focus:ring-red-500/20'
+              }`}
+            aria-controls={baseline ? 'progress-baseline-month-picker' : undefined}
             aria-describedby="progress-baseline-tooltip"
-            aria-label="Start tracking"
+            aria-expanded={baseline ? isMonthPickerOpen : undefined}
+            aria-label={baseline ? 'Reset baseline' : 'Start tracking'}
             type="button"
-            onClick={onRecord}
+            onClick={baseline ? () => setIsMonthPickerOpen((isOpen) => !isOpen) : onRecord}
           >
-            <span className="h-7 w-7 rounded-full bg-red-500 shadow-sm shadow-red-500/40" />
+            {baseline ? (
+              <RefreshCcw className="h-7 w-7" />
+            ) : (
+              <span className="h-7 w-7 rounded-full bg-red-500 shadow-sm shadow-red-500/40" />
+            )}
           </button>
+          {baseline && isMonthPickerOpen && (
+            <ProgressMonthPicker
+              selectedMonth={selectedMonth}
+              onMonthChange={resetBaselineMonth}
+            />
+          )}
           <span
             id="progress-baseline-tooltip"
             role="tooltip"
             className={hoverTooltipClasses('bottom-20 left-1/2 w-max -translate-x-1/2 whitespace-nowrap px-3 py-2')}
           >
-            Start tracking
+            {baseline ? 'Reset baseline' : 'Start tracking'}
           </span>
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-bold leading-5 text-slate-950">Progress Baseline</h2>
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+            <h2 className="text-sm font-bold leading-5 text-slate-950">{baseline ? 'Started' : 'Start'}</h2>
+            {baseline && (
+              <div className="ml-auto flex w-fit shrink-0 items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/12 px-3 py-1 text-sm font-bold text-emerald-700">
+                <CheckCircle2 className="h-4 w-4" />
+                Baseline set
+              </div>
+            )}
+          </div>
           <p className="mt-2 text-sm font-semibold text-slate-600">{baseline?.monthLabel ?? currentMonthLabel}</p>
-          {baseline && (
-            <div className="mt-3 flex w-fit items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/12 px-3 py-1 text-sm font-bold text-emerald-700">
-              <CheckCircle2 className="h-4 w-4" />
-              Baseline set
-            </div>
-          )}
         </div>
       </div>
       <p className="mt-4 max-w-xs wrap-break-word text-sm leading-6 text-slate-700">
         Your asset values of this month are used as the starting point for progress tracking.
       </p>
     </section>
+  );
+}
+
+function ProgressMonthPicker({
+  selectedMonth,
+  onMonthChange,
+}: {
+  selectedMonth: ProgressMonth;
+  onMonthChange: (month: ProgressMonth) => void;
+}) {
+  const [visibleYear, setVisibleYear] = useState(() => Number(selectedMonth.key.slice(0, 4)));
+  const selectedMonthNumber = Number(selectedMonth.key.slice(5, 7));
+  const months = Array.from({ length: 12 }, (_, index) => buildProgressMonth(visibleYear, index));
+
+  return (
+    <div
+      id="progress-baseline-month-picker"
+      className="absolute left-0 top-20 z-50 w-72 rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+    >
+      <div className="flex items-center justify-between">
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
+          aria-label="Previous year"
+          type="button"
+          onClick={() => setVisibleYear((year) => year - 1)}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <p className="text-sm font-bold text-slate-950">{visibleYear}</p>
+        <button
+          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
+          aria-label="Next year"
+          type="button"
+          onClick={() => setVisibleYear((year) => year + 1)}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {months.map((month) => {
+          const isSelected = visibleYear === Number(selectedMonth.key.slice(0, 4)) && selectedMonthNumber === Number(month.key.slice(5, 7));
+
+          return (
+            <button
+              key={month.key}
+              className={`h-9 rounded-lg text-sm font-semibold transition ${isSelected
+                ? 'bg-blue-600/14 text-blue-700 shadow-inner'
+                : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
+                }`}
+              type="button"
+              onClick={() => onMonthChange(month)}
+            >
+              {month.shortLabel}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -222,6 +337,34 @@ function formatProgressMonth(date: Date) {
     month: 'long',
     year: 'numeric',
   });
+}
+
+function getCurrentProgressMonth() {
+  const currentDate = new Date();
+
+  return buildProgressMonth(currentDate.getFullYear(), currentDate.getMonth());
+}
+
+function getProgressMonthFromDate(date: Date) {
+  return buildProgressMonth(date.getFullYear(), date.getMonth());
+}
+
+function buildProgressMonth(year: number, monthIndex: number): ProgressMonth {
+  const date = new Date(year, monthIndex, 1);
+
+  return {
+    key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+    label: formatProgressMonth(date),
+    shortLabel: date.toLocaleDateString('en-US', {
+      month: 'short',
+    }),
+  };
+}
+
+function getProgressMonthDate(month: ProgressMonth) {
+  const [year, monthNumber] = month.key.split('-').map(Number);
+
+  return new Date(year, monthNumber - 1, 1);
 }
 
 function formatSignedCurrency(value: number) {
