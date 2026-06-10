@@ -10,6 +10,7 @@ import {
   calculateYearsTracked,
   buildProgressChartData,
   buildOptimisticProgressProjection,
+  buildPessimisticProgressProjection,
 } from './progressCalculations';
 
 describe('progress calculations', () => {
@@ -74,9 +75,9 @@ describe('progress calculations', () => {
     });
 
     expect(points).toEqual([
-      { actualWealth: 100000, optimisticWealth: 100000, plannedWealth: 100000, year: 0 },
-      { actualWealth: 108000, optimisticWealth: 105000, plannedWealth: 105000, year: 5 / 12 },
-      { actualWealth: null, optimisticWealth: 112000, plannedWealth: 112000, year: 1 },
+      { actualWealth: 100000, optimisticWealth: 100000, pessimisticWealth: 100000, plannedWealth: 100000, year: 0 },
+      { actualWealth: 108000, optimisticWealth: 105000, pessimisticWealth: 105000, plannedWealth: 105000, year: 5 / 12 },
+      { actualWealth: null, optimisticWealth: 112000, pessimisticWealth: 112000, plannedWealth: 112000, year: 1 },
     ]);
   });
 
@@ -93,6 +94,22 @@ describe('progress calculations', () => {
     expect(points).toEqual([
       { value: 100000, year: 0 },
       { value: 102000, year: 1 },
+    ]);
+  });
+
+  it('builds a pessimistic projection with all returns set to zero', () => {
+    const points = buildPessimisticProgressProjection({
+      assets: [
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 100 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 200 },
+      ],
+      baselineWealth: 100000,
+      projectionYears: 1,
+    });
+
+    expect(points).toEqual([
+      { value: 100000, year: 0 },
+      { value: 103600, year: 1 },
     ]);
   });
 });

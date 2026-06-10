@@ -16,6 +16,7 @@ export type ProgressChartActualPoint = {
 export type ProgressChartPoint = {
   actualWealth: number | null;
   optimisticWealth: number;
+  pessimisticWealth: number;
   plannedWealth: number;
   year: number;
 };
@@ -87,6 +88,11 @@ export function buildProgressChartData({
     baselineWealth,
     projectionYears: safeProjectionYears,
   });
+  const pessimisticProjection = buildPessimisticProgressProjection({
+    assets: optimisticAssets,
+    baselineWealth,
+    projectionYears: safeProjectionYears,
+  });
   const pointByYear = new Map<string, ProgressChartPoint>();
 
   function setPoint(year: number, actualWealth: number | null = null) {
@@ -102,6 +108,7 @@ export function buildProgressChartData({
     pointByYear.set(key, {
       actualWealth: actualWealth ?? existingPoint?.actualWealth ?? null,
       optimisticWealth: interpolateProgressProjectionValue(optimisticProjection, safeYear),
+      pessimisticWealth: interpolateProgressProjectionValue(pessimisticProjection, safeYear),
       plannedWealth,
       year: safeYear,
     });
@@ -159,6 +166,33 @@ export function buildOptimisticProgressProjection({
 
       return sum + calculateAssetProjectionValue({
         annualReturnPercent: optimisticReturn,
+        monthlyContribution: asset.monthlyContribution,
+        principal: baselineAmount,
+        years: year,
+      });
+    }, 0),
+    year,
+  }));
+}
+
+export function buildPessimisticProgressProjection({
+  assets,
+  baselineWealth,
+  projectionYears,
+}: {
+  assets: ProgressProjectionAsset[];
+  baselineWealth: number;
+  projectionYears: number;
+}) {
+  const safeProjectionYears = Math.max(1, Math.round(projectionYears));
+  const totalAssetWealth = calculateCurrentWealth(assets);
+
+  return Array.from({ length: safeProjectionYears + 1 }, (_, year) => ({
+    value: assets.reduce((sum, asset) => {
+      const baselineAmount = totalAssetWealth > 0 ? (asset.amount / totalAssetWealth) * baselineWealth : 0;
+
+      return sum + calculateAssetProjectionValue({
+        annualReturnPercent: 0,
         monthlyContribution: asset.monthlyContribution,
         principal: baselineAmount,
         years: year,

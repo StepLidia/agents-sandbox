@@ -552,6 +552,19 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               strokeWidth={2.5}
               type="monotone"
             />
+            <Line
+              activeDot={{ r: 5, fill: '#94a3b8', stroke: 'white', strokeWidth: 2 }}
+              dataKey="pessimisticWealth"
+              dot={false}
+              isAnimationActive={false}
+              name="Pessimistic"
+              stroke="#94a3b8"
+              strokeDasharray="2 6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2.5}
+              type="monotone"
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -564,6 +577,7 @@ function ProgressChartLegend() {
     { color: colorClasses.blue.stroke, label: 'Planned' },
     { color: colorClasses.emerald.stroke, label: 'Actual' },
     { color: '#64748b', dashed: true, label: 'Optimistic' },
+    { color: '#94a3b8', dashed: true, label: 'Pessimistic' },
   ];
 
   return (
