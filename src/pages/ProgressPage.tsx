@@ -329,7 +329,7 @@ function MonthlyAssetBalancesCard({
       <p className="mt-4 text-sm font-semibold text-slate-600">
         Enter your current asset balances to save your progress.
       </p>
-      <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-5 grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-4 xl:gap-5">
         {assets.map((asset) => (
           <ProgressAssetBalanceField
             key={asset.id}
@@ -340,7 +340,7 @@ function MonthlyAssetBalancesCard({
         ))}
       </div>
       <div className="mt-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm font-semibold text-slate-600">
+        <p className="text-sm text-slate-600">
           {savedMonthLabel ? `Last saved for ${savedMonthLabel}` : 'No monthly record saved yet'}
         </p>
         <button
@@ -369,14 +369,14 @@ function ProgressAssetBalanceField({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
 
   return (
-    <label className="block min-w-0">
-      <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-slate-700">
+    <label className="flex min-w-0 flex-col gap-2 rounded-lg border border-slate-300/30 bg-white/20 p-3">
+      <span className="flex min-w-0 items-center justify-end gap-2 text-sm font-bold text-slate-700">
         <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${colors.bg} ring-4 ring-white`} style={{ backgroundColor: colors.stroke }} />
         <span className="min-w-0">
           <span className="block truncate">{asset.label}</span>
         </span>
       </span>
-      <span className="glass-input mt-1.5 flex w-full min-w-0 items-center gap-2 py-2 text-sm">
+      <span className="glass-input flex w-full min-w-0 items-center gap-2 py-2 text-sm">
         <input
           aria-label={`${asset.label} current balance`}
           className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
@@ -394,35 +394,41 @@ function ProgressAssetBalanceField({
 function HowProgressWorksCard({ className = '' }: { className?: string }) {
   const steps = [
     {
+      color: colorClasses.blue.text,
       icon: CalendarCheck2,
       label: 'Set a baseline month',
     },
     {
+      color: colorClasses.violet.text,
       icon: ListChecks,
       label: 'Add your actual balances each month',
     },
     {
+      color: colorClasses.emerald.text,
       icon: TrendingUp,
       label: 'Compare actual vs. projected wealth',
     },
     {
+      color: colorClasses.coral.text,
       icon: Sparkles,
       label: 'Stay on track and achieve your goals',
     },
   ];
 
   return (
-    <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${className}`}>
+    <section className={`glass-panel flex h-full w-full max-w-[calc(100vw-3rem)] min-w-0 flex-col p-5 sm:max-w-full ${className}`}>
       <div className="flex items-center gap-3">
-        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl border border-blue-300/40 bg-blue-500/12 text-blue-600">
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-2xl border ${colorClasses.cyan.border} ${colorClasses.cyan.bg} ${colorClasses.cyan.text}`}>
           <Info className="h-5 w-5" />
         </div>
         <h2 className="text-sm font-bold text-slate-950">How it works</h2>
       </div>
-      <div className="mt-5 space-y-4">
-        {steps.map(({ icon: Icon, label }) => (
-          <div key={label} className="flex min-w-0 items-center gap-3 text-sm font-semibold text-slate-700">
-            <Icon className="h-5 w-5 shrink-0 text-blue-600" />
+      <div className="mt-5 flex flex-1 flex-col gap-2">
+        {steps.map(({ color, icon: Icon, label }) => (
+          <div key={label} className="flex min-w-0 items-center gap-3 text-sm text-slate-700">
+            <span className="grid h-9 w-9 shrink-0 place-items-center">
+              <Icon className={`h-5 w-5 ${color}`} />
+            </span>
             <span className="min-w-0">{label}</span>
           </div>
         ))}
