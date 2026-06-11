@@ -1,10 +1,9 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
   Area,
   AreaChart,
   CartesianGrid,
   Line,
-  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -71,12 +70,24 @@ type ProgressZoomDomain = {
 };
 
 type ProgressZoomSelection = {
-  endYear: number;
-  startYear: number;
+  endX: number;
+  endY: number;
+  startX: number;
+  startY: number;
 };
 
-type ProgressChartMouseState = {
-  activeLabel?: number | string;
+type ProgressChartPlotBounds = {
+  bottom: number;
+  height: number;
+  left: number;
+  right: number;
+  top: number;
+  width: number;
+};
+
+type ProgressChartPointerPoint = {
+  x: number;
+  y: number;
 };
 
 const PROGRESS_CHART_VALUE_KEYS = [
@@ -86,6 +97,8 @@ const PROGRESS_CHART_VALUE_KEYS = [
   'pessimisticWealth',
   'plannedWealth',
 ] as const;
+const PROGRESS_CHART_MARGIN = { top: 14, right: 16, bottom: 6, left: -4 };
+const PROGRESS_CHART_Y_AXIS_WIDTH = 58;
 
 export function ProgressPage({
   assets,
@@ -445,54 +458,64 @@ function ProgressWealthChartCard({
   data: ReturnType<typeof buildProgressChartData>;
   projectionYears: number;
 }) {
+  const chartRef = useRef<HTMLDivElement>(null);
   const [zoomDomain, setZoomDomain] = useState<ProgressZoomDomain | null>(null);
   const [zoomSelection, setZoomSelection] = useState<ProgressZoomSelection | null>(null);
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
   const xDomain = zoomDomain?.x ?? [0, safeProjectionYears];
   const yDomain = zoomDomain?.y ?? buildProgressChartYDomain(data, xDomain);
-  const selectionStart = zoomSelection ? Math.min(zoomSelection.startYear, zoomSelection.endYear) : null;
-  const selectionEnd = zoomSelection ? Math.max(zoomSelection.startYear, zoomSelection.endYear) : null;
+  const plotBounds = getProgressChartPlotBounds(chartRef.current);
+  const selectionBox = zoomSelection ? getProgressZoomSelectionBox(zoomSelection) : null;
 
-  function startZoomSelection(state: ProgressChartMouseState) {
-    const activeYear = getActiveChartYear(state);
+  function startZoomSelection(event: PointerEvent<HTMLDivElement>) {
+    const nextPoint = getProgressChartPointerPoint(event, chartRef.current);
 
-    if (activeYear === null) {
+    if (!nextPoint) {
       return;
     }
 
-    setZoomSelection({ endYear: activeYear, startYear: activeYear });
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setZoomSelection({
+      endX: nextPoint.x,
+      endY: nextPoint.y,
+      startX: nextPoint.x,
+      startY: nextPoint.y,
+    });
   }
 
-  function updateZoomSelection(state: ProgressChartMouseState) {
-    const activeYear = getActiveChartYear(state);
+  function updateZoomSelection(event: PointerEvent<HTMLDivElement>) {
+    const nextPoint = getProgressChartPointerPoint(event, chartRef.current);
 
-    if (activeYear === null) {
+    if (!nextPoint) {
       return;
     }
 
     setZoomSelection((currentSelection) => (
-      currentSelection ? { ...currentSelection, endYear: activeYear } : currentSelection
+      currentSelection ? { ...currentSelection, endX: nextPoint.x, endY: nextPoint.y } : currentSelection
     ));
   }
 
   function commitZoomSelection() {
-    if (!zoomSelection) {
+    if (!zoomSelection || !plotBounds) {
+      setZoomSelection(null);
       return;
     }
 
-    const startYear = Math.min(zoomSelection.startYear, zoomSelection.endYear);
-    const endYear = Math.max(zoomSelection.startYear, zoomSelection.endYear);
+    const selectionWidth = Math.abs(zoomSelection.endX - zoomSelection.startX);
+    const selectionHeight = Math.abs(zoomSelection.endY - zoomSelection.startY);
     setZoomSelection(null);
 
-    if (endYear - startYear < 0.25) {
+    if (selectionWidth < 8 || selectionHeight < 8) {
       return;
     }
 
-    const nextXDomain: [number, number] = [startYear, endYear];
-    setZoomDomain({
-      x: nextXDomain,
-      y: buildProgressChartYDomain(data, nextXDomain),
-    });
+    const nextZoomDomain = getProgressChartZoomDomainFromSelection(zoomSelection, plotBounds, xDomain, yDomain);
+
+    if (nextZoomDomain.x[1] - nextZoomDomain.x[0] < 0.05 || nextZoomDomain.y[1] - nextZoomDomain.y[0] < 1) {
+      return;
+    }
+
+    setZoomDomain(nextZoomDomain);
   }
 
   return (
@@ -516,15 +539,18 @@ function ProgressWealthChartCard({
         )}
       </div>
       <ProgressChartLegend />
-      <div className="mt-3 h-80 w-full min-w-0">
+      <div
+        ref={chartRef}
+        className="relative mt-3 h-80 w-full min-w-0 cursor-crosshair select-none touch-none"
+        onPointerDown={startZoomSelection}
+        onPointerLeave={() => setZoomSelection(null)}
+        onPointerMove={updateZoomSelection}
+        onPointerUp={commitZoomSelection}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={data}
-            margin={{ top: 14, right: 16, bottom: 6, left: -4 }}
-            onMouseDown={startZoomSelection}
-            onMouseLeave={() => setZoomSelection(null)}
-            onMouseMove={updateZoomSelection}
-            onMouseUp={commitZoomSelection}
+            margin={PROGRESS_CHART_MARGIN}
           >
             <defs>
               <linearGradient id="progress-planned-gradient" x1="0" x2="0" y1="0" y2="1">
@@ -626,19 +652,19 @@ function ProgressWealthChartCard({
               strokeWidth={2.5}
               type="monotone"
             />
-            {selectionStart !== null && selectionEnd !== null && (
-              <ReferenceArea
-                ifOverflow="hidden"
-                stroke={colorClasses.blue.stroke}
-                strokeOpacity={0.35}
-                fill={colorClasses.blue.stroke}
-                fillOpacity={0.08}
-                x1={selectionStart}
-                x2={selectionEnd}
-              />
-            )}
           </AreaChart>
         </ResponsiveContainer>
+        {selectionBox && (
+          <div
+            className="pointer-events-none absolute rounded border border-blue-500/70 bg-blue-500/10"
+            style={{
+              left: `${selectionBox.left}px`,
+              top: `${selectionBox.top}px`,
+              height: `${selectionBox.height}px`,
+              width: `${selectionBox.width}px`,
+            }}
+          />
+        )}
       </div>
     </section>
   );
@@ -672,14 +698,92 @@ function ProgressChartLegend() {
   );
 }
 
-function getActiveChartYear(state: ProgressChartMouseState) {
-  if (typeof state.activeLabel !== 'number' && typeof state.activeLabel !== 'string') {
+function getProgressChartPlotBounds(element: HTMLDivElement | null): ProgressChartPlotBounds | null {
+  if (!element) {
     return null;
   }
 
-  const year = Number(state.activeLabel);
+  const rect = element.getBoundingClientRect();
+  const left = Math.max(PROGRESS_CHART_Y_AXIS_WIDTH + PROGRESS_CHART_MARGIN.left, 0);
+  const right = Math.max(left + 1, rect.width - PROGRESS_CHART_MARGIN.right);
+  const top = PROGRESS_CHART_MARGIN.top;
+  const bottom = Math.max(top + 1, rect.height - PROGRESS_CHART_MARGIN.bottom);
 
-  return Number.isFinite(year) ? year : null;
+  return {
+    bottom,
+    height: bottom - top,
+    left,
+    right,
+    top,
+    width: right - left,
+  };
+}
+
+function getProgressChartPointerPoint(
+  event: PointerEvent<HTMLDivElement>,
+  element: HTMLDivElement | null,
+): ProgressChartPointerPoint | null {
+  const bounds = getProgressChartPlotBounds(element);
+
+  if (!element || !bounds) {
+    return null;
+  }
+
+  const rect = element.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  return {
+    x: clampNumber(x, bounds.left, bounds.right),
+    y: clampNumber(y, bounds.top, bounds.bottom),
+  };
+}
+
+function getProgressZoomSelectionBox(selection: ProgressZoomSelection) {
+  const left = Math.min(selection.startX, selection.endX);
+  const top = Math.min(selection.startY, selection.endY);
+
+  return {
+    height: Math.abs(selection.endY - selection.startY),
+    left,
+    top,
+    width: Math.abs(selection.endX - selection.startX),
+  };
+}
+
+function getProgressChartZoomDomainFromSelection(
+  selection: ProgressZoomSelection,
+  plotBounds: ProgressChartPlotBounds,
+  currentDomain: [number, number],
+  currentYDomain: [number, number],
+): ProgressZoomDomain {
+  const minX = Math.min(selection.startX, selection.endX);
+  const maxX = Math.max(selection.startX, selection.endX);
+  const minY = Math.min(selection.startY, selection.endY);
+  const maxY = Math.max(selection.startY, selection.endY);
+  const [minYear, maxYear] = currentDomain;
+  const [minValue, maxValue] = currentYDomain;
+  const yearRange = maxYear - minYear;
+  const valueRange = maxValue - minValue;
+  const startRatio = (minX - plotBounds.left) / plotBounds.width;
+  const endRatio = (maxX - plotBounds.left) / plotBounds.width;
+  const topRatio = (minY - plotBounds.top) / plotBounds.height;
+  const bottomRatio = (maxY - plotBounds.top) / plotBounds.height;
+
+  return {
+    x: [
+      minYear + startRatio * yearRange,
+      minYear + endRatio * yearRange,
+    ],
+    y: [
+      maxValue - bottomRatio * valueRange,
+      maxValue - topRatio * valueRange,
+    ],
+  };
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function buildProgressChartYDomain(
@@ -687,10 +791,15 @@ function buildProgressChartYDomain(
   xDomain: [number, number],
 ): [number, number] {
   const [minYear, maxYear] = xDomain;
-  const values = data
+  const valuesAtVisiblePoints = data
     .filter((point) => point.year >= minYear && point.year <= maxYear)
     .flatMap((point) => PROGRESS_CHART_VALUE_KEYS.map((key) => point[key]))
     .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+  const valuesAtDomainEdges = [
+    ...getProgressChartValuesAtYear(data, minYear),
+    ...getProgressChartValuesAtYear(data, maxYear),
+  ];
+  const values = [...valuesAtVisiblePoints, ...valuesAtDomainEdges];
 
   if (values.length === 0) {
     return [0, 1];
@@ -700,6 +809,32 @@ function buildProgressChartYDomain(
   const paddedMax = maxValue + Math.max(maxValue * 0.08, 1);
 
   return [0, paddedMax];
+}
+
+function getProgressChartValuesAtYear(data: ReturnType<typeof buildProgressChartData>, year: number) {
+  const lowerPoint = [...data].reverse().find((point) => point.year <= year) ?? data[0];
+  const upperPoint = data.find((point) => point.year >= year) ?? data.at(-1);
+
+  if (!lowerPoint || !upperPoint) {
+    return [];
+  }
+
+  return PROGRESS_CHART_VALUE_KEYS.map((key) => {
+    const lowerValue = lowerPoint[key];
+    const upperValue = upperPoint[key];
+
+    if (typeof lowerValue !== 'number' || typeof upperValue !== 'number') {
+      return null;
+    }
+
+    if (lowerPoint.year === upperPoint.year) {
+      return lowerValue;
+    }
+
+    const progress = (year - lowerPoint.year) / (upperPoint.year - lowerPoint.year);
+
+    return lowerValue + (upperValue - lowerValue) * progress;
+  }).filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
 }
 
 function ProgressChartTooltip({
