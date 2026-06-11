@@ -1461,15 +1461,15 @@ function ProgressMonthlyRecordsEditor({
         </div>
       </div>
       <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-2xl table-fixed border-separate border-spacing-0">
+        <table className="w-full min-w-3xl table-fixed border-separate border-spacing-0 md:min-w-full">
           <thead>
             <tr className="text-left text-sm font-bold text-slate-600">
-              <th className="w-16 pb-3 pr-2">Month</th>
+              <th className="w-20 pb-3 pr-2">Month</th>
               {assets.map((asset) => {
                 const colors = colorClasses[asset.color];
 
                 return (
-                  <th key={asset.id} className="pb-3 pr-2 text-right">
+                  <th key={asset.id} className="pb-3 pr-2 text-right xl:pr-3">
                     <span className="flex items-center justify-end gap-2">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.stroke }} />
                       {formatProgressAssetBarLabel(asset.label)}
@@ -1477,8 +1477,8 @@ function ProgressMonthlyRecordsEditor({
                   </th>
                 );
               })}
-              <th className="w-16 pb-3 pr-2 text-right">Total</th>
-              <th className="w-14 pb-3 pr-1 text-right">Actions</th>
+              <th className="w-28 pb-3 pr-2 text-right xl:w-32 xl:pr-3">Total</th>
+              <th className="w-16 pb-3 pr-1 text-right xl:w-20 xl:pr-2">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1492,7 +1492,7 @@ function ProgressMonthlyRecordsEditor({
                     {month.shortLabel} {selectedYear}
                   </td>
                   {assets.map((asset) => (
-                    <td key={asset.id} className="border-t border-slate-300/30 py-2 pr-2">
+                    <td key={asset.id} className="border-t border-slate-300/30 py-2 pr-2 xl:pr-3">
                       <ProgressRecordMoneyInput
                         ariaLabel={`${month.label} ${asset.label} balance`}
                         value={record.balances[asset.id] ?? 0}
@@ -1500,10 +1500,10 @@ function ProgressMonthlyRecordsEditor({
                       />
                     </td>
                   ))}
-                  <td className="border-t border-slate-300/30 py-2 pr-2 text-right text-sm font-bold text-slate-950">
+                  <td className="border-t border-slate-300/30 py-2 pr-2 text-right text-sm font-bold text-slate-950 xl:pr-3">
                     {currency(total)}
                   </td>
-                  <td className="border-t border-slate-300/30 py-2 pr-1 text-right">
+                  <td className="border-t border-slate-300/30 py-2 pr-1 text-right xl:pr-2">
                     <button
                       className={buttonClasses({ size: 'icon', tone: 'danger' })}
                       aria-label={`Clear ${month.label}`}
@@ -1535,7 +1535,7 @@ function ProgressRecordMoneyInput({
   const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
 
   return (
-    <span className="glass-input flex h-10 w-full min-w-0 items-center gap-2 px-2 py-2 text-sm">
+    <span className="glass-input ml-auto flex h-10 w-full max-w-xs min-w-0 items-center gap-2 px-2 py-2 text-sm xl:px-3">
       <input
         aria-label={ariaLabel}
         className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
