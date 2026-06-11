@@ -4,6 +4,7 @@ import {
   AreaChart,
   CartesianGrid,
   Line,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -21,6 +22,7 @@ import {
   Save,
   Sparkles,
   TrendingUp,
+  ZoomOut,
   type LucideIcon,
 } from 'lucide-react';
 import { colorClasses } from '../constants/colors';
@@ -62,6 +64,28 @@ type ProgressMonthlyRecord = {
   recordedAt: string;
   balances: Record<string, number>;
 };
+
+type ProgressZoomDomain = {
+  x: [number, number];
+  y: [number, number];
+};
+
+type ProgressZoomSelection = {
+  endYear: number;
+  startYear: number;
+};
+
+type ProgressChartMouseState = {
+  activeLabel?: number | string;
+};
+
+const PROGRESS_CHART_VALUE_KEYS = [
+  'actualWealth',
+  'negativeWealth',
+  'optimisticWealth',
+  'pessimisticWealth',
+  'plannedWealth',
+] as const;
 
 export function ProgressPage({
   assets,
@@ -421,6 +445,56 @@ function ProgressWealthChartCard({
   data: ReturnType<typeof buildProgressChartData>;
   projectionYears: number;
 }) {
+  const [zoomDomain, setZoomDomain] = useState<ProgressZoomDomain | null>(null);
+  const [zoomSelection, setZoomSelection] = useState<ProgressZoomSelection | null>(null);
+  const safeProjectionYears = Math.max(1, Math.round(projectionYears));
+  const xDomain = zoomDomain?.x ?? [0, safeProjectionYears];
+  const yDomain = zoomDomain?.y ?? buildProgressChartYDomain(data, xDomain);
+  const selectionStart = zoomSelection ? Math.min(zoomSelection.startYear, zoomSelection.endYear) : null;
+  const selectionEnd = zoomSelection ? Math.max(zoomSelection.startYear, zoomSelection.endYear) : null;
+
+  function startZoomSelection(state: ProgressChartMouseState) {
+    const activeYear = getActiveChartYear(state);
+
+    if (activeYear === null) {
+      return;
+    }
+
+    setZoomSelection({ endYear: activeYear, startYear: activeYear });
+  }
+
+  function updateZoomSelection(state: ProgressChartMouseState) {
+    const activeYear = getActiveChartYear(state);
+
+    if (activeYear === null) {
+      return;
+    }
+
+    setZoomSelection((currentSelection) => (
+      currentSelection ? { ...currentSelection, endYear: activeYear } : currentSelection
+    ));
+  }
+
+  function commitZoomSelection() {
+    if (!zoomSelection) {
+      return;
+    }
+
+    const startYear = Math.min(zoomSelection.startYear, zoomSelection.endYear);
+    const endYear = Math.max(zoomSelection.startYear, zoomSelection.endYear);
+    setZoomSelection(null);
+
+    if (endYear - startYear < 0.25) {
+      return;
+    }
+
+    const nextXDomain: [number, number] = [startYear, endYear];
+    setZoomDomain({
+      x: nextXDomain,
+      y: buildProgressChartYDomain(data, nextXDomain),
+    });
+  }
+
   return (
     <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -430,11 +504,28 @@ function ProgressWealthChartCard({
             Compare saved monthly balances with your planned wealth path
           </p>
         </div>
+        {zoomDomain && (
+          <button
+            className={buttonClasses({ className: 'md:self-start' })}
+            type="button"
+            onClick={() => setZoomDomain(null)}
+          >
+            <ZoomOut className="h-4 w-4" />
+            Reset zoom
+          </button>
+        )}
       </div>
       <ProgressChartLegend />
       <div className="mt-3 h-80 w-full min-w-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 14, right: 16, bottom: 6, left: -4 }}>
+          <AreaChart
+            data={data}
+            margin={{ top: 14, right: 16, bottom: 6, left: -4 }}
+            onMouseDown={startZoomSelection}
+            onMouseLeave={() => setZoomSelection(null)}
+            onMouseMove={updateZoomSelection}
+            onMouseUp={commitZoomSelection}
+          >
             <defs>
               <linearGradient id="progress-planned-gradient" x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" stopColor={colorClasses.blue.stroke} stopOpacity={0.22} />
@@ -444,18 +535,21 @@ function ProgressWealthChartCard({
             </defs>
             <CartesianGrid stroke="rgba(100,116,139,.18)" strokeDasharray="0" vertical={false} />
             <XAxis
+              allowDataOverflow
               axisLine={false}
               dataKey="year"
+              domain={xDomain}
               interval="preserveStartEnd"
               tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickFormatter={formatProgressYearAxis}
               tickLine={false}
-              ticks={buildProgressYearTicks(projectionYears)}
+              ticks={buildProgressYearTicks(safeProjectionYears, xDomain)}
               type="number"
             />
             <YAxis
+              allowDataOverflow
               axisLine={false}
-              domain={[0, 'dataMax']}
+              domain={yDomain}
               tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickFormatter={formatChartAxisValue}
               tickLine={false}
@@ -532,6 +626,17 @@ function ProgressWealthChartCard({
               strokeWidth={2.5}
               type="monotone"
             />
+            {selectionStart !== null && selectionEnd !== null && (
+              <ReferenceArea
+                ifOverflow="hidden"
+                stroke={colorClasses.blue.stroke}
+                strokeOpacity={0.35}
+                fill={colorClasses.blue.stroke}
+                fillOpacity={0.08}
+                x1={selectionStart}
+                x2={selectionEnd}
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -565,6 +670,36 @@ function ProgressChartLegend() {
       ))}
     </div>
   );
+}
+
+function getActiveChartYear(state: ProgressChartMouseState) {
+  if (typeof state.activeLabel !== 'number' && typeof state.activeLabel !== 'string') {
+    return null;
+  }
+
+  const year = Number(state.activeLabel);
+
+  return Number.isFinite(year) ? year : null;
+}
+
+function buildProgressChartYDomain(
+  data: ReturnType<typeof buildProgressChartData>,
+  xDomain: [number, number],
+): [number, number] {
+  const [minYear, maxYear] = xDomain;
+  const values = data
+    .filter((point) => point.year >= minYear && point.year <= maxYear)
+    .flatMap((point) => PROGRESS_CHART_VALUE_KEYS.map((key) => point[key]))
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+
+  if (values.length === 0) {
+    return [0, 1];
+  }
+
+  const maxValue = Math.max(...values);
+  const paddedMax = maxValue + Math.max(maxValue * 0.08, 1);
+
+  return [0, paddedMax];
 }
 
 function ProgressChartTooltip({
@@ -799,8 +934,26 @@ function getProgressMonthDate(month: ProgressMonth) {
   return new Date(year, monthNumber - 1, 1);
 }
 
-function buildProgressYearTicks(maxYear: number) {
-  return Array.from({ length: 7 }, (_, index) => index * 5).filter((year) => year <= maxYear);
+function buildProgressYearTicks(maxYear: number, domain: [number, number] = [0, maxYear]) {
+  const [minYear, maxDomainYear] = domain;
+  const startYear = Math.ceil(minYear);
+  const endYear = Math.floor(maxDomainYear);
+  const range = Math.max(endYear - startYear, 0);
+  const interval = range > 12 ? 5 : range > 6 ? 2 : 1;
+  const ticks = Array.from(
+    { length: Math.floor(range / interval) + 1 },
+    (_, index) => startYear + index * interval,
+  ).filter((year) => year >= minYear && year <= maxDomainYear && year <= maxYear);
+
+  if (!ticks.includes(minYear)) {
+    ticks.unshift(minYear);
+  }
+
+  if (!ticks.includes(maxDomainYear)) {
+    ticks.push(maxDomainYear);
+  }
+
+  return ticks;
 }
 
 function formatProgressYearAxis(value: number) {
