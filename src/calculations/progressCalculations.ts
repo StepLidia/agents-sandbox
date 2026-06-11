@@ -64,6 +64,14 @@ export function calculateProgressDeltaPercent(currentWealth: number, plannedWeal
   return ((currentWealth - plannedWealth) / plannedWealth) * 100;
 }
 
+export function calculateProgressTargetPercent(currentWealth: number, targetWealth: number) {
+  if (targetWealth <= 0) {
+    return currentWealth > 0 ? 100 : 0;
+  }
+
+  return (Math.max(currentWealth, 0) / targetWealth) * 100;
+}
+
 export function calculateTotalBalance(balances: Record<string, number>) {
   return Object.values(balances).reduce((sum, balance) => sum + balance, 0);
 }

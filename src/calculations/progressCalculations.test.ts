@@ -6,6 +6,7 @@ import {
   calculatePlannedWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateProgressTargetPercent,
   calculateTotalBalance,
   calculateYearsTracked,
   buildProgressChartData,
@@ -55,6 +56,12 @@ describe('progress calculations', () => {
     expect(plannedWealth).toBe(112000);
     expect(calculateProgressDelta(120000, plannedWealth)).toBe(8000);
     expect(calculateProgressDeltaPercent(120000, plannedWealth)).toBeCloseTo(7.14, 2);
+  });
+
+  it('calculates progress toward target projected wealth', () => {
+    expect(calculateProgressTargetPercent(412000, 1000000)).toBeCloseTo(41.2, 2);
+    expect(calculateProgressTargetPercent(-1000, 1000000)).toBe(0);
+    expect(calculateProgressTargetPercent(1000, 0)).toBe(100);
   });
 
   it('calculates total balance from saved monthly balances', () => {

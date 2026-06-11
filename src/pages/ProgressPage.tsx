@@ -34,6 +34,7 @@ import {
   calculatePlannedWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateProgressTargetPercent,
   calculateTotalBalance,
   calculateYearsTracked,
 } from '../calculations/progressCalculations';
@@ -232,7 +233,11 @@ export function ProgressPage({
         <HowProgressWorksCard />
       </div>
       <div className="mt-3">
-        <ProgressWealthChartCard data={progressChartData} projectionYears={projectionYears} />
+        <ProgressWealthChartCard
+          currentWealth={currentWealth}
+          data={progressChartData}
+          projectionYears={projectionYears}
+        />
       </div>
     </>
   );
@@ -461,9 +466,11 @@ function HowProgressWorksCard({ className = '' }: { className?: string }) {
 }
 
 function ProgressWealthChartCard({
+  currentWealth,
   data,
   projectionYears,
 }: {
+  currentWealth: number;
   data: ReturnType<typeof buildProgressChartData>;
   projectionYears: number;
 }) {
@@ -476,6 +483,8 @@ function ProgressWealthChartCard({
   const yDomain = zoomDomain?.y ?? buildProgressChartYDomain(data, xDomain);
   const plotBounds = getProgressChartPlotBounds(chartRef.current);
   const selectionBox = zoomSelection ? getProgressZoomSelectionBox(zoomSelection) : null;
+  const targetProjectedWealth = data.at(-1)?.plannedWealth ?? currentWealth;
+  const targetPercent = calculateProgressTargetPercent(currentWealth, targetProjectedWealth);
 
   function startZoomSelection(event: PointerEvent<HTMLDivElement>) {
     const nextPoint = getProgressChartPointerPoint(event, chartRef.current);
@@ -674,6 +683,11 @@ function ProgressWealthChartCard({
             />
           </AreaChart>
         </ResponsiveContainer>
+        <ProgressTargetOverlay
+          currentWealth={currentWealth}
+          percent={targetPercent}
+          targetWealth={targetProjectedWealth}
+        />
         {selectionBox && (
           <div
             className="pointer-events-none absolute rounded border border-blue-500/70 bg-blue-500/10"
@@ -714,6 +728,66 @@ function ProgressChartLegend() {
           {item.label}
         </span>
       ))}
+    </div>
+  );
+}
+
+function ProgressTargetOverlay({
+  currentWealth,
+  percent,
+  targetWealth,
+}: {
+  currentWealth: number;
+  percent: number;
+  targetWealth: number;
+}) {
+  const displayPercent = Math.round(percent);
+  const ringPercent = Math.min(Math.max(percent, 0), 100);
+  const radius = 34;
+  const strokeWidth = 8;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - ringPercent / 100);
+
+  return (
+    <div className="pointer-events-none absolute left-16 top-4 z-10 hidden w-72 items-center gap-3 rounded-lg bg-white/10 p-2 shadow-lg shadow-slate-400/10 backdrop-blur-md sm:flex">
+      <div className="relative h-20 w-20 shrink-0">
+        <svg className="h-20 w-20 -rotate-90" viewBox="0 0 88 88" aria-hidden="true">
+          <circle
+            cx="44"
+            cy="44"
+            fill="none"
+            r={radius}
+            stroke="#e5eaf2"
+            strokeWidth={strokeWidth}
+          />
+          <circle
+            cx="44"
+            cy="44"
+            fill="none"
+            r={radius}
+            stroke={colorClasses.emerald.stroke}
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            strokeLinecap="round"
+            strokeWidth={strokeWidth}
+          />
+        </svg>
+        <div className="absolute inset-0 grid place-items-center text-center">
+          <div>
+            <p className="text-lg font-semibold leading-5 text-slate-950">{displayPercent}%</p>
+            <p className="text-sm font-medium leading-3 text-emerald-600">goal</p>
+          </div>
+        </div>
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold leading-4 text-slate-600">Current Wealth</p>
+        <p className="mt-0.5 text-base font-semibold leading-5 tracking-normal text-slate-950">
+          {currency(currentWealth)} <span className="text-sm font-semibold">CHF</span>
+        </p>
+        <p className="mt-1 text-sm font-semibold leading-4 text-blue-600">
+          Goal {currency(targetWealth)} CHF
+        </p>
+      </div>
     </div>
   );
 }
