@@ -1154,7 +1154,8 @@ function ProgressVarianceChartCard({
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const visiblePoints = selectedYear ? chart.monthlyPointsByYear[selectedYear] ?? [] : chart.annualPoints;
   const maxAbsVariance = Math.max(...visiblePoints.map((point) => Math.abs(point.variance)), 1);
-  const yLimit = maxAbsVariance * 1.25;
+  const yLimit = buildProgressVarianceAxisLimit(maxAbsVariance);
+  const yTicks = buildProgressVarianceTicks(yLimit);
   const gradientPrefix = `progress-variance-${chart.id}`;
 
   return (
@@ -1210,6 +1211,7 @@ function ProgressVarianceChartCard({
                 tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
                 tickFormatter={formatSignedChartAxisValue}
                 tickLine={false}
+                ticks={yTicks}
                 width={54}
               />
               <ReferenceLine y={0} stroke="rgba(71,85,105,.38)" strokeWidth={1} />
@@ -1305,6 +1307,19 @@ function ProgressVarianceTooltip({
       </p>
     </div>
   );
+}
+
+function buildProgressVarianceAxisLimit(maxAbsVariance: number) {
+  const paddedValue = Math.max(maxAbsVariance * 1.25, 1);
+  const magnitude = 10 ** Math.floor(Math.log10(paddedValue));
+  const normalized = paddedValue / magnitude;
+  const niceNormalized = normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+
+  return niceNormalized * magnitude;
+}
+
+function buildProgressVarianceTicks(limit: number) {
+  return [-limit, -limit / 2, 0, limit / 2, limit];
 }
 
 function ProgressMetricCard({
