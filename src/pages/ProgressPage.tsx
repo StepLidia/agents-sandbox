@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent, type ReactNode } from 'react';
 import {
   Area,
   AreaChart,
@@ -27,6 +27,7 @@ import {
   Save,
   Sparkles,
   TrendingUp,
+  Trash2,
   ZoomOut,
   type LucideIcon,
 } from 'lucide-react';
@@ -190,6 +191,11 @@ export function ProgressPage({
     saveProgressMonthlyRecords(nextRecords);
   }
 
+  function saveAllMonthlyRecords(nextRecords: SavedProgressMonthlyRecords) {
+    setMonthlyRecords(nextRecords);
+    saveProgressMonthlyRecords(nextRecords);
+  }
+
   return (
     <>
       <Header
@@ -256,6 +262,14 @@ export function ProgressPage({
         {progressVarianceCharts.map((chart) => (
           <ProgressVarianceChartCard key={chart.id} chart={chart} />
         ))}
+      </div>
+      <div className="mt-3">
+        <ProgressMonthlyRecordsEditor
+          assets={assets}
+          currentDate={currentDate}
+          records={monthlyRecords}
+          onSave={saveAllMonthlyRecords}
+        />
       </div>
     </>
   );
@@ -1322,6 +1336,174 @@ function buildProgressVarianceTicks(limit: number) {
   return [-limit, -limit / 2, 0, limit / 2, limit];
 }
 
+function ProgressMonthlyRecordsEditor({
+  assets,
+  currentDate,
+  records,
+  onSave,
+}: {
+  assets: FinancialAsset[];
+  currentDate: Date;
+  records: SavedProgressMonthlyRecords;
+  onSave: (records: SavedProgressMonthlyRecords) => void;
+}) {
+  const availableYears = buildProgressRecordEditorYears(records, currentDate);
+  const [selectedYear, setSelectedYear] = useState(() => String(currentDate.getFullYear()));
+  const [draftRecords, setDraftRecords] = useState(records);
+  const months = Array.from({ length: 12 }, (_, monthIndex) => buildProgressMonth(Number(selectedYear), monthIndex));
+
+  useEffect(() => {
+    setDraftRecords(records);
+  }, [records]);
+
+  function updateDraftBalance(month: ProgressMonth, assetId: string, value: number) {
+    setDraftRecords((currentRecords) => {
+      const currentRecord = currentRecords[month.key] ?? buildEmptyProgressMonthlyRecord(month, assets);
+
+      return {
+        ...currentRecords,
+        [month.key]: {
+          ...currentRecord,
+          balances: {
+            ...currentRecord.balances,
+            [assetId]: Math.max(0, value),
+          },
+        },
+      };
+    });
+  }
+
+  function clearDraftMonth(month: ProgressMonth) {
+    setDraftRecords((currentRecords) => ({
+      ...currentRecords,
+      [month.key]: buildEmptyProgressMonthlyRecord(month, assets),
+    }));
+  }
+
+  function saveDraftRecords() {
+    onSave(removeEmptyProgressMonthlyRecords(draftRecords));
+  }
+
+  return (
+    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-slate-950">Record Your Actual Balances</h2>
+          <p className="mt-1 text-sm font-semibold text-slate-600">
+            Edit saved monthly balances and save to update every progress chart
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor="progress-record-year">
+            Year
+          </label>
+          <select
+            id="progress-record-year"
+            className="glass-input h-10 rounded-lg px-3 text-sm font-bold text-slate-700 outline-none"
+            value={selectedYear}
+            onChange={(event) => setSelectedYear(event.currentTarget.value)}
+          >
+            {availableYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+          <button className={buttonClasses()} type="button" onClick={saveDraftRecords}>
+            <Save className="h-4 w-4" />
+            Save
+          </button>
+        </div>
+      </div>
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full min-w-[56rem] border-separate border-spacing-0">
+          <thead>
+            <tr className="text-left text-sm font-bold text-slate-600">
+              <th className="w-28 pb-3 pr-3">Month</th>
+              {assets.map((asset) => {
+                const colors = colorClasses[asset.color];
+
+                return (
+                  <th key={asset.id} className="pb-3 pr-3">
+                    <span className="flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.stroke }} />
+                      {formatProgressAssetBarLabel(asset.label)}
+                    </span>
+                  </th>
+                );
+              })}
+              <th className="w-28 pb-3 pr-3">Total</th>
+              <th className="w-20 pb-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {months.map((month) => {
+              const record = draftRecords[month.key] ?? buildEmptyProgressMonthlyRecord(month, assets);
+              const total = calculateTotalBalance(record.balances);
+
+              return (
+                <tr key={month.key}>
+                  <td className="border-t border-slate-300/30 py-2 pr-3 text-sm font-bold text-slate-700">
+                    {month.shortLabel} {selectedYear}
+                  </td>
+                  {assets.map((asset) => (
+                    <td key={asset.id} className="border-t border-slate-300/30 py-2 pr-3">
+                      <ProgressRecordMoneyInput
+                        ariaLabel={`${month.label} ${asset.label} balance`}
+                        value={record.balances[asset.id] ?? 0}
+                        onChange={(value) => updateDraftBalance(month, asset.id, value)}
+                      />
+                    </td>
+                  ))}
+                  <td className="border-t border-slate-300/30 py-2 pr-3 text-sm font-bold text-slate-950">
+                    {currency(total)}
+                  </td>
+                  <td className="border-t border-slate-300/30 py-2 text-right">
+                    <button
+                      className={buttonClasses({ size: 'icon', tone: 'danger' })}
+                      aria-label={`Clear ${month.label}`}
+                      type="button"
+                      onClick={() => clearDraftMonth(month)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function ProgressRecordMoneyInput({
+  ariaLabel,
+  value,
+  onChange,
+}: {
+  ariaLabel: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  const { inputValue, onInputChange } = useEditableNumber(value, onChange, { format: 'money' });
+
+  return (
+    <span className="glass-input flex h-10 min-w-36 items-center gap-2 px-3 py-2 text-sm">
+      <input
+        aria-label={ariaLabel}
+        className="min-w-0 flex-1 bg-transparent text-right font-black text-slate-950 outline-none"
+        inputMode="numeric"
+        type="text"
+        value={inputValue}
+        onChange={(event) => onInputChange(event.currentTarget.value)}
+      />
+      <span className="font-semibold text-slate-600">CHF</span>
+    </span>
+  );
+}
+
 function ProgressMetricCard({
   helper,
   icon: Icon,
@@ -1532,6 +1714,29 @@ function getProgressMonthDate(month: ProgressMonth) {
   const [year, monthNumber] = month.key.split('-').map(Number);
 
   return new Date(year, monthNumber - 1, 1);
+}
+
+function buildProgressRecordEditorYears(records: SavedProgressMonthlyRecords, currentDate: Date) {
+  const years = new Set([
+    String(currentDate.getFullYear()),
+    ...Object.keys(records).map((key) => key.slice(0, 4)),
+  ]);
+
+  return [...years].sort((first, second) => Number(second) - Number(first));
+}
+
+function buildEmptyProgressMonthlyRecord(month: ProgressMonth, assets: FinancialAsset[]): ProgressMonthlyRecord {
+  return {
+    monthLabel: month.label,
+    recordedAt: getProgressMonthDate(month).toISOString(),
+    balances: Object.fromEntries(assets.map((asset) => [asset.id, 0])),
+  };
+}
+
+function removeEmptyProgressMonthlyRecords(records: SavedProgressMonthlyRecords) {
+  return Object.fromEntries(
+    Object.entries(records).filter(([, record]) => calculateTotalBalance(record.balances) > 0),
+  );
 }
 
 function buildProgressYearTicks(maxYear: number, domain: [number, number] = [0, maxYear]) {
