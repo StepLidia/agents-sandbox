@@ -44,7 +44,6 @@ import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
 const PROGRESS_MONTHLY_RECORD_STORAGE_KEY = 'growly-progress-monthly-record-v1';
-const PROGRESS_CHART_YEARS = 30;
 
 type ProgressBaseline = {
   monthLabel: string;
@@ -64,7 +63,13 @@ type ProgressMonthlyRecord = {
   balances: Record<string, number>;
 };
 
-export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
+export function ProgressPage({
+  assets,
+  projectionYears,
+}: {
+  assets: FinancialAsset[];
+  projectionYears: number;
+}) {
   const [baseline, setBaseline] = useState<ProgressBaseline | null>(readSavedProgressBaseline);
   const [monthlyRecord, setMonthlyRecord] = useState<ProgressMonthlyRecord | null>(readSavedProgressMonthlyRecord);
   const [assetBalances, setAssetBalances] = useState(() => getInitialProgressAssetBalances(assets, monthlyRecord));
@@ -93,7 +98,7 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
     baselineWealth: baseline?.totalWealth ?? currentWealth,
     optimisticAssets: assets,
-    projectionYears: PROGRESS_CHART_YEARS,
+    projectionYears,
   });
 
   function recordBaseline() {
@@ -181,7 +186,7 @@ export function ProgressPage({ assets }: { assets: FinancialAsset[] }) {
         <HowProgressWorksCard />
       </div>
       <div className="mt-3">
-        <ProgressWealthChartCard data={progressChartData} />
+        <ProgressWealthChartCard data={progressChartData} projectionYears={projectionYears} />
       </div>
     </>
   );
@@ -409,7 +414,13 @@ function HowProgressWorksCard({ className = '' }: { className?: string }) {
   );
 }
 
-function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgressChartData> }) {
+function ProgressWealthChartCard({
+  data,
+  projectionYears,
+}: {
+  data: ReturnType<typeof buildProgressChartData>;
+  projectionYears: number;
+}) {
   return (
     <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -439,7 +450,7 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
               tickFormatter={formatProgressYearAxis}
               tickLine={false}
-              ticks={buildProgressYearTicks(PROGRESS_CHART_YEARS)}
+              ticks={buildProgressYearTicks(projectionYears)}
               type="number"
             />
             <YAxis

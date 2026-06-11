@@ -109,7 +109,7 @@ export function Dashboard() {
                 />
               }
             />
-            <Route path="/progress" element={<ProgressPage assets={assets} />} />
+            <Route path="/progress" element={<ProgressPage assets={assets} projectionYears={projectionYears} />} />
             <Route
               path="/expenses"
               element={
