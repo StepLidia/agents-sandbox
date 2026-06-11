@@ -64,6 +64,8 @@ type ProgressMonthlyRecord = {
   balances: Record<string, number>;
 };
 
+type SavedProgressMonthlyRecords = Record<string, ProgressMonthlyRecord>;
+
 type ProgressZoomDomain = {
   x: [number, number];
   y: [number, number];
@@ -108,7 +110,9 @@ export function ProgressPage({
   projectionYears: number;
 }) {
   const [baseline, setBaseline] = useState<ProgressBaseline | null>(readSavedProgressBaseline);
-  const [monthlyRecord, setMonthlyRecord] = useState<ProgressMonthlyRecord | null>(readSavedProgressMonthlyRecord);
+  const [monthlyRecords, setMonthlyRecords] = useState<SavedProgressMonthlyRecords>(readSavedProgressMonthlyRecords);
+  const currentProgressMonth = useMemo(getCurrentProgressMonth, []);
+  const monthlyRecord = monthlyRecords[currentProgressMonth.key] ?? null;
   const [assetBalances, setAssetBalances] = useState(() => getInitialProgressAssetBalances(assets, monthlyRecord));
   const currentDate = useMemo(() => new Date(), []);
   const currentMonthLabel = formatProgressMonth(currentDate);
@@ -130,7 +134,7 @@ export function ProgressPage({
       baseline,
       currentDate,
       currentWealth,
-      monthlyRecord,
+      monthlyRecords,
     }),
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
     baselineWealth: baseline?.totalWealth ?? currentWealth,
@@ -163,8 +167,13 @@ export function ProgressPage({
       balances: assetBalances,
     };
 
-    setMonthlyRecord(nextRecord);
-    saveProgressMonthlyRecord(nextRecord);
+    const nextRecords = {
+      ...monthlyRecords,
+      [currentProgressMonth.key]: nextRecord,
+    };
+
+    setMonthlyRecords(nextRecords);
+    saveProgressMonthlyRecords(nextRecords);
   }
 
   return (
@@ -460,6 +469,7 @@ function ProgressWealthChartCard({
 }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [zoomDomain, setZoomDomain] = useState<ProgressZoomDomain | null>(null);
+  const [zoomHistory, setZoomHistory] = useState<Array<ProgressZoomDomain | null>>([]);
   const [zoomSelection, setZoomSelection] = useState<ProgressZoomSelection | null>(null);
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
   const xDomain = zoomDomain?.x ?? [0, safeProjectionYears];
@@ -509,12 +519,19 @@ function ProgressWealthChartCard({
       return;
     }
 
+    if (isProgressZoomOutSelection(zoomSelection)) {
+      setZoomDomain(zoomHistory.at(-1) ?? null);
+      setZoomHistory((currentHistory) => currentHistory.slice(0, -1));
+      return;
+    }
+
     const nextZoomDomain = getProgressChartZoomDomainFromSelection(zoomSelection, plotBounds, xDomain, yDomain);
 
     if (nextZoomDomain.x[1] - nextZoomDomain.x[0] < 0.05 || nextZoomDomain.y[1] - nextZoomDomain.y[0] < 1) {
       return;
     }
 
+    setZoomHistory((currentHistory) => [...currentHistory, zoomDomain]);
     setZoomDomain(nextZoomDomain);
   }
 
@@ -531,7 +548,10 @@ function ProgressWealthChartCard({
           <button
             className={buttonClasses({ className: 'md:self-start' })}
             type="button"
-            onClick={() => setZoomDomain(null)}
+            onClick={() => {
+              setZoomDomain(null);
+              setZoomHistory([]);
+            }}
           >
             <ZoomOut className="h-4 w-4" />
             Reset zoom
@@ -751,6 +771,10 @@ function getProgressZoomSelectionBox(selection: ProgressZoomSelection) {
   };
 }
 
+function isProgressZoomOutSelection(selection: ProgressZoomSelection) {
+  return selection.endX < selection.startX && selection.endY < selection.startY;
+}
+
 function getProgressChartZoomDomainFromSelection(
   selection: ProgressZoomSelection,
   plotBounds: ProgressChartPlotBounds,
@@ -858,7 +882,7 @@ function ProgressChartTooltip({
 
   return (
     <div className={tooltipContentClasses('px-3 py-2')}>
-      <p className="mb-2 font-bold text-slate-950">Year {formatProgressYearAxis(Number(label ?? 0))}</p>
+      <p className="mb-2 font-bold text-slate-950">{formatProgressChartTooltipLabel(Number(label ?? 0))}</p>
       {values.map((item) => (
         <p key={`${item.name}-${item.dataKey}`} className="text-slate-700">
           <span className="font-semibold" style={{ color: item.color }}>
@@ -937,20 +961,26 @@ function saveProgressBaseline(baseline: ProgressBaseline) {
   }
 }
 
-function readSavedProgressMonthlyRecord(): ProgressMonthlyRecord | null {
+function readSavedProgressMonthlyRecords(): SavedProgressMonthlyRecords {
   try {
     const savedValue = window.localStorage.getItem(PROGRESS_MONTHLY_RECORD_STORAGE_KEY);
-    const record = savedValue ? JSON.parse(savedValue) : null;
+    const records = savedValue ? JSON.parse(savedValue) : null;
 
-    return isProgressMonthlyRecord(record) ? record : null;
+    if (isProgressMonthlyRecord(records)) {
+      return {
+        [getProgressMonthFromDate(new Date(records.recordedAt)).key]: records,
+      };
+    }
+
+    return isSavedProgressMonthlyRecords(records) ? records : {};
   } catch {
-    return null;
+    return {};
   }
 }
 
-function saveProgressMonthlyRecord(record: ProgressMonthlyRecord) {
+function saveProgressMonthlyRecords(records: SavedProgressMonthlyRecords) {
   try {
-    window.localStorage.setItem(PROGRESS_MONTHLY_RECORD_STORAGE_KEY, JSON.stringify(record));
+    window.localStorage.setItem(PROGRESS_MONTHLY_RECORD_STORAGE_KEY, JSON.stringify(records));
   } catch {
     // Keep monthly recording usable when browser storage is unavailable.
   }
@@ -973,12 +1003,12 @@ function getProgressActualPoints({
   baseline,
   currentDate,
   currentWealth,
-  monthlyRecord,
+  monthlyRecords,
 }: {
   baseline: ProgressBaseline | null;
   currentDate: Date;
   currentWealth: number;
-  monthlyRecord: ProgressMonthlyRecord | null;
+  monthlyRecords: SavedProgressMonthlyRecords;
 }) {
   const actualPoints = [
     {
@@ -987,12 +1017,12 @@ function getProgressActualPoints({
     },
   ];
 
-  if (monthlyRecord) {
+  Object.values(monthlyRecords).forEach((monthlyRecord) => {
     actualPoints.push({
       date: new Date(monthlyRecord.recordedAt),
       totalWealth: calculateTotalBalance(monthlyRecord.balances),
     });
-  }
+  });
 
   return actualPoints;
 }
@@ -1024,6 +1054,14 @@ function isProgressMonthlyRecord(value: unknown): value is ProgressMonthlyRecord
     typeof record.recordedAt === 'string' &&
     isProgressBalanceRecord(record.balances)
   );
+}
+
+function isSavedProgressMonthlyRecords(value: unknown): value is SavedProgressMonthlyRecords {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  return Object.values(value).every(isProgressMonthlyRecord);
 }
 
 function isProgressBalanceRecord(value: unknown): value is Record<string, number> {
@@ -1097,6 +1135,23 @@ function formatProgressYearAxis(value: number) {
   }
 
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatProgressChartTooltipLabel(value: number) {
+  if (value === 0) {
+    return 'Baseline';
+  }
+
+  const roundedMonths = Math.round(value * 12);
+
+  if (roundedMonths < 12) {
+    return `Month ${roundedMonths}`;
+  }
+
+  const years = Math.floor(roundedMonths / 12);
+  const months = roundedMonths % 12;
+
+  return months === 0 ? `Year ${years}` : `Year ${years}, month ${months}`;
 }
 
 function formatChartAxisValue(value: number) {

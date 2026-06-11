@@ -84,13 +84,18 @@ describe('progress calculations', () => {
       plannedWealth: 100000,
       year: 0,
     });
-    expect(points[1].actualWealth).toBe(108000);
-    expect(points[1].negativeWealth).toBeCloseTo(105416.67, 2);
-    expect(points[1].optimisticWealth).toBeCloseTo(105833.33, 2);
-    expect(points[1].pessimisticWealth).toBeCloseTo(105000, 2);
-    expect(points[1].plannedWealth).toBeCloseTo(105625, 2);
-    expect(points[1].year).toBe(5 / 12);
-    expect(points[2]).toEqual({
+    expect(points).toHaveLength(13);
+    expect(points[1]).toMatchObject({
+      actualWealth: null,
+      year: 1 / 12,
+    });
+    expect(points[5].actualWealth).toBe(108000);
+    expect(points[5].negativeWealth).toBeCloseTo(105416.67, 2);
+    expect(points[5].optimisticWealth).toBeCloseTo(105833.33, 2);
+    expect(points[5].pessimisticWealth).toBeCloseTo(105000, 2);
+    expect(points[5].plannedWealth).toBeCloseTo(105625, 2);
+    expect(points[5].year).toBe(5 / 12);
+    expect(points[12]).toEqual({
       actualWealth: null,
       negativeWealth: 113000,
       optimisticWealth: 114000,

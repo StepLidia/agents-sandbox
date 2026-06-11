@@ -120,8 +120,8 @@ export function buildProgressChartData({
     });
   }
 
-  for (let year = 0; year <= safeProjectionYears; year += 1) {
-    setPoint(year);
+  for (let month = 0; month <= safeProjectionYears * 12; month += 1) {
+    setPoint(month / 12);
   }
 
   actualPoints.forEach((point) => {
