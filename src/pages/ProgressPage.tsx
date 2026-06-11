@@ -123,12 +123,13 @@ export function ProgressPage({
 }) {
   const [baseline, setBaseline] = useState<ProgressBaseline | null>(readSavedProgressBaseline);
   const [monthlyRecords, setMonthlyRecords] = useState<SavedProgressMonthlyRecords>(readSavedProgressMonthlyRecords);
-  const currentProgressMonth = useMemo(getCurrentProgressMonth, []);
+  const currentDate = useMemo(() => new Date(), []);
+  const currentProgressMonth = useMemo(() => getProgressMonthFromDate(currentDate), [currentDate]);
   const monthlyRecord = monthlyRecords[currentProgressMonth.key] ?? null;
   const [assetBalances, setAssetBalances] = useState(() => getInitialProgressAssetBalances(assets, monthlyRecord));
-  const currentDate = useMemo(() => new Date(), []);
+  const currentAssets = useMemo(() => getProgressCurrentAssets(assets, monthlyRecord), [assets, monthlyRecord]);
   const currentMonthLabel = formatProgressMonth(currentDate);
-  const currentWealth = calculateCurrentWealth(assets);
+  const currentWealth = calculateCurrentWealth(currentAssets);
   const monthlyPlanContribution = calculateMonthlyPlanContribution(assets);
   const monthsTracked = baseline ? calculateMonthsTracked(new Date(baseline.recordedAt), currentDate) : 0;
   const yearsTracked = calculateYearsTracked(monthsTracked);
@@ -150,7 +151,7 @@ export function ProgressPage({
     }),
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
     baselineWealth: baseline?.totalWealth ?? currentWealth,
-    optimisticAssets: assets,
+    optimisticAssets: currentAssets,
     projectionYears,
   });
   const progressVarianceCharts = buildProgressVarianceCharts({
@@ -176,6 +177,10 @@ export function ProgressPage({
       [assetId]: value,
     }));
   }
+
+  useEffect(() => {
+    setAssetBalances(getInitialProgressAssetBalances(assets, monthlyRecord));
+  }, [assets, monthlyRecord]);
 
   function saveMonthlyRecord() {
     const nextRecord = {
@@ -258,7 +263,7 @@ export function ProgressPage({
           data={progressChartData}
           projectionYears={projectionYears}
         />
-        <ProgressAssetTargetBarsCard assets={assets} projectionYears={projectionYears} />
+        <ProgressAssetTargetBarsCard assets={currentAssets} projectionYears={projectionYears} />
       </div>
       <div className="mt-3 grid min-w-0 gap-3 xl:grid-cols-3">
         {progressVarianceCharts.map((chart) => (
@@ -1625,6 +1630,17 @@ function getInitialProgressAssetBalances(assets: FinancialAsset[], savedRecord: 
       getSavedProgressBalance(savedRecord?.balances[asset.id], asset.amount),
     ]),
   );
+}
+
+function getProgressCurrentAssets(assets: FinancialAsset[], monthlyRecord: ProgressMonthlyRecord | null) {
+  if (!monthlyRecord) {
+    return assets;
+  }
+
+  return assets.map((asset) => ({
+    ...asset,
+    amount: getSavedProgressBalance(monthlyRecord.balances[asset.id], asset.amount),
+  }));
 }
 
 function getSavedProgressBalance(value: unknown, fallback: number) {
