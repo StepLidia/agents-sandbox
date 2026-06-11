@@ -52,6 +52,7 @@ export type ProgressChartActualPoint = {
 
 export type ProgressChartPoint = {
   actualWealth: number | null;
+  monthLabel: string;
   negativeWealth: number;
   optimisticWealth: number;
   pessimisticWealth: number;
@@ -246,6 +247,7 @@ export function buildProgressChartData({
 
     pointByYear.set(key, {
       actualWealth: actualWealth ?? existingPoint?.actualWealth ?? null,
+      monthLabel: formatProgressChartMonthLabel(addProgressMonths(baselineDate, Math.round(safeYear * 12))),
       negativeWealth: interpolateProgressProjectionValue(negativeProjection, safeYear),
       optimisticWealth: interpolateProgressProjectionValue(optimisticProjection, safeYear),
       pessimisticWealth: interpolateProgressProjectionValue(pessimisticProjection, safeYear),
@@ -268,6 +270,17 @@ export function buildProgressChartData({
   });
 
   return [...pointByYear.values()].sort((a, b) => a.year - b.year);
+}
+
+function addProgressMonths(date: Date, months: number) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1);
+}
+
+function formatProgressChartMonthLabel(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 function buildProgressVariancePoint({

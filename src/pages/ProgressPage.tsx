@@ -983,7 +983,13 @@ function ProgressChartTooltip({
 }: {
   active?: boolean;
   label?: number | string;
-  payload?: Array<{ color?: string; dataKey?: string | number; name?: string; value?: number | null }>;
+  payload?: Array<{
+    color?: string;
+    dataKey?: string | number;
+    name?: string;
+    payload?: ReturnType<typeof buildProgressChartData>[number];
+    value?: number | null;
+  }>;
 }) {
   if (!active || !payload?.length) {
     return null;
@@ -997,7 +1003,9 @@ function ProgressChartTooltip({
 
   return (
     <div className={tooltipContentClasses('px-3 py-2')}>
-      <p className="mb-2 font-bold text-slate-950">{formatProgressChartTooltipLabel(Number(label ?? 0))}</p>
+      <p className="mb-2 font-bold text-slate-950">
+        {payload[0]?.payload?.monthLabel ?? formatProgressChartTooltipLabel(Number(label ?? 0))}
+      </p>
       {values.map((item) => (
         <p key={`${item.name}-${item.dataKey}`} className="text-slate-700">
           <span className="font-semibold" style={{ color: item.color }}>
@@ -1444,7 +1452,7 @@ function ProgressMonthlyRecordsEditor({
         </div>
       </div>
       <div className="mt-5 overflow-x-auto">
-        <table className="w-full min-w-[56rem] border-separate border-spacing-0">
+        <table className="w-full min-w-4xl border-separate border-spacing-0">
           <thead>
             <tr className="text-left text-sm font-bold text-slate-600">
               <th className="w-28 pb-3 pr-3">Month</th>

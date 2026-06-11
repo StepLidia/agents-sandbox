@@ -150,6 +150,7 @@ describe('progress calculations', () => {
 
     expect(points[0]).toEqual({
       actualWealth: 100000,
+      monthLabel: 'January 2026',
       negativeWealth: 100000,
       optimisticWealth: 100000,
       pessimisticWealth: 100000,
@@ -159,9 +160,11 @@ describe('progress calculations', () => {
     expect(points).toHaveLength(13);
     expect(points[1]).toMatchObject({
       actualWealth: null,
+      monthLabel: 'February 2026',
       year: 1 / 12,
     });
     expect(points[5].actualWealth).toBe(108000);
+    expect(points[5].monthLabel).toBe('June 2026');
     expect(points[5].negativeWealth).toBeCloseTo(105416.67, 2);
     expect(points[5].optimisticWealth).toBeCloseTo(105833.33, 2);
     expect(points[5].pessimisticWealth).toBeCloseTo(105000, 2);
@@ -169,6 +172,7 @@ describe('progress calculations', () => {
     expect(points[5].year).toBe(5 / 12);
     expect(points[12]).toEqual({
       actualWealth: null,
+      monthLabel: 'January 2027',
       negativeWealth: 113000,
       optimisticWealth: 114000,
       pessimisticWealth: 112000,
