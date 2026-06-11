@@ -121,6 +121,19 @@ export function calculateTotalBalance(balances: Record<string, number>) {
   return Object.values(balances).reduce((sum, balance) => sum + balance, 0);
 }
 
+export function calculateProgressBaselineWealth(
+  balances: Record<string, number> | null | undefined,
+  fallbackWealth: number,
+) {
+  if (!balances) {
+    return fallbackWealth;
+  }
+
+  const totalBalance = calculateTotalBalance(balances);
+
+  return Number.isFinite(totalBalance) ? totalBalance : fallbackWealth;
+}
+
 export function buildProgressAssetTargetBars({
   assets,
   projectionYears,

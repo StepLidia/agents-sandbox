@@ -4,6 +4,7 @@ import {
   calculateMonthlyPlanContribution,
   calculateMonthsTracked,
   calculatePlannedWealth,
+  calculateProgressBaselineWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
   calculateProgressTargetPercent,
@@ -70,6 +71,16 @@ describe('progress calculations', () => {
 
   it('calculates total balance from saved monthly balances', () => {
     expect(calculateTotalBalance({ investments: 40000, pillar2: 85000, pillar3: 15000, savings: 25000 })).toBe(165000);
+  });
+
+  it('calculates baseline wealth from a saved month record', () => {
+    expect(
+      calculateProgressBaselineWealth(
+        { investments: 42000, pillar2: 86000, pillar3: 16000, savings: 27000 },
+        200000,
+      ),
+    ).toBe(171000);
+    expect(calculateProgressBaselineWealth(null, 200000)).toBe(200000);
   });
 
   it('builds asset target progress bars in projection years', () => {
