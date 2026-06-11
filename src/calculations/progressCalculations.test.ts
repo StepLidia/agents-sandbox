@@ -4,7 +4,6 @@ import {
   calculateMonthlyPlanContribution,
   calculateMonthsTracked,
   calculatePlannedWealth,
-  calculateProgressBaselineWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
   calculateProjectedPlannedWealth,
@@ -69,11 +68,30 @@ describe('progress calculations', () => {
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 500 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 500 },
       ],
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       monthsTracked: 5,
     });
 
     expect(plannedWealth).toBeCloseTo(105625, 2);
+  });
+
+  it('calculates projected planned wealth from saved baseline balances', () => {
+    const plannedWealth = calculateProjectedPlannedWealth({
+      assets: [
+        { amount: 60000, annualReturn: 0, id: 'savings', monthlyContribution: 500 },
+        { amount: 40000, annualReturn: 3, id: 'investments', monthlyContribution: 500 },
+      ],
+      baselineBalances: {
+        investments: 48000,
+        savings: 72000,
+      },
+      monthsTracked: 5,
+    });
+
+    expect(plannedWealth).toBeCloseTo(125600, 2);
   });
 
   it('calculates progress toward target projected wealth', () => {
@@ -85,16 +103,6 @@ describe('progress calculations', () => {
 
   it('calculates total balance from saved monthly balances', () => {
     expect(calculateTotalBalance({ investments: 40000, pillar2: 85000, pillar3: 15000, savings: 25000 })).toBe(165000);
-  });
-
-  it('calculates baseline wealth from a saved month record', () => {
-    expect(
-      calculateProgressBaselineWealth(
-        { investments: 42000, pillar2: 86000, pillar3: 16000, savings: 27000 },
-        200000,
-      ),
-    ).toBe(171000);
-    expect(calculateProgressBaselineWealth(null, 200000)).toBe(200000);
   });
 
   it('builds asset target progress bars in projection years', () => {
@@ -133,6 +141,12 @@ describe('progress calculations', () => {
         { amount: 80000, annualReturn: 0, color: 'emerald', id: 'pillar2', label: '2nd Pillar', monthlyContribution: 400 },
         { amount: 20000, annualReturn: 0, color: 'cyan', id: 'pillar3', label: '3rd Pillar', monthlyContribution: 100 },
       ],
+      baselineBalances: {
+        investments: 50000,
+        pillar2: 80000,
+        pillar3: 20000,
+        savings: 100000,
+      },
       baselineDate: new Date(2026, 0, 1),
       records: [
         {
@@ -158,6 +172,83 @@ describe('progress calculations', () => {
     expect(totalChart?.annualPoints[0].variance).toBeCloseTo(8400, 2);
   });
 
+  it('uses baseline balances for total variance planned values', () => {
+    const charts = buildProgressVarianceCharts({
+      assets: [
+        { amount: 50000, annualReturn: 0, color: 'blue', id: 'savings', label: 'Savings', monthlyContribution: 500 },
+        { amount: 50000, annualReturn: 3, color: 'coral', id: 'investments', label: 'Investments', monthlyContribution: 500 },
+      ],
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
+      baselineDate: new Date(2026, 0, 1),
+      records: [
+        {
+          balances: { investments: 54000, savings: 54000 },
+          recordedAt: new Date(2026, 5, 1).toISOString(),
+        },
+      ],
+    });
+    const totalChart = charts.find((chart) => chart.id === 'total');
+
+    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(105625, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(2375, 2);
+  });
+
+  it('uses saved baseline balances when they differ from current assets', () => {
+    const charts = buildProgressVarianceCharts({
+      assets: [
+        { amount: 60000, annualReturn: 0, color: 'blue', id: 'savings', label: 'Savings', monthlyContribution: 500 },
+        { amount: 40000, annualReturn: 3, color: 'coral', id: 'investments', label: 'Investments', monthlyContribution: 500 },
+      ],
+      baselineBalances: {
+        investments: 48000,
+        savings: 72000,
+      },
+      baselineDate: new Date(2026, 0, 1),
+      records: [
+        {
+          balances: { investments: 54000, savings: 72000 },
+          recordedAt: new Date(2026, 5, 1).toISOString(),
+        },
+      ],
+    });
+    const totalChart = charts.find((chart) => chart.id === 'total');
+
+    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125600, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(400, 2);
+  });
+
+  it('uses saved baseline balances for subgroup variance planned values', () => {
+    const charts = buildProgressVarianceCharts({
+      assets: [
+        { amount: 60000, annualReturn: 0, color: 'blue', id: 'savings', label: 'Savings', monthlyContribution: 500 },
+        { amount: 40000, annualReturn: 3, color: 'coral', id: 'investments', label: 'Investments', monthlyContribution: 500 },
+        { amount: 90000, annualReturn: 1, color: 'emerald', id: 'pillar2', label: '2nd Pillar', monthlyContribution: 400 },
+        { amount: 10000, annualReturn: 2, color: 'cyan', id: 'pillar3', label: '3rd Pillar', monthlyContribution: 100 },
+      ],
+      baselineBalances: {
+        investments: 48000,
+        pillar2: 78000,
+        pillar3: 12000,
+        savings: 72000,
+      },
+      baselineDate: new Date(2026, 0, 1),
+      records: [
+        {
+          balances: { investments: 54000, pillar2: 82000, pillar3: 13000, savings: 72000 },
+          recordedAt: new Date(2026, 5, 1).toISOString(),
+        },
+      ],
+    });
+    const liquidChart = charts.find((chart) => chart.id === 'liquid');
+    const pensionChart = charts.find((chart) => chart.id === 'pension');
+
+    expect(liquidChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125600, 2);
+    expect(pensionChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(92925, 2);
+  });
+
   it('builds planned and actual progress chart points', () => {
     const points = buildProgressChartData({
       actualPoints: [
@@ -165,7 +256,10 @@ describe('progress calculations', () => {
         { date: new Date(2026, 5, 1), totalWealth: 108000 },
       ],
       baselineDate: new Date(2026, 0, 1),
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       optimisticAssets: [
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 500 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 500 },
@@ -212,7 +306,10 @@ describe('progress calculations', () => {
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
       ],
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       projectionYears: 1,
     });
 
@@ -228,7 +325,10 @@ describe('progress calculations', () => {
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
       ],
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       projectionYears: 1,
     });
 
@@ -244,7 +344,10 @@ describe('progress calculations', () => {
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 0 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 0 },
       ],
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       projectionYears: 1,
     });
 
@@ -260,7 +363,10 @@ describe('progress calculations', () => {
         { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 100 },
         { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 200 },
       ],
-      baselineWealth: 100000,
+      baselineBalances: {
+        investments: 50000,
+        savings: 50000,
+      },
       projectionYears: 1,
     });
 

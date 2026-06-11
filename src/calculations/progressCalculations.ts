@@ -92,11 +92,11 @@ export function calculatePlannedWealth({
 
 export function calculateProjectedPlannedWealth({
   assets,
-  baselineWealth,
+  baselineBalances,
   monthsTracked,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   monthsTracked: number;
 }) {
   const safeMonthsTracked = Math.max(0, monthsTracked);
@@ -104,7 +104,7 @@ export function calculateProjectedPlannedWealth({
   const projectionYears = Math.max(1, Math.ceil(trackedYears));
   const plannedProjection = buildPlannedProgressProjection({
     assets,
-    baselineWealth,
+    baselineBalances,
     projectionYears,
   });
 
@@ -142,19 +142,6 @@ export function calculateTotalBalance(balances: Record<string, number>) {
   return Object.values(balances).reduce((sum, balance) => sum + balance, 0);
 }
 
-export function calculateProgressBaselineWealth(
-  balances: Record<string, number> | null | undefined,
-  fallbackWealth: number,
-) {
-  if (!balances) {
-    return fallbackWealth;
-  }
-
-  const totalBalance = calculateTotalBalance(balances);
-
-  return Number.isFinite(totalBalance) ? totalBalance : fallbackWealth;
-}
-
 export function buildProgressAssetTargetBars({
   assets,
   projectionYears,
@@ -187,10 +174,12 @@ export function buildProgressAssetTargetBars({
 export function buildProgressVarianceCharts({
   assets,
   baselineDate,
+  baselineBalances,
   records,
 }: {
   assets: ProgressAssetTargetInput[];
   baselineDate: Date;
+  baselineBalances: Record<string, number>;
   records: ProgressVarianceRecord[];
 }): ProgressVarianceChart[] {
   const groups: Array<Pick<ProgressVarianceChart, 'color' | 'id' | 'title'> & { assetIds: string[] }> = [
@@ -205,6 +194,7 @@ export function buildProgressVarianceCharts({
         assetIds: group.assetIds,
         assets,
         baselineDate,
+        baselineBalances,
         record,
       }))
       .filter((point): point is ProgressVariancePoint => point !== null)
@@ -239,36 +229,36 @@ export function buildProgressVarianceCharts({
 
 export function buildProgressChartData({
   actualPoints,
+  baselineBalances,
   baselineDate,
-  baselineWealth,
   optimisticAssets,
   projectionYears,
 }: {
   actualPoints: ProgressChartActualPoint[];
+  baselineBalances: Record<string, number>;
   baselineDate: Date;
-  baselineWealth: number;
   optimisticAssets: ProgressProjectionAsset[];
   projectionYears: number;
 }) {
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
   const plannedProjection = buildPlannedProgressProjection({
     assets: optimisticAssets,
-    baselineWealth,
+    baselineBalances,
     projectionYears: safeProjectionYears,
   });
   const optimisticProjection = buildOptimisticProgressProjection({
     assets: optimisticAssets,
-    baselineWealth,
+    baselineBalances,
     projectionYears: safeProjectionYears,
   });
   const negativeProjection = buildNegativeProgressProjection({
     assets: optimisticAssets,
-    baselineWealth,
+    baselineBalances,
     projectionYears: safeProjectionYears,
   });
   const pessimisticProjection = buildPessimisticProgressProjection({
     assets: optimisticAssets,
-    baselineWealth,
+    baselineBalances,
     projectionYears: safeProjectionYears,
   });
   const pointByYear = new Map<string, ProgressChartPoint>();
@@ -321,11 +311,13 @@ function buildProgressVariancePoint({
   assetIds,
   assets,
   baselineDate,
+  baselineBalances,
   record,
 }: {
   assetIds: string[];
   assets: ProgressAssetTargetInput[];
   baselineDate: Date;
+  baselineBalances: Record<string, number>;
   record: ProgressVarianceRecord;
 }) {
   const recordedDate = new Date(record.recordedAt);
@@ -333,10 +325,13 @@ function buildProgressVariancePoint({
   const yearsTracked = monthsTracked / 12;
   const groupAssets = assets.filter((asset) => assetIds.includes(asset.id));
   const actualWealth = assetIds.reduce((sum, assetId) => sum + (record.balances[assetId] ?? 0), 0);
-  const plannedWealth = groupAssets.reduce(
-    (sum, asset) => sum + interpolateProgressAssetProjectionValue(asset, yearsTracked),
-    0,
-  );
+  const plannedWealth = groupAssets.reduce((sum, asset) => {
+    return sum + interpolateProgressAssetProjectionValue({
+      asset,
+      baselineAmount: getProgressAssetBaselineAmount(asset, baselineBalances),
+      years: yearsTracked,
+    });
+  }, 0);
 
   if (!Number.isFinite(actualWealth) || !Number.isFinite(plannedWealth)) {
     return null;
@@ -352,20 +347,28 @@ function buildProgressVariancePoint({
   };
 }
 
-function interpolateProgressAssetProjectionValue(asset: ProgressProjectionAsset, years: number) {
+function interpolateProgressAssetProjectionValue({
+  asset,
+  baselineAmount,
+  years,
+}: {
+  asset: ProgressProjectionAsset;
+  baselineAmount: number;
+  years: number;
+}) {
   const safeYears = Math.max(0, years);
   const lowerYear = Math.floor(safeYears);
   const upperYear = Math.ceil(safeYears);
   const lowerValue = calculateAssetProjectionValue({
     annualReturnPercent: asset.annualReturn,
     monthlyContribution: asset.monthlyContribution,
-    principal: asset.amount,
+    principal: baselineAmount,
     years: lowerYear,
   });
   const upperValue = calculateAssetProjectionValue({
     annualReturnPercent: asset.annualReturn,
     monthlyContribution: asset.monthlyContribution,
-    principal: asset.amount,
+    principal: baselineAmount,
     years: upperYear,
   });
 
@@ -395,16 +398,16 @@ function interpolateProgressProjectionValue(points: Array<{ value: number; year:
 
 export function buildPlannedProgressProjection({
   assets,
-  baselineWealth,
+  baselineBalances,
   projectionYears,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }) {
   return buildProgressProjectionWithReturns({
     assets,
-    baselineWealth,
+    baselineBalances,
     getAnnualReturn: (asset) => asset.annualReturn,
     projectionYears,
   });
@@ -412,16 +415,16 @@ export function buildPlannedProgressProjection({
 
 export function buildOptimisticProgressProjection({
   assets,
-  baselineWealth,
+  baselineBalances,
   projectionYears,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }) {
   return buildProgressProjectionWithReturns({
     assets,
-    baselineWealth,
+    baselineBalances,
     getAnnualReturn: (asset) => (shouldBoostOptimisticReturn(asset.id) ? asset.annualReturn + 1 : asset.annualReturn),
     projectionYears,
   });
@@ -429,16 +432,16 @@ export function buildOptimisticProgressProjection({
 
 export function buildNegativeProgressProjection({
   assets,
-  baselineWealth,
+  baselineBalances,
   projectionYears,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }) {
   return buildProgressProjectionWithReturns({
     assets,
-    baselineWealth,
+    baselineBalances,
     getAnnualReturn: (asset) => (shouldBoostOptimisticReturn(asset.id) ? asset.annualReturn - 1 : asset.annualReturn),
     projectionYears,
   });
@@ -446,16 +449,16 @@ export function buildNegativeProgressProjection({
 
 export function buildPessimisticProgressProjection({
   assets,
-  baselineWealth,
+  baselineBalances,
   projectionYears,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }) {
   return buildProgressProjectionWithReturns({
     assets,
-    baselineWealth,
+    baselineBalances,
     getAnnualReturn: () => 0,
     projectionYears,
   });
@@ -463,31 +466,38 @@ export function buildPessimisticProgressProjection({
 
 function buildProgressProjectionWithReturns({
   assets,
-  baselineWealth,
+  baselineBalances,
   getAnnualReturn,
   projectionYears,
 }: {
   assets: ProgressProjectionAsset[];
-  baselineWealth: number;
+  baselineBalances: Record<string, number>;
   getAnnualReturn: (asset: ProgressProjectionAsset) => number;
   projectionYears: number;
 }) {
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
-  const totalAssetWealth = calculateCurrentWealth(assets);
 
   return Array.from({ length: safeProjectionYears + 1 }, (_, year) => ({
     value: assets.reduce((sum, asset) => {
-      const baselineAmount = totalAssetWealth > 0 ? (asset.amount / totalAssetWealth) * baselineWealth : 0;
-
       return sum + calculateAssetProjectionValue({
         annualReturnPercent: getAnnualReturn(asset),
         monthlyContribution: asset.monthlyContribution,
-        principal: baselineAmount,
+        principal: getProgressAssetBaselineAmount(asset, baselineBalances),
         years: year,
       });
     }, 0),
     year,
   }));
+}
+
+function getProgressAssetBaselineAmount(asset: ProgressProjectionAsset, baselineBalances: Record<string, number>) {
+  const baselineBalance = baselineBalances[asset.id];
+
+  if (typeof baselineBalance === 'number' && Number.isFinite(baselineBalance)) {
+    return Math.max(0, baselineBalance);
+  }
+
+  return 0;
 }
 
 function calculateAssetProjectionValue({

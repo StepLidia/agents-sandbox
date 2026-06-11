@@ -40,7 +40,6 @@ import {
   buildProgressVarianceCharts,
   calculateCurrentWealth,
   calculateMonthsTracked,
-  calculateProgressBaselineWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
   calculateProjectedPlannedWealth,
@@ -59,6 +58,7 @@ const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
 const PROGRESS_MONTHLY_RECORD_STORAGE_KEY = 'growly-progress-monthly-record-v1';
 
 type ProgressBaseline = {
+  balances: Record<string, number>;
   monthLabel: string;
   recordedAt: string;
   totalWealth: number;
@@ -130,12 +130,13 @@ export function ProgressPage({
   const currentAssets = useMemo(() => getProgressCurrentAssets(assets, monthlyRecord), [assets, monthlyRecord]);
   const currentMonthLabel = formatProgressMonth(currentDate);
   const currentWealth = calculateCurrentWealth(currentAssets);
+  const activeBaselineBalances = baseline?.balances ?? getProgressAssetBalances(currentAssets);
   const monthsTracked = baseline ? calculateMonthsTracked(new Date(baseline.recordedAt), currentDate) : 0;
   const yearsTracked = calculateYearsTracked(monthsTracked);
   const plannedWealth = baseline
     ? calculateProjectedPlannedWealth({
       assets: currentAssets,
-      baselineWealth: baseline.totalWealth,
+      baselineBalances: activeBaselineBalances,
       monthsTracked,
     })
     : currentWealth;
@@ -149,21 +150,24 @@ export function ProgressPage({
       monthlyRecords,
     }),
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
-    baselineWealth: baseline?.totalWealth ?? currentWealth,
+    baselineBalances: activeBaselineBalances,
     optimisticAssets: currentAssets,
     projectionYears,
   });
   const progressVarianceCharts = buildProgressVarianceCharts({
-    assets,
+    assets: currentAssets,
     baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
+    baselineBalances: activeBaselineBalances,
     records: Object.values(monthlyRecords),
   });
 
   function recordBaseline() {
+    const balances = getProgressAssetBalances(currentAssets);
     const nextBaseline = {
+      balances,
       monthLabel: currentMonthLabel,
       recordedAt: currentDate.toISOString(),
-      totalWealth: currentWealth,
+      totalWealth: calculateTotalBalance(balances),
     };
 
     setBaseline(nextBaseline);
@@ -211,9 +215,9 @@ export function ProgressPage({
       />
       <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
         <BaselineCard
+          assets={currentAssets}
           baseline={baseline}
           currentMonthLabel={currentMonthLabel}
-          currentWealth={currentWealth}
           monthlyRecords={monthlyRecords}
           onBaselineChange={(nextBaseline) => {
             setBaseline(nextBaseline);
@@ -283,16 +287,16 @@ export function ProgressPage({
 }
 
 function BaselineCard({
+  assets,
   baseline,
   currentMonthLabel,
-  currentWealth,
   monthlyRecords,
   onBaselineChange,
   onRecord,
 }: {
+  assets: FinancialAsset[];
   baseline: ProgressBaseline | null;
   currentMonthLabel: string;
-  currentWealth: number;
   monthlyRecords: SavedProgressMonthlyRecords;
   onBaselineChange: (baseline: ProgressBaseline) => void;
   onRecord: () => void;
@@ -301,10 +305,16 @@ function BaselineCard({
   const selectedMonth = baseline ? getProgressMonthFromDate(new Date(baseline.recordedAt)) : getCurrentProgressMonth();
 
   function resetBaselineMonth(month: ProgressMonth) {
+    const balances = getProgressBaselineBalances({
+      assets,
+      savedRecord: monthlyRecords[month.key],
+    });
+
     onBaselineChange({
+      balances,
       monthLabel: month.label,
       recordedAt: getProgressMonthDate(month).toISOString(),
-      totalWealth: calculateProgressBaselineWealth(monthlyRecords[month.key]?.balances, currentWealth),
+      totalWealth: calculateTotalBalance(balances),
     });
     setIsMonthPickerOpen(false);
   }
@@ -1647,6 +1657,29 @@ function getInitialProgressAssetBalances(assets: FinancialAsset[], savedRecord: 
   );
 }
 
+function getProgressAssetBalances(assets: FinancialAsset[]) {
+  return Object.fromEntries(assets.map((asset) => [asset.id, Math.max(0, asset.amount)]));
+}
+
+function getProgressBaselineBalances({
+  assets,
+  savedRecord,
+}: {
+  assets: FinancialAsset[];
+  savedRecord?: ProgressMonthlyRecord;
+}) {
+  if (savedRecord) {
+    return Object.fromEntries(
+      assets.map((asset) => [
+        asset.id,
+        getSavedProgressBalance(savedRecord.balances[asset.id], 0),
+      ]),
+    );
+  }
+
+  return getProgressAssetBalances(assets);
+}
+
 function getProgressCurrentAssets(assets: FinancialAsset[], monthlyRecord: ProgressMonthlyRecord | null) {
   if (!monthlyRecord) {
     return assets;
@@ -1701,7 +1734,8 @@ function isProgressBaseline(value: unknown): value is ProgressBaseline {
     typeof baseline.monthLabel === 'string' &&
     typeof baseline.recordedAt === 'string' &&
     typeof baseline.totalWealth === 'number' &&
-    Number.isFinite(baseline.totalWealth)
+    Number.isFinite(baseline.totalWealth) &&
+    isProgressBalanceRecord(baseline.balances)
   );
 }
 
