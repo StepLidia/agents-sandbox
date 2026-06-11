@@ -80,7 +80,7 @@ describe('progress calculations', () => {
       monthsTracked: 5,
     });
 
-    expect(plannedWealth).toBeCloseTo(105640.66, 2);
+    expect(plannedWealth).toBeCloseTo(105625, 2);
   });
 
   it('calculates projected planned wealth from saved baseline balances', () => {
@@ -96,10 +96,10 @@ describe('progress calculations', () => {
       monthsTracked: 5,
     });
 
-    expect(plannedWealth).toBeCloseTo(125615.54, 2);
+    expect(plannedWealth).toBeCloseTo(125600, 2);
   });
 
-  it('accrues prorated return on monthly investment contributions', () => {
+  it('linearly interpolates planned wealth between yearly compounded values', () => {
     const plannedWealth = calculateProjectedPlannedWealth({
       assets: [
         { amount: 60000, annualReturn: 0, id: 'savings', monthlyContribution: 1000 },
@@ -112,7 +112,7 @@ describe('progress calculations', () => {
       monthsTracked: 2,
     });
 
-    expect(plannedWealth).toBeCloseTo(65607.5, 2);
+    expect(plannedWealth).toBeCloseTo(65600, 2);
   });
 
   it('calculates progress toward target projected wealth', () => {
@@ -256,8 +256,8 @@ describe('progress calculations', () => {
     });
     const totalChart = charts.find((chart) => chart.id === 'total');
 
-    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(105640.66, 2);
-    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(2359.34, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(105625, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(2375, 2);
   });
 
   it('uses saved baseline balances when they differ from current assets', () => {
@@ -280,8 +280,8 @@ describe('progress calculations', () => {
     });
     const totalChart = charts.find((chart) => chart.id === 'total');
 
-    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125615.54, 2);
-    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(384.46, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125600, 2);
+    expect(totalChart?.monthlyPointsByYear['2026'][0].variance).toBeCloseTo(400, 2);
   });
 
   it('uses saved baseline balances for subgroup variance planned values', () => {
@@ -309,8 +309,8 @@ describe('progress calculations', () => {
     const liquidChart = charts.find((chart) => chart.id === 'liquid');
     const pensionChart = charts.find((chart) => chart.id === 'pension');
 
-    expect(liquidChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125615.54, 2);
-    expect(pensionChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(92930.88, 2);
+    expect(liquidChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(125600, 2);
+    expect(pensionChart?.monthlyPointsByYear['2026'][0].plannedWealth).toBeCloseTo(92925, 2);
   });
 
   it('builds planned and actual progress chart points', () => {
@@ -348,18 +348,18 @@ describe('progress calculations', () => {
     });
     expect(points[5].actualWealth).toBe(108000);
     expect(points[5].monthLabel).toBe('June 2026');
-    expect(points[5].negativeWealth).toBeCloseTo(105426.41, 2);
-    expect(points[5].optimisticWealth).toBeCloseTo(105855.63, 2);
+    expect(points[5].negativeWealth).toBeCloseTo(105416.67, 2);
+    expect(points[5].optimisticWealth).toBeCloseTo(105833.33, 2);
     expect(points[5].pessimisticWealth).toBeCloseTo(105000, 2);
-    expect(points[5].plannedWealth).toBeCloseTo(105640.66, 2);
+    expect(points[5].plannedWealth).toBeCloseTo(105625, 2);
     expect(points[5].year).toBe(5 / 12);
     expect(points[12]).toEqual({
       actualWealth: null,
       monthLabel: 'January 2027',
-      negativeWealth: expect.closeTo(113064.52, 2),
-      optimisticWealth: expect.closeTo(114148.31, 2),
+      negativeWealth: 113000,
+      optimisticWealth: 114000,
       pessimisticWealth: 112000,
-      plannedWealth: expect.closeTo(113603.99, 2),
+      plannedWealth: 113500,
       year: 1,
     });
   });
@@ -377,10 +377,9 @@ describe('progress calculations', () => {
       projectionYears: 1,
     });
 
-    expect(points).toHaveLength(13);
+    expect(points).toHaveLength(2);
     expect(points[0]).toEqual({ value: 100000, year: 0 });
-    expect(points[1]).toEqual({ value: expect.closeTo(100125, 2), year: 1 / 12 });
-    expect(points.at(-1)).toEqual({ value: expect.closeTo(101520.8, 2), year: 1 });
+    expect(points.at(-1)).toEqual({ value: 101500, year: 1 });
   });
 
   it('builds an optimistic projection with boosted investment and pension returns', () => {
@@ -396,10 +395,9 @@ describe('progress calculations', () => {
       projectionYears: 1,
     });
 
-    expect(points).toHaveLength(13);
+    expect(points).toHaveLength(2);
     expect(points[0]).toEqual({ value: 100000, year: 0 });
-    expect(points[1]).toEqual({ value: expect.closeTo(100166.67, 2), year: 1 / 12 });
-    expect(points.at(-1)).toEqual({ value: expect.closeTo(102037.08, 2), year: 1 });
+    expect(points.at(-1)).toEqual({ value: 102000, year: 1 });
   });
 
   it('builds a negative projection with reduced investment and pension returns', () => {
@@ -415,10 +413,9 @@ describe('progress calculations', () => {
       projectionYears: 1,
     });
 
-    expect(points).toHaveLength(13);
+    expect(points).toHaveLength(2);
     expect(points[0]).toEqual({ value: 100000, year: 0 });
-    expect(points[1]).toEqual({ value: expect.closeTo(100083.33, 2), year: 1 / 12 });
-    expect(points.at(-1)).toEqual({ value: expect.closeTo(101009.22, 2), year: 1 });
+    expect(points.at(-1)).toEqual({ value: 101000, year: 1 });
   });
 
   it('builds a pessimistic projection with all returns set to zero', () => {
@@ -434,9 +431,8 @@ describe('progress calculations', () => {
       projectionYears: 1,
     });
 
-    expect(points).toHaveLength(13);
+    expect(points).toHaveLength(2);
     expect(points[0]).toEqual({ value: 100000, year: 0 });
-    expect(points[1]).toEqual({ value: 100300, year: 1 / 12 });
     expect(points.at(-1)).toEqual({ value: 103600, year: 1 });
   });
 });
