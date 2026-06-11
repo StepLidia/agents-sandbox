@@ -6,6 +6,7 @@ import {
   BarChart,
   Cell,
   CartesianGrid,
+  LabelList,
   Line,
   ResponsiveContainer,
   Tooltip,
@@ -998,8 +999,17 @@ function ProgressAssetTargetBarsCard({
           <BarChart
             data={bars}
             layout="vertical"
-            margin={{ top: 8, right: 18, bottom: 10, left: 4 }}
+            margin={{ top: 8, right: 44, bottom: 10, left: 4 }}
           >
+            <defs>
+              {bars.map((bar) => (
+                <linearGradient key={bar.id} id={getProgressAssetBarGradientId(bar.id)} x1="0" x2="1" y1="0" y2="0">
+                  <stop offset="0%" stopColor={getProgressAssetBarColor(bar.color)} stopOpacity={0.38} />
+                  <stop offset="70%" stopColor={getProgressAssetBarColor(bar.color)} stopOpacity={0.82} />
+                  <stop offset="100%" stopColor={getProgressAssetBarColor(bar.color)} stopOpacity={0.96} />
+                </linearGradient>
+              ))}
+            </defs>
             <CartesianGrid stroke="rgba(100,116,139,.16)" strokeDasharray="0" horizontal={false} />
             <XAxis
               axisLine={false}
@@ -1032,8 +1042,9 @@ function ProgressAssetTargetBarsCard({
               radius={[0, 8, 8, 0]}
             >
               {bars.map((bar) => (
-                <Cell key={bar.id} fill={getProgressAssetBarColor(bar.color)} />
+                <Cell key={bar.id} fill={`url(#${getProgressAssetBarGradientId(bar.id)})`} />
               ))}
+              <LabelList content={(props) => renderProgressAssetBarPercentLabel(props, bars)} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -1044,6 +1055,46 @@ function ProgressAssetTargetBarsCard({
 
 function getProgressAssetBarColor(color: string) {
   return color in colorClasses ? colorClasses[color as keyof typeof colorClasses].stroke : colorClasses.blue.stroke;
+}
+
+function getProgressAssetBarGradientId(assetId: string) {
+  return `progress-asset-target-${assetId}`;
+}
+
+function renderProgressAssetBarPercentLabel({
+  height,
+  index,
+  width,
+  x,
+  y,
+}: {
+  height?: number | string;
+  index?: number | string;
+  width?: number | string;
+  x?: number | string;
+  y?: number | string;
+}, bars: ReturnType<typeof buildProgressAssetTargetBars>) {
+  const bar = bars[Number(index)];
+
+  if (!bar) {
+    return null;
+  }
+
+  const labelX = Number(x ?? 0) + Number(width ?? 0) + 8;
+  const labelY = Number(y ?? 0) + Number(height ?? 0) / 2 + 4;
+
+  return (
+    <text
+      fill={getProgressAssetBarColor(bar.color)}
+      fontSize={13}
+      fontWeight={700}
+      textAnchor="start"
+      x={labelX}
+      y={labelY}
+    >
+      {Math.round(bar.progressPercent)}%
+    </text>
+  );
 }
 
 function formatProgressAssetBarLabel(label: string) {
