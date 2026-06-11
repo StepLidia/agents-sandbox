@@ -91,7 +91,7 @@ function SidebarContent({ onNavigate }: SidebarProps) {
         ))}
       </nav>
       <a
-        className="group mt-auto mb-12 block px-3 py-2 text-center transition focus:outline-none"
+        className="group mt-auto block px-3 py-2 text-center transition focus:outline-none"
         href={TWINT_THANK_YOU_URL}
         target="_blank"
         rel="noopener noreferrer"
