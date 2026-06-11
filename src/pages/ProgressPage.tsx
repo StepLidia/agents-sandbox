@@ -492,7 +492,7 @@ function HowProgressWorksCard({ className = '' }: { className?: string }) {
       </div>
       <div className="mt-5 flex flex-1 flex-col gap-2">
         {steps.map(({ color, icon: Icon, label }) => (
-          <div key={label} className="flex min-w-0 items-center gap-3 text-sm text-slate-700">
+          <div key={label} className="flex min-w-0 items-center gap-3 text-sm font-medium text-slate-700">
             <span className="grid h-9 w-9 shrink-0 place-items-center">
               <Icon className={`h-5 w-5 ${color}`} />
             </span>
@@ -1245,7 +1245,7 @@ function ProgressVarianceChartCard({
               />
               <ReferenceLine y={0} stroke="rgba(71,85,105,.38)" strokeWidth={1} />
               <Tooltip
-                content={<ProgressVarianceTooltip />}
+                content={<ProgressVarianceTooltip canDrillDown={!selectedYear} />}
                 cursor={{ fill: 'rgba(15,23,42,.04)' }}
                 isAnimationActive={false}
                 wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
@@ -1311,9 +1311,11 @@ function renderProgressVarianceBarLabel({
 
 function ProgressVarianceTooltip({
   active,
+  canDrillDown,
   payload,
 }: {
   active?: boolean;
+  canDrillDown?: boolean;
   payload?: Array<{ payload?: ReturnType<typeof buildProgressVarianceCharts>[number]['annualPoints'][number] }>;
 }) {
   const point = payload?.[0]?.payload;
@@ -1334,6 +1336,9 @@ function ProgressVarianceTooltip({
       <p className={point.variance >= 0 ? 'text-emerald-700' : 'text-red-500'}>
         Variance: <span className="font-semibold">{formatSignedCurrency(point.variance)} CHF</span>
       </p>
+      {canDrillDown && (
+        <p className="mt-2 text-sm font-semibold text-slate-500">Click bar for monthly view</p>
+      )}
     </div>
   );
 }

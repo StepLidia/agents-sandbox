@@ -97,7 +97,7 @@ function SidebarContent({ onNavigate }: SidebarProps) {
         rel="noopener noreferrer"
       >
         <p className="text-sm text-stone-700">Thank you sticker</p>
-        <div className="mx-auto mt-2 grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-stone-100 via-amber-50 to-slate-100 text-stone-800 shadow-inner shadow-white/70 ring-1 ring-stone-300/30 transition group-hover:scale-102">
+        <div className="mx-auto mt-2 grid h-16 w-16 place-items-center rounded-3xl bg-linear-to-br from-stone-100 via-amber-50 to-slate-100 text-stone-800 shadow-inner shadow-white/70 ring-1 ring-stone-300/30 transition group-hover:scale-102">
           <Coffee className="h-9 w-9" />
         </div>
         <p className="mt-1.5 text-xs font-medium tracking-normal text-stone-600">TWINT</p>
