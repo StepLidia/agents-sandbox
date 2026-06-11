@@ -7,6 +7,7 @@ import {
   calculateProgressBaselineWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateProjectedPlannedWealth,
   calculateProgressTargetPercent,
   calculateProgressTargetYears,
   calculateTotalBalance,
@@ -60,6 +61,19 @@ describe('progress calculations', () => {
     expect(plannedWealth).toBe(112000);
     expect(calculateProgressDelta(120000, plannedWealth)).toBe(8000);
     expect(calculateProgressDeltaPercent(120000, plannedWealth)).toBeCloseTo(7.14, 2);
+  });
+
+  it('calculates projected planned wealth with configured returns', () => {
+    const plannedWealth = calculateProjectedPlannedWealth({
+      assets: [
+        { amount: 50000, annualReturn: 0, id: 'savings', monthlyContribution: 500 },
+        { amount: 50000, annualReturn: 3, id: 'investments', monthlyContribution: 500 },
+      ],
+      baselineWealth: 100000,
+      monthsTracked: 5,
+    });
+
+    expect(plannedWealth).toBeCloseTo(105625, 2);
   });
 
   it('calculates progress toward target projected wealth', () => {

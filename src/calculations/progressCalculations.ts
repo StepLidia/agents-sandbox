@@ -90,6 +90,27 @@ export function calculatePlannedWealth({
   return baselineWealth + monthlyPlanContribution * monthsTracked;
 }
 
+export function calculateProjectedPlannedWealth({
+  assets,
+  baselineWealth,
+  monthsTracked,
+}: {
+  assets: ProgressProjectionAsset[];
+  baselineWealth: number;
+  monthsTracked: number;
+}) {
+  const safeMonthsTracked = Math.max(0, monthsTracked);
+  const trackedYears = safeMonthsTracked / 12;
+  const projectionYears = Math.max(1, Math.ceil(trackedYears));
+  const plannedProjection = buildPlannedProgressProjection({
+    assets,
+    baselineWealth,
+    projectionYears,
+  });
+
+  return interpolateProgressProjectionValue(plannedProjection, trackedYears);
+}
+
 export function calculateProgressDelta(currentWealth: number, plannedWealth: number) {
   return currentWealth - plannedWealth;
 }

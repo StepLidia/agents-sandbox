@@ -39,12 +39,11 @@ import {
   buildProgressChartData,
   buildProgressVarianceCharts,
   calculateCurrentWealth,
-  calculateMonthlyPlanContribution,
   calculateMonthsTracked,
-  calculatePlannedWealth,
   calculateProgressBaselineWealth,
   calculateProgressDelta,
   calculateProgressDeltaPercent,
+  calculateProjectedPlannedWealth,
   calculateProgressTargetPercent,
   calculateTotalBalance,
   calculateYearsTracked,
@@ -131,13 +130,12 @@ export function ProgressPage({
   const currentAssets = useMemo(() => getProgressCurrentAssets(assets, monthlyRecord), [assets, monthlyRecord]);
   const currentMonthLabel = formatProgressMonth(currentDate);
   const currentWealth = calculateCurrentWealth(currentAssets);
-  const monthlyPlanContribution = calculateMonthlyPlanContribution(assets);
   const monthsTracked = baseline ? calculateMonthsTracked(new Date(baseline.recordedAt), currentDate) : 0;
   const yearsTracked = calculateYearsTracked(monthsTracked);
   const plannedWealth = baseline
-    ? calculatePlannedWealth({
+    ? calculateProjectedPlannedWealth({
+      assets: currentAssets,
       baselineWealth: baseline.totalWealth,
-      monthlyPlanContribution,
       monthsTracked,
     })
     : currentWealth;
