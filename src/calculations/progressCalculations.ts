@@ -356,27 +356,12 @@ function interpolateProgressAssetProjectionValue({
   baselineAmount: number;
   years: number;
 }) {
-  const safeYears = Math.max(0, years);
-  const lowerYear = Math.floor(safeYears);
-  const upperYear = Math.ceil(safeYears);
-  const lowerValue = calculateAssetProjectionValue({
+  return calculateAssetProjectionValue({
     annualReturnPercent: asset.annualReturn,
     monthlyContribution: asset.monthlyContribution,
     principal: baselineAmount,
-    years: lowerYear,
+    years,
   });
-  const upperValue = calculateAssetProjectionValue({
-    annualReturnPercent: asset.annualReturn,
-    monthlyContribution: asset.monthlyContribution,
-    principal: baselineAmount,
-    years: upperYear,
-  });
-
-  if (lowerYear === upperYear) {
-    return lowerValue;
-  }
-
-  return lowerValue + (upperValue - lowerValue) * (safeYears - lowerYear);
 }
 
 function interpolateProgressProjectionValue(points: Array<{ value: number; year: number }>, year: number) {
@@ -477,16 +462,16 @@ function buildProgressProjectionWithReturns({
 }) {
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
 
-  return Array.from({ length: safeProjectionYears + 1 }, (_, year) => ({
+  return Array.from({ length: safeProjectionYears * 12 + 1 }, (_, month) => ({
     value: assets.reduce((sum, asset) => {
       return sum + calculateAssetProjectionValue({
         annualReturnPercent: getAnnualReturn(asset),
         monthlyContribution: asset.monthlyContribution,
         principal: getProgressAssetBaselineAmount(asset, baselineBalances),
-        years: year,
+        years: month / 12,
       });
     }, 0),
-    year,
+    year: month / 12,
   }));
 }
 
@@ -511,13 +496,15 @@ function calculateAssetProjectionValue({
   principal: number;
   years: number;
 }) {
-  const safeYears = Math.max(0, Math.round(years));
+  const safeMonths = Math.max(0, Math.round(years * 12));
   const yearlyRate = annualReturnPercent / 100;
-  const yearlyContribution = Math.max(0, monthlyContribution) * 12;
+  const monthlyRate = yearlyRate / 12;
+  const safeMonthlyContribution = Math.max(0, monthlyContribution);
   let value = Math.max(0, principal);
 
-  for (let year = 0; year < safeYears; year += 1) {
-    value = value * (1 + yearlyRate) + yearlyContribution;
+  for (let month = 0; month < safeMonths; month += 1) {
+    value *= 1 + monthlyRate;
+    value += safeMonthlyContribution;
   }
 
   return value;
