@@ -31,17 +31,6 @@ input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
 }
 
-.recharts-wrapper,
-.recharts-wrapper:focus,
-.recharts-wrapper:focus-visible,
-.recharts-surface,
-.recharts-surface:focus,
-.recharts-surface:focus-visible,
-.recharts-layer:focus,
-.recharts-layer:focus-visible {
-  outline: none;
-}
-
 .years-slider {
   width: 100%;
   height: 9px;
