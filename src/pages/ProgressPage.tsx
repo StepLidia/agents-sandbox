@@ -13,8 +13,6 @@ import {
   CalendarDays,
   CalendarCheck2,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
   Coins,
   Info,
   ListChecks,
@@ -41,6 +39,7 @@ import {
 import { hoverTooltipClasses, tooltipContentClasses } from '../constants/tooltipStyles';
 import { currency, type FinancialAsset } from '../finance';
 import { Header } from '../components/Header';
+import { MonthPicker } from '../components/MonthPicker';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
@@ -236,7 +235,10 @@ function BaselineCard({
             )}
           </button>
           {baseline && isMonthPickerOpen && (
-            <ProgressMonthPicker
+            <MonthPicker
+              buildMonth={buildProgressMonth}
+              className="left-0 top-20"
+              id="progress-baseline-month-picker"
               selectedMonth={selectedMonth}
               onMonthChange={resetBaselineMonth}
             />
@@ -266,64 +268,6 @@ function BaselineCard({
         Your asset values of this month are used as the starting point for progress tracking.
       </p>
     </section>
-  );
-}
-
-function ProgressMonthPicker({
-  selectedMonth,
-  onMonthChange,
-}: {
-  selectedMonth: ProgressMonth;
-  onMonthChange: (month: ProgressMonth) => void;
-}) {
-  const [visibleYear, setVisibleYear] = useState(() => Number(selectedMonth.key.slice(0, 4)));
-  const selectedMonthNumber = Number(selectedMonth.key.slice(5, 7));
-  const months = Array.from({ length: 12 }, (_, index) => buildProgressMonth(visibleYear, index));
-
-  return (
-    <div
-      id="progress-baseline-month-picker"
-      className="absolute left-0 top-20 z-50 w-72 rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
-    >
-      <div className="flex items-center justify-between">
-        <button
-          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
-          aria-label="Previous year"
-          type="button"
-          onClick={() => setVisibleYear((year) => year - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <p className="text-sm font-bold text-slate-950">{visibleYear}</p>
-        <button
-          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
-          aria-label="Next year"
-          type="button"
-          onClick={() => setVisibleYear((year) => year + 1)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {months.map((month) => {
-          const isSelected = visibleYear === Number(selectedMonth.key.slice(0, 4)) && selectedMonthNumber === Number(month.key.slice(5, 7));
-
-          return (
-            <button
-              key={month.key}
-              className={`h-9 rounded-lg text-sm font-semibold transition ${isSelected
-                ? 'bg-blue-600/14 text-blue-700 shadow-inner'
-                : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
-                }`}
-              type="button"
-              onClick={() => onMonthChange(month)}
-            >
-              {month.shortLabel}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -569,7 +513,7 @@ function ProgressWealthChartCard({ data }: { data: ReturnType<typeof buildProgre
               dataKey="pessimisticWealth"
               dot={false}
               isAnimationActive={false}
-              name="Neutral"
+              name="No return"
               stroke="#94a3b8"
               strokeDasharray="2 6"
               strokeLinecap="round"
@@ -590,7 +534,7 @@ function ProgressChartLegend() {
     { color: colorClasses.emerald.stroke, label: 'Actual' },
     { color: '#64748b', dashed: true, label: 'Optimistic (+1%)' },
     { color: colorClasses.coral.stroke, dashed: true, label: 'Negative (-1%)' },
-    { color: '#94a3b8', dashed: true, label: 'Neutral (0%)' },
+    { color: '#94a3b8', dashed: true, label: 'No return (0%)' },
   ];
 
   return (

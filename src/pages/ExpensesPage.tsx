@@ -7,8 +7,6 @@ import {
   CalendarDays,
   ChevronDown,
   ChartLine,
-  ChevronLeft,
-  ChevronRight,
   Home,
   PiggyBank,
   Star,
@@ -24,6 +22,7 @@ import { currency } from '../finance';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 import { ExpenseTrendAnalysisPage } from './ExpenseTrendAnalysisPage';
 import { InsightValue } from '../components/InsightValue';
+import { MonthPicker } from '../components/MonthPicker';
 
 const EXPENSES_STORAGE_KEY = 'growly-expenses-v1';
 const DEFAULT_MONTHLY_INCOME = 6000;
@@ -346,7 +345,10 @@ function ExpensesHeader({
           </button>
           {isMonthPickerOpen && (
             <MonthPicker
-              expenseMonth={expenseMonth}
+              buildMonth={buildExpenseMonth}
+              className="right-0 top-12"
+              id="expenses-month-picker"
+              selectedMonth={expenseMonth}
               onMonthChange={(month) => {
                 onMonthChange(month);
                 setIsMonthPickerOpen(false);
@@ -393,64 +395,6 @@ function ExpensesHeader({
         </span>
       </div>
     </header>
-  );
-}
-
-function MonthPicker({
-  expenseMonth,
-  onMonthChange,
-}: {
-  expenseMonth: ExpenseMonth;
-  onMonthChange: (month: ExpenseMonth) => void;
-}) {
-  const [visibleYear, setVisibleYear] = useState(() => Number(expenseMonth.key.slice(0, 4)));
-  const selectedMonth = Number(expenseMonth.key.slice(5, 7));
-  const months = Array.from({ length: 12 }, (_, index) => buildExpenseMonth(visibleYear, index));
-
-  return (
-    <div
-      id="expenses-month-picker"
-      className="absolute right-0 top-12 z-50 w-72 rounded-lg border border-slate-300/30 bg-white/95 p-3 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
-    >
-      <div className="flex items-center justify-between">
-        <button
-          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
-          aria-label="Previous year"
-          type="button"
-          onClick={() => setVisibleYear((year) => year - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <p className="text-sm font-bold text-slate-950">{visibleYear}</p>
-        <button
-          className="grid h-8 w-8 place-items-center rounded-lg text-slate-600 transition hover:bg-blue-500/10 hover:text-blue-700"
-          aria-label="Next year"
-          type="button"
-          onClick={() => setVisibleYear((year) => year + 1)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {months.map((month) => {
-          const isSelected = visibleYear === Number(expenseMonth.key.slice(0, 4)) && selectedMonth === Number(month.key.slice(5, 7));
-
-          return (
-            <button
-              key={month.key}
-              className={`h-9 rounded-lg text-sm font-semibold transition ${isSelected
-                ? 'bg-blue-600/14 text-blue-700 shadow-inner'
-                : 'text-slate-700 hover:bg-blue-500/10 hover:text-blue-700'
-                }`}
-              type="button"
-              onClick={() => onMonthChange(month)}
-            >
-              {month.shortLabel}
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
