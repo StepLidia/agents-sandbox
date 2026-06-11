@@ -226,7 +226,7 @@ function Footer() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Lidia Stepanova
+        Lidatron Labs
       </a>
       <span className="text-slate-400">·</span>
       <span className="group relative">

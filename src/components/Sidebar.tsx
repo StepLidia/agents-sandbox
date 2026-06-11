@@ -1,5 +1,7 @@
-import { BarChart3, CircleUserRound, Footprints, Home, LineChart, ReceiptText, X } from 'lucide-react';
+import { BarChart3, CircleUserRound, Coffee, Home, LineChart, ReceiptText, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+
+const TWINT_THANK_YOU_URL = 'https://go.twint.ch/1/e/tw?tw=acq.SF-CFeDKQsSG4gqPKxcsn8YTI9RPFXNHoXvteLRjOMDbzGBzll4KLhW-DGK4jmcK.';
 
 const navItems = [
   { label: 'Overview', icon: BarChart3, to: '/', end: true },
@@ -62,7 +64,7 @@ function SidebarContent({ onNavigate }: SidebarProps) {
   }
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 px-2">
         <div className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white shadow-xl shadow-blue-600/25">
           <BarChart3 className="h-6 w-6" />
@@ -77,8 +79,8 @@ function SidebarContent({ onNavigate }: SidebarProps) {
           <button
             key={label}
             className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${isActiveRoute(location.pathname, to, end)
-                ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
-                : 'text-slate-700 hover:bg-white/45'
+              ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
+              : 'text-slate-700 hover:bg-white/45'
               }`}
             type="button"
             onClick={() => handleNavigate(to)}
@@ -88,16 +90,19 @@ function SidebarContent({ onNavigate }: SidebarProps) {
           </button>
         ))}
       </nav>
-      <div className="glass-panel mt-10 p-4 text-center">
-        <div className="mx-auto grid h-11 w-11 place-items-center rounded-full bg-blue-500/10 text-blue-600">
-          <Footprints className="h-6 w-6" />
+      <a
+        className="group mt-auto mb-12 block px-3 py-2 text-center transition focus:outline-none"
+        href={TWINT_THANK_YOU_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <p className="text-sm text-stone-700">Thank you sticker</p>
+        <div className="mx-auto mt-2 grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-stone-100 via-amber-50 to-slate-100 text-stone-800 shadow-inner shadow-white/70 ring-1 ring-stone-300/30 transition group-hover:scale-102">
+          <Coffee className="h-9 w-9" />
         </div>
-        <p className="mt-4 text-sm leading-6 text-slate-900">Small steps today create freedom tomorrow.</p>
-        <svg viewBox="0 0 180 58" className="mt-3 h-14 w-full text-violet-500">
-          <path d="M2 50 C24 35,30 62,48 45 S78 42,90 33 S124 8,142 24 S165 31,178 14" fill="none" stroke="currentColor" strokeWidth="2" />
-        </svg>
-      </div>
-    </>
+        <p className="mt-1.5 text-xs font-medium tracking-normal text-stone-600">TWINT</p>
+      </a>
+    </div>
   );
 }
 
