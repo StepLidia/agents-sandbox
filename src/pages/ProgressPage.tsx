@@ -19,6 +19,7 @@ import {
   CalendarDays,
   CalendarCheck2,
   CheckCircle2,
+  ChevronDown,
   Coins,
   Info,
   ListChecks,
@@ -51,6 +52,7 @@ import { hoverTooltipClasses, tooltipContentClasses } from '../constants/tooltip
 import { currency, type FinancialAsset } from '../finance';
 import { Header } from '../components/Header';
 import { MonthPicker } from '../components/MonthPicker';
+import { YearPicker } from '../components/YearPicker';
 import { useEditableNumber } from '../hooks/useEditableNumber';
 
 const PROGRESS_BASELINE_STORAGE_KEY = 'growly-progress-baseline-v1';
@@ -1347,9 +1349,9 @@ function ProgressMonthlyRecordsEditor({
   records: SavedProgressMonthlyRecords;
   onSave: (records: SavedProgressMonthlyRecords) => void;
 }) {
-  const availableYears = buildProgressRecordEditorYears(records, currentDate);
   const [selectedYear, setSelectedYear] = useState(() => String(currentDate.getFullYear()));
   const [draftRecords, setDraftRecords] = useState(records);
+  const [isYearPickerOpen, setIsYearPickerOpen] = useState(false);
   const months = Array.from({ length: 12 }, (_, monthIndex) => buildProgressMonth(Number(selectedYear), monthIndex));
 
   useEffect(() => {
@@ -1385,8 +1387,8 @@ function ProgressMonthlyRecordsEditor({
   }
 
   return (
-    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
-      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+    <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${isYearPickerOpen ? 'z-50' : ''}`}>
+      <div className="glass-panel-floating-layer flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h2 className="text-sm font-bold text-slate-950">Record Your Actual Balances</h2>
           <p className="mt-1 text-sm font-semibold text-slate-600">
@@ -1394,21 +1396,30 @@ function ProgressMonthlyRecordsEditor({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="sr-only" htmlFor="progress-record-year">
-            Year
-          </label>
-          <select
-            id="progress-record-year"
-            className="glass-input h-10 rounded-lg px-3 text-sm font-bold text-slate-700 outline-none"
-            value={selectedYear}
-            onChange={(event) => setSelectedYear(event.currentTarget.value)}
-          >
-            {availableYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <button
+              className={buttonClasses({ className: 'min-w-28 whitespace-nowrap' })}
+              aria-controls="progress-record-year-picker"
+              aria-expanded={isYearPickerOpen}
+              type="button"
+              onClick={() => setIsYearPickerOpen((isOpen) => !isOpen)}
+            >
+              <CalendarDays className="h-4 w-4 shrink-0" />
+              <span>{selectedYear}</span>
+              <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isYearPickerOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {isYearPickerOpen && (
+              <YearPicker
+                className="right-0 top-12"
+                id="progress-record-year-picker"
+                selectedYear={Number(selectedYear)}
+                onYearChange={(year) => {
+                  setSelectedYear(String(year));
+                  setIsYearPickerOpen(false);
+                }}
+              />
+            )}
+          </div>
           <button className={buttonClasses()} type="button" onClick={saveDraftRecords}>
             <Save className="h-4 w-4" />
             Save
@@ -1424,16 +1435,16 @@ function ProgressMonthlyRecordsEditor({
                 const colors = colorClasses[asset.color];
 
                 return (
-                  <th key={asset.id} className="pb-3 pr-3">
-                    <span className="flex items-center gap-2">
+                  <th key={asset.id} className="pb-3 pr-3 text-right">
+                    <span className="flex items-center justify-end gap-2">
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colors.stroke }} />
                       {formatProgressAssetBarLabel(asset.label)}
                     </span>
                   </th>
                 );
               })}
-              <th className="w-28 pb-3 pr-3">Total</th>
-              <th className="w-20 pb-3 text-right">Actions</th>
+              <th className="w-28 pb-3 pr-3 text-right">Total</th>
+              <th className="w-24 pb-3 pr-2 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -1455,10 +1466,10 @@ function ProgressMonthlyRecordsEditor({
                       />
                     </td>
                   ))}
-                  <td className="border-t border-slate-300/30 py-2 pr-3 text-sm font-bold text-slate-950">
+                  <td className="border-t border-slate-300/30 py-2 pr-3 text-right text-sm font-bold text-slate-950">
                     {currency(total)}
                   </td>
-                  <td className="border-t border-slate-300/30 py-2 text-right">
+                  <td className="border-t border-slate-300/30 py-2 pr-2 text-right">
                     <button
                       className={buttonClasses({ size: 'icon', tone: 'danger' })}
                       aria-label={`Clear ${month.label}`}
@@ -1714,15 +1725,6 @@ function getProgressMonthDate(month: ProgressMonth) {
   const [year, monthNumber] = month.key.split('-').map(Number);
 
   return new Date(year, monthNumber - 1, 1);
-}
-
-function buildProgressRecordEditorYears(records: SavedProgressMonthlyRecords, currentDate: Date) {
-  const years = new Set([
-    String(currentDate.getFullYear()),
-    ...Object.keys(records).map((key) => key.slice(0, 4)),
-  ]);
-
-  return [...years].sort((first, second) => Number(second) - Number(first));
 }
 
 function buildEmptyProgressMonthlyRecord(month: ProgressMonth, assets: FinancialAsset[]): ProgressMonthlyRecord {
