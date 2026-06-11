@@ -7,8 +7,10 @@ import {
   calculateProgressDelta,
   calculateProgressDeltaPercent,
   calculateProgressTargetPercent,
+  calculateProgressTargetYears,
   calculateTotalBalance,
   calculateYearsTracked,
+  buildProgressAssetTargetBars,
   buildProgressChartData,
   buildNegativeProgressProjection,
   buildOptimisticProgressProjection,
@@ -62,10 +64,39 @@ describe('progress calculations', () => {
     expect(calculateProgressTargetPercent(412000, 1000000)).toBeCloseTo(41.2, 2);
     expect(calculateProgressTargetPercent(-1000, 1000000)).toBe(0);
     expect(calculateProgressTargetPercent(1000, 0)).toBe(100);
+    expect(calculateProgressTargetYears(412000, 1000000, 30)).toBeCloseTo(12.36, 2);
   });
 
   it('calculates total balance from saved monthly balances', () => {
     expect(calculateTotalBalance({ investments: 40000, pillar2: 85000, pillar3: 15000, savings: 25000 })).toBe(165000);
+  });
+
+  it('builds asset target progress bars in projection years', () => {
+    const bars = buildProgressAssetTargetBars({
+      assets: [
+        {
+          amount: 100000,
+          annualReturn: 0,
+          color: 'blue',
+          id: 'savings',
+          label: 'Savings',
+          monthlyContribution: 1000,
+        },
+      ],
+      projectionYears: 10,
+    });
+
+    expect(bars).toEqual([
+      {
+        color: 'blue',
+        currentWealth: 100000,
+        id: 'savings',
+        label: 'Savings',
+        progressPercent: expect.closeTo(45.45, 2),
+        progressYears: expect.closeTo(4.55, 2),
+        targetWealth: 220000,
+      },
+    ]);
   });
 
   it('builds planned and actual progress chart points', () => {

@@ -2,6 +2,9 @@ import { useMemo, useRef, useState, type PointerEvent, type ReactNode } from 're
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
+  Cell,
   CartesianGrid,
   Line,
   ResponsiveContainer,
@@ -28,6 +31,7 @@ import { colorClasses } from '../constants/colors';
 import { buttonClasses } from '../constants/buttonStyles';
 import {
   buildProgressChartData,
+  buildProgressAssetTargetBars,
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
   calculateMonthsTracked,
@@ -220,11 +224,10 @@ export function ProgressPage({
           helperClassName="text-amber-500"
         />
       </div>
-      <div className="mt-3 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
+      <div className="mt-3 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
         <MonthlyAssetBalancesCard
           assets={assets}
           balances={assetBalances}
-          className="2xl:col-span-3"
           currentMonthLabel={currentMonthLabel}
           savedMonthLabel={monthlyRecord?.monthLabel}
           onBalanceChange={updateAssetBalance}
@@ -232,12 +235,13 @@ export function ProgressPage({
         />
         <HowProgressWorksCard />
       </div>
-      <div className="mt-3">
+      <div className="mt-3 grid min-w-0 gap-3 2xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
         <ProgressWealthChartCard
           currentWealth={currentWealth}
           data={progressChartData}
           projectionYears={projectionYears}
         />
+        <ProgressAssetTargetBarsCard assets={assets} projectionYears={projectionYears} />
       </div>
     </>
   );
@@ -466,10 +470,12 @@ function HowProgressWorksCard({ className = '' }: { className?: string }) {
 }
 
 function ProgressWealthChartCard({
+  className = '',
   currentWealth,
   data,
   projectionYears,
 }: {
+  className?: string;
   currentWealth: number;
   data: ReturnType<typeof buildProgressChartData>;
   projectionYears: number;
@@ -545,7 +551,7 @@ function ProgressWealthChartCard({
   }
 
   return (
-    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
+    <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${className}`}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <h2 className="text-sm font-bold text-slate-950">Actual vs Planned Wealth</h2>
@@ -965,6 +971,113 @@ function ProgressChartTooltip({
           {currency(item.value ?? 0)} CHF
         </p>
       ))}
+    </div>
+  );
+}
+
+function ProgressAssetTargetBarsCard({
+  assets,
+  projectionYears,
+}: {
+  assets: FinancialAsset[];
+  projectionYears: number;
+}) {
+  const bars = buildProgressAssetTargetBars({ assets, projectionYears });
+  const safeProjectionYears = Math.max(1, Math.round(projectionYears));
+
+  return (
+    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
+      <div>
+        <h2 className="text-sm font-bold text-slate-950">Asset Goal Progress</h2>
+        <p className="mt-1 text-sm font-semibold text-slate-600">
+          Current asset value vs projected value
+        </p>
+      </div>
+      <div className="mt-4 h-80 w-full min-w-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={bars}
+            layout="vertical"
+            margin={{ top: 8, right: 18, bottom: 10, left: 4 }}
+          >
+            <CartesianGrid stroke="rgba(100,116,139,.16)" strokeDasharray="0" horizontal={false} />
+            <XAxis
+              axisLine={false}
+              domain={[0, safeProjectionYears]}
+              tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
+              tickFormatter={(value) => `${value}y`}
+              tickLine={false}
+              ticks={buildProgressYearTicks(safeProjectionYears)}
+              type="number"
+            />
+            <YAxis
+              axisLine={false}
+              dataKey="label"
+              tick={{ fill: '#334155', fontSize: 11, fontWeight: 600 }}
+              tickFormatter={formatProgressAssetBarLabel}
+              tickLine={false}
+              type="category"
+              width={72}
+            />
+            <Tooltip
+              content={<ProgressAssetTargetBarsTooltip />}
+              cursor={{ fill: 'rgba(15,23,42,.04)' }}
+              isAnimationActive={false}
+              wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+            />
+            <Bar
+              dataKey="progressYears"
+              isAnimationActive={false}
+              name="Current vs projected"
+              radius={[0, 8, 8, 0]}
+            >
+              {bars.map((bar) => (
+                <Cell key={bar.id} fill={getProgressAssetBarColor(bar.color)} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
+  );
+}
+
+function getProgressAssetBarColor(color: string) {
+  return color in colorClasses ? colorClasses[color as keyof typeof colorClasses].stroke : colorClasses.blue.stroke;
+}
+
+function formatProgressAssetBarLabel(label: string) {
+  return label
+    .replace('Savings Account', 'Savings')
+    .replace('BVG (2nd Pillar)', '2nd Pillar')
+    .replace('3rd Pillar', '3rd Pillar');
+}
+
+function ProgressAssetTargetBarsTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: ReturnType<typeof buildProgressAssetTargetBars>[number] }>;
+}) {
+  const bar = payload?.[0]?.payload;
+
+  if (!active || !bar) {
+    return null;
+  }
+
+  return (
+    <div className={tooltipContentClasses('px-3 py-2')}>
+      <p className="font-bold text-slate-950">{bar.label}</p>
+      <p className="mt-2 text-slate-700">
+        Current: <span className="font-semibold">{currency(bar.currentWealth)} CHF</span>
+      </p>
+      <p className="text-slate-700">
+        Projected: <span className="font-semibold">{currency(bar.targetWealth)} CHF</span>
+      </p>
+      <p className="text-slate-700">
+        Progress: <span className="font-semibold">{bar.progressPercent.toFixed(1)}%</span>
+      </p>
     </div>
   );
 }

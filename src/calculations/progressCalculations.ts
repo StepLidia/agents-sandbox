@@ -8,6 +8,21 @@ export type ProgressProjectionAsset = ProgressAsset & {
   id: string;
 };
 
+export type ProgressAssetTargetInput = ProgressProjectionAsset & {
+  color: string;
+  label: string;
+};
+
+export type ProgressAssetTargetBar = {
+  color: string;
+  currentWealth: number;
+  id: string;
+  label: string;
+  progressPercent: number;
+  progressYears: number;
+  targetWealth: number;
+};
+
 export type ProgressChartActualPoint = {
   date: Date;
   totalWealth: number;
@@ -72,8 +87,44 @@ export function calculateProgressTargetPercent(currentWealth: number, targetWeal
   return (Math.max(currentWealth, 0) / targetWealth) * 100;
 }
 
+export function calculateProgressTargetYears(currentWealth: number, targetWealth: number, projectionYears: number) {
+  const safeProjectionYears = Math.max(0, Math.round(projectionYears));
+  const progressRatio = Math.min(calculateProgressTargetPercent(currentWealth, targetWealth) / 100, 1);
+
+  return progressRatio * safeProjectionYears;
+}
+
 export function calculateTotalBalance(balances: Record<string, number>) {
   return Object.values(balances).reduce((sum, balance) => sum + balance, 0);
+}
+
+export function buildProgressAssetTargetBars({
+  assets,
+  projectionYears,
+}: {
+  assets: ProgressAssetTargetInput[];
+  projectionYears: number;
+}): ProgressAssetTargetBar[] {
+  const safeProjectionYears = Math.max(0, Math.round(projectionYears));
+
+  return assets.map((asset) => {
+    const targetWealth = calculateAssetProjectionValue({
+      annualReturnPercent: asset.annualReturn,
+      monthlyContribution: asset.monthlyContribution,
+      principal: asset.amount,
+      years: safeProjectionYears,
+    });
+
+    return {
+      color: asset.color,
+      currentWealth: asset.amount,
+      id: asset.id,
+      label: asset.label,
+      progressPercent: calculateProgressTargetPercent(asset.amount, targetWealth),
+      progressYears: calculateProgressTargetYears(asset.amount, targetWealth, safeProjectionYears),
+      targetWealth,
+    };
+  });
 }
 
 export function buildProgressChartData({
