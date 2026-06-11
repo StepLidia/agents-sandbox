@@ -38,7 +38,7 @@ export function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDrawerProp
         onClick={onClose}
       />
       <aside
-        className={`glass-panel glass-panel-square fixed inset-y-0 left-0 flex w-[min(18rem,calc(100vw-3rem))] flex-col border-y-0 border-l-0 px-4 py-5 shadow-2xl transition-transform duration-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`glass-panel glass-panel-square mobile-sidebar-panel fixed bottom-0 left-0 top-0 flex h-dvh min-h-screen w-[min(18rem,calc(100vw-3rem))] flex-col border-y-0 border-l-0 px-4 pb-3 pt-5 shadow-2xl transition-transform duration-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <button
           aria-label="Close navigation"
@@ -48,13 +48,13 @@ export function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDrawerProp
         >
           <X className="h-5 w-5" />
         </button>
-        <SidebarContent onNavigate={onClose} />
+        <SidebarContent isMobile onNavigate={onClose} />
       </aside>
     </div>
   );
 }
 
-function SidebarContent({ onNavigate }: SidebarProps) {
+function SidebarContent({ isMobile = false, onNavigate }: SidebarProps & { isMobile?: boolean }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -91,7 +91,7 @@ function SidebarContent({ onNavigate }: SidebarProps) {
         ))}
       </nav>
       <a
-        className="group mt-auto block px-3 py-2 text-center transition focus:outline-none"
+        className={`group mt-auto block px-3 text-center transition focus:outline-none ${isMobile ? 'pb-0 pt-2' : 'py-2'}`}
         href={TWINT_THANK_YOU_URL}
         target="_blank"
         rel="noopener noreferrer"
