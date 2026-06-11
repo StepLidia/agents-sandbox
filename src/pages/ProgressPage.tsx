@@ -166,7 +166,7 @@ export function ProgressPage({
     const nextBaseline = {
       balances,
       monthLabel: currentMonthLabel,
-      recordedAt: currentDate.toISOString(),
+      recordedAt: getProgressMonthDate(currentProgressMonth).toISOString(),
       totalWealth: calculateTotalBalance(balances),
     };
 
@@ -188,7 +188,7 @@ export function ProgressPage({
   function saveMonthlyRecord() {
     const nextRecord = {
       monthLabel: currentMonthLabel,
-      recordedAt: currentDate.toISOString(),
+      recordedAt: getProgressMonthDate(currentProgressMonth).toISOString(),
       balances: assetBalances,
     };
 

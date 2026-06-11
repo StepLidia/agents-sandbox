@@ -46,6 +46,11 @@ describe('progress calculations', () => {
     expect(calculateYearsTracked(monthsTracked)).toBe(4.3);
   });
 
+  it('tracks months by calendar month regardless of day in month', () => {
+    expect(calculateMonthsTracked(new Date(2026, 1, 18), new Date(2026, 2, 1))).toBe(1);
+    expect(calculateMonthsTracked(new Date(2026, 1, 1), new Date(2026, 2, 30))).toBe(1);
+  });
+
   it('does not return negative tracked months', () => {
     expect(calculateMonthsTracked(new Date(2026, 4, 1), new Date(2022, 0, 15))).toBe(0);
   });
