@@ -267,7 +267,11 @@ export function ProgressPage({
           data={progressChartData}
           projectionYears={projectionYears}
         />
-        <ProgressAssetTargetBarsCard assets={currentAssets} projectionYears={projectionYears} />
+        <ProgressAssetTargetBarsCard
+          assets={currentAssets}
+          baselineBalances={activeBaselineBalances}
+          projectionYears={projectionYears}
+        />
       </div>
       <div className="mt-3 grid min-w-0 gap-3 xl:grid-cols-3">
         {progressVarianceCharts.map((chart) => (
@@ -1032,12 +1036,14 @@ function ProgressChartTooltip({
 
 function ProgressAssetTargetBarsCard({
   assets,
+  baselineBalances,
   projectionYears,
 }: {
   assets: FinancialAsset[];
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }) {
-  const bars = buildProgressAssetTargetBars({ assets, projectionYears });
+  const bars = buildProgressAssetTargetBars({ assets, baselineBalances, projectionYears });
   const safeProjectionYears = Math.max(1, Math.round(projectionYears));
 
   return (

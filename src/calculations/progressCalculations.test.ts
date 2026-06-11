@@ -138,6 +138,9 @@ describe('progress calculations', () => {
           monthlyContribution: 1000,
         },
       ],
+      baselineBalances: {
+        savings: 100000,
+      },
       projectionYears: 10,
     });
 
@@ -152,6 +155,46 @@ describe('progress calculations', () => {
         targetWealth: 220000,
       },
     ]);
+  });
+
+  it('builds asset target progress bars from baseline planned values', () => {
+    const assets = [
+      {
+        amount: 120000,
+        annualReturn: 0,
+        color: 'blue',
+        id: 'savings',
+        label: 'Savings',
+        monthlyContribution: 1000,
+      },
+      {
+        amount: 30000,
+        annualReturn: 3,
+        color: 'coral',
+        id: 'investments',
+        label: 'Investments',
+        monthlyContribution: 500,
+      },
+    ];
+    const baselineBalances = {
+      investments: 50000,
+      savings: 100000,
+    };
+    const bars = buildProgressAssetTargetBars({
+      assets,
+      baselineBalances,
+      projectionYears: 10,
+    });
+    const totalPlannedTarget = buildPlannedProgressProjection({
+      assets,
+      baselineBalances,
+      projectionYears: 10,
+    }).at(-1)?.value ?? 0;
+    const totalBarTarget = bars.reduce((sum, bar) => sum + bar.targetWealth, 0);
+
+    expect(bars[0].currentWealth).toBe(120000);
+    expect(bars[0].targetWealth).toBe(220000);
+    expect(totalBarTarget).toBeCloseTo(totalPlannedTarget, 2);
   });
 
   it('builds annual and monthly variance charts from saved progress records', () => {

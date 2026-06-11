@@ -144,9 +144,11 @@ export function calculateTotalBalance(balances: Record<string, number>) {
 
 export function buildProgressAssetTargetBars({
   assets,
+  baselineBalances,
   projectionYears,
 }: {
   assets: ProgressAssetTargetInput[];
+  baselineBalances: Record<string, number>;
   projectionYears: number;
 }): ProgressAssetTargetBar[] {
   const safeProjectionYears = Math.max(0, Math.round(projectionYears));
@@ -155,7 +157,7 @@ export function buildProgressAssetTargetBars({
     const targetWealth = calculateAssetProjectionValue({
       annualReturnPercent: asset.annualReturn,
       monthlyContribution: asset.monthlyContribution,
-      principal: asset.amount,
+      principal: getProgressAssetBaselineAmount(asset, baselineBalances),
       years: safeProjectionYears,
     });
 
