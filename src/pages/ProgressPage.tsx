@@ -1352,11 +1352,31 @@ function ProgressMonthlyRecordsEditor({
   const [selectedYear, setSelectedYear] = useState(() => String(currentDate.getFullYear()));
   const [draftRecords, setDraftRecords] = useState(records);
   const [isYearPickerOpen, setIsYearPickerOpen] = useState(false);
+  const onSaveRef = useRef(onSave);
+  const shouldSkipAutosaveRef = useRef(true);
   const months = Array.from({ length: 12 }, (_, monthIndex) => buildProgressMonth(Number(selectedYear), monthIndex));
 
   useEffect(() => {
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  useEffect(() => {
+    shouldSkipAutosaveRef.current = true;
     setDraftRecords(records);
   }, [records]);
+
+  useEffect(() => {
+    if (shouldSkipAutosaveRef.current) {
+      shouldSkipAutosaveRef.current = false;
+      return;
+    }
+
+    const autosaveTimeout = window.setTimeout(() => {
+      onSaveRef.current(removeEmptyProgressMonthlyRecords(draftRecords));
+    }, 400);
+
+    return () => window.clearTimeout(autosaveTimeout);
+  }, [draftRecords]);
 
   function updateDraftBalance(month: ProgressMonth, assetId: string, value: number) {
     setDraftRecords((currentRecords) => {
@@ -1382,17 +1402,13 @@ function ProgressMonthlyRecordsEditor({
     }));
   }
 
-  function saveDraftRecords() {
-    onSave(removeEmptyProgressMonthlyRecords(draftRecords));
-  }
-
   return (
     <section className={`glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full ${isYearPickerOpen ? 'z-50' : ''}`}>
       <div className="glass-panel-floating-layer flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <h2 className="text-sm font-bold text-slate-950">Record Your Actual Balances</h2>
           <p className="mt-1 text-sm font-semibold text-slate-600">
-            Edit saved monthly balances and save to update every progress chart
+            Edit saved monthly balances
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -1420,10 +1436,6 @@ function ProgressMonthlyRecordsEditor({
               />
             )}
           </div>
-          <button className={buttonClasses()} type="button" onClick={saveDraftRecords}>
-            <Save className="h-4 w-4" />
-            Save
-          </button>
         </div>
       </div>
       <div className="mt-5 overflow-x-auto">
