@@ -8,12 +8,14 @@ import {
   CartesianGrid,
   LabelList,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from 'recharts';
 import {
+  ArrowLeft,
   CalendarDays,
   CalendarCheck2,
   CheckCircle2,
@@ -31,8 +33,9 @@ import {
 import { colorClasses } from '../constants/colors';
 import { buttonClasses } from '../constants/buttonStyles';
 import {
-  buildProgressChartData,
   buildProgressAssetTargetBars,
+  buildProgressChartData,
+  buildProgressVarianceCharts,
   calculateCurrentWealth,
   calculateMonthlyPlanContribution,
   calculateMonthsTracked,
@@ -147,6 +150,11 @@ export function ProgressPage({
     optimisticAssets: assets,
     projectionYears,
   });
+  const progressVarianceCharts = buildProgressVarianceCharts({
+    assets,
+    baselineDate: baseline ? new Date(baseline.recordedAt) : currentDate,
+    records: Object.values(monthlyRecords),
+  });
 
   function recordBaseline() {
     const nextBaseline = {
@@ -243,6 +251,11 @@ export function ProgressPage({
           projectionYears={projectionYears}
         />
         <ProgressAssetTargetBarsCard assets={assets} projectionYears={projectionYears} />
+      </div>
+      <div className="mt-3 grid min-w-0 gap-3 xl:grid-cols-3">
+        {progressVarianceCharts.map((chart) => (
+          <ProgressVarianceChartCard key={chart.id} chart={chart} />
+        ))}
       </div>
     </>
   );
@@ -1133,6 +1146,167 @@ function ProgressAssetTargetBarsTooltip({
   );
 }
 
+function ProgressVarianceChartCard({
+  chart,
+}: {
+  chart: ReturnType<typeof buildProgressVarianceCharts>[number];
+}) {
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  const visiblePoints = selectedYear ? chart.monthlyPointsByYear[selectedYear] ?? [] : chart.annualPoints;
+  const maxAbsVariance = Math.max(...visiblePoints.map((point) => Math.abs(point.variance)), 1);
+  const yLimit = maxAbsVariance * 1.25;
+  const gradientPrefix = `progress-variance-${chart.id}`;
+
+  return (
+    <section className="glass-panel w-full max-w-[calc(100vw-3rem)] min-w-0 p-5 sm:max-w-full">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-slate-950">
+            {selectedYear ? `${selectedYear} Monthly Variance` : chart.title}
+          </h2>
+          <p className="mt-1 text-sm font-semibold text-slate-600">Actual vs plan</p>
+        </div>
+        {selectedYear && (
+          <button
+            className={buttonClasses({ size: 'icon' })}
+            aria-label="Back to annual variance"
+            type="button"
+            onClick={() => setSelectedYear(null)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      <div className="mt-4 h-64 w-full min-w-0">
+        {visiblePoints.length === 0 ? (
+          <div className="grid h-full place-items-center rounded-lg border border-slate-300/30 bg-white/30 text-center text-sm font-semibold text-slate-500">
+            Save monthly progress to see variance
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={visiblePoints} margin={{ top: 22, right: 10, bottom: 8, left: -6 }}>
+              <defs>
+                <linearGradient id={`${gradientPrefix}-positive`} x1="0" x2="0" y1="1" y2="0">
+                  <stop offset="0%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.38} />
+                  <stop offset="70%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.82} />
+                  <stop offset="100%" stopColor={colorClasses.emerald.stroke} stopOpacity={0.96} />
+                </linearGradient>
+                <linearGradient id={`${gradientPrefix}-negative`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.38} />
+                  <stop offset="70%" stopColor="#ef4444" stopOpacity={0.82} />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.96} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="rgba(100,116,139,.16)" strokeDasharray="0" vertical={false} />
+              <XAxis
+                axisLine={false}
+                dataKey="label"
+                tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
+                tickLine={false}
+              />
+              <YAxis
+                axisLine={false}
+                domain={[-yLimit, yLimit]}
+                tick={{ fill: '#475569', fontSize: 11, fontWeight: 500 }}
+                tickFormatter={formatSignedChartAxisValue}
+                tickLine={false}
+                width={54}
+              />
+              <ReferenceLine y={0} stroke="rgba(71,85,105,.38)" strokeWidth={1} />
+              <Tooltip
+                content={<ProgressVarianceTooltip />}
+                cursor={{ fill: 'rgba(15,23,42,.04)' }}
+                isAnimationActive={false}
+                wrapperStyle={{ outline: 'none', pointerEvents: 'none' }}
+              />
+              <Bar
+                dataKey="variance"
+                isAnimationActive={false}
+                name="Variance"
+                radius={[7, 7, 7, 7]}
+                onClick={(point) => {
+                  if (!selectedYear && point?.key) {
+                    setSelectedYear(String(point.key));
+                  }
+                }}
+              >
+                {visiblePoints.map((point) => (
+                  <Cell
+                    key={point.key}
+                    cursor={selectedYear ? 'default' : 'pointer'}
+                    fill={`url(#${gradientPrefix}-${point.variance >= 0 ? 'positive' : 'negative'})`}
+                  />
+                ))}
+                <LabelList content={renderProgressVarianceBarLabel} />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function renderProgressVarianceBarLabel({
+  height,
+  value,
+  width,
+  x,
+  y,
+}: {
+  height?: number | string;
+  value?: unknown;
+  width?: number | string;
+  x?: number | string;
+  y?: number | string;
+}) {
+  const variance = Number(value ?? 0);
+  const labelX = Number(x ?? 0) + Number(width ?? 0) / 2;
+  const labelY = variance >= 0 ? Number(y ?? 0) - 6 : Number(y ?? 0) + Number(height ?? 0) + 14;
+
+  return (
+    <text
+      fill={variance >= 0 ? colorClasses.emerald.stroke : '#ef4444'}
+      fontSize={11}
+      fontWeight={700}
+      textAnchor="middle"
+      x={labelX}
+      y={labelY}
+    >
+      {formatSignedCompactCurrency(variance)}
+    </text>
+  );
+}
+
+function ProgressVarianceTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload?: ReturnType<typeof buildProgressVarianceCharts>[number]['annualPoints'][number] }>;
+}) {
+  const point = payload?.[0]?.payload;
+
+  if (!active || !point) {
+    return null;
+  }
+
+  return (
+    <div className={tooltipContentClasses('px-3 py-2')}>
+      <p className="font-bold text-slate-950">{point.label}</p>
+      <p className="mt-2 text-slate-700">
+        Actual: <span className="font-semibold">{currency(point.actualWealth)} CHF</span>
+      </p>
+      <p className="text-slate-700">
+        Plan: <span className="font-semibold">{currency(point.plannedWealth)} CHF</span>
+      </p>
+      <p className={point.variance >= 0 ? 'text-emerald-700' : 'text-red-500'}>
+        Variance: <span className="font-semibold">{formatSignedCurrency(point.variance)} CHF</span>
+      </p>
+    </div>
+  );
+}
+
 function ProgressMetricCard({
   helper,
   icon: Icon,
@@ -1406,6 +1580,22 @@ function formatChartAxisValue(value: number) {
   }
 
   return String(Math.round(value));
+}
+
+function formatSignedChartAxisValue(value: number) {
+  if (value === 0) {
+    return '0';
+  }
+
+  const sign = value > 0 ? '+' : '-';
+
+  return `${sign}${formatChartAxisValue(Math.abs(value))}`;
+}
+
+function formatSignedCompactCurrency(value: number) {
+  const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+
+  return `${sign}${currency(Math.abs(value), true)}`;
 }
 
 function formatSignedCurrency(value: number) {

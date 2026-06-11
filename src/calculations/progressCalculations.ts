@@ -23,6 +23,28 @@ export type ProgressAssetTargetBar = {
   targetWealth: number;
 };
 
+export type ProgressVarianceRecord = {
+  balances: Record<string, number>;
+  recordedAt: string;
+};
+
+export type ProgressVariancePoint = {
+  actualWealth: number;
+  key: string;
+  label: string;
+  plannedWealth: number;
+  sortValue: number;
+  variance: number;
+};
+
+export type ProgressVarianceChart = {
+  annualPoints: ProgressVariancePoint[];
+  color: string;
+  id: 'total' | 'pension' | 'liquid';
+  monthlyPointsByYear: Record<string, ProgressVariancePoint[]>;
+  title: string;
+};
+
 export type ProgressChartActualPoint = {
   date: Date;
   totalWealth: number;
@@ -127,6 +149,59 @@ export function buildProgressAssetTargetBars({
   });
 }
 
+export function buildProgressVarianceCharts({
+  assets,
+  baselineDate,
+  records,
+}: {
+  assets: ProgressAssetTargetInput[];
+  baselineDate: Date;
+  records: ProgressVarianceRecord[];
+}): ProgressVarianceChart[] {
+  const groups: Array<Pick<ProgressVarianceChart, 'color' | 'id' | 'title'> & { assetIds: string[] }> = [
+    { assetIds: assets.map((asset) => asset.id), color: 'blue', id: 'total', title: 'Total Wealth Variance' },
+    { assetIds: ['pillar2', 'pillar3'], color: 'emerald', id: 'pension', title: 'Pension Wealth Variance' },
+    { assetIds: ['savings', 'investments'], color: 'coral', id: 'liquid', title: 'Savings + Investments Variance' },
+  ];
+
+  return groups.map((group) => {
+    const monthlyPoints = records
+      .map((record) => buildProgressVariancePoint({
+        assetIds: group.assetIds,
+        assets,
+        baselineDate,
+        record,
+      }))
+      .filter((point): point is ProgressVariancePoint => point !== null)
+      .sort((first, second) => first.sortValue - second.sortValue);
+    const monthlyPointsByYear = monthlyPoints.reduce<Record<string, ProgressVariancePoint[]>>((pointsByYear, point) => {
+      const year = point.key.slice(0, 4);
+
+      return {
+        ...pointsByYear,
+        [year]: [...(pointsByYear[year] ?? []), point],
+      };
+    }, {});
+    const annualPoints = Object.entries(monthlyPointsByYear).map(([year, points]) => {
+      const latestPoint = points.at(-1) ?? points[0];
+
+      return {
+        ...latestPoint,
+        key: year,
+        label: year,
+      };
+    });
+
+    return {
+      annualPoints,
+      color: group.color,
+      id: group.id,
+      monthlyPointsByYear,
+      title: group.title,
+    };
+  });
+}
+
 export function buildProgressChartData({
   actualPoints,
   baselineDate,
@@ -193,6 +268,65 @@ export function buildProgressChartData({
   });
 
   return [...pointByYear.values()].sort((a, b) => a.year - b.year);
+}
+
+function buildProgressVariancePoint({
+  assetIds,
+  assets,
+  baselineDate,
+  record,
+}: {
+  assetIds: string[];
+  assets: ProgressAssetTargetInput[];
+  baselineDate: Date;
+  record: ProgressVarianceRecord;
+}) {
+  const recordedDate = new Date(record.recordedAt);
+  const monthsTracked = calculateMonthsTracked(baselineDate, recordedDate);
+  const yearsTracked = monthsTracked / 12;
+  const groupAssets = assets.filter((asset) => assetIds.includes(asset.id));
+  const actualWealth = assetIds.reduce((sum, assetId) => sum + (record.balances[assetId] ?? 0), 0);
+  const plannedWealth = groupAssets.reduce(
+    (sum, asset) => sum + interpolateProgressAssetProjectionValue(asset, yearsTracked),
+    0,
+  );
+
+  if (!Number.isFinite(actualWealth) || !Number.isFinite(plannedWealth)) {
+    return null;
+  }
+
+  return {
+    actualWealth,
+    key: `${recordedDate.getFullYear()}-${String(recordedDate.getMonth() + 1).padStart(2, '0')}`,
+    label: recordedDate.toLocaleDateString('en-US', { month: 'short' }),
+    plannedWealth,
+    sortValue: recordedDate.getFullYear() * 12 + recordedDate.getMonth(),
+    variance: actualWealth - plannedWealth,
+  };
+}
+
+function interpolateProgressAssetProjectionValue(asset: ProgressProjectionAsset, years: number) {
+  const safeYears = Math.max(0, years);
+  const lowerYear = Math.floor(safeYears);
+  const upperYear = Math.ceil(safeYears);
+  const lowerValue = calculateAssetProjectionValue({
+    annualReturnPercent: asset.annualReturn,
+    monthlyContribution: asset.monthlyContribution,
+    principal: asset.amount,
+    years: lowerYear,
+  });
+  const upperValue = calculateAssetProjectionValue({
+    annualReturnPercent: asset.annualReturn,
+    monthlyContribution: asset.monthlyContribution,
+    principal: asset.amount,
+    years: upperYear,
+  });
+
+  if (lowerYear === upperYear) {
+    return lowerValue;
+  }
+
+  return lowerValue + (upperValue - lowerValue) * (safeYears - lowerYear);
 }
 
 function interpolateProgressProjectionValue(points: Array<{ value: number; year: number }>, year: number) {

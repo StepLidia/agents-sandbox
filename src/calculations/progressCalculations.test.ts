@@ -12,6 +12,7 @@ import {
   calculateYearsTracked,
   buildProgressAssetTargetBars,
   buildProgressChartData,
+  buildProgressVarianceCharts,
   buildNegativeProgressProjection,
   buildOptimisticProgressProjection,
   buildPessimisticProgressProjection,
@@ -97,6 +98,39 @@ describe('progress calculations', () => {
         targetWealth: 220000,
       },
     ]);
+  });
+
+  it('builds annual and monthly variance charts from saved progress records', () => {
+    const charts = buildProgressVarianceCharts({
+      assets: [
+        { amount: 100000, annualReturn: 0, color: 'blue', id: 'savings', label: 'Savings', monthlyContribution: 1000 },
+        { amount: 50000, annualReturn: 0, color: 'coral', id: 'investments', label: 'Investments', monthlyContribution: 500 },
+        { amount: 80000, annualReturn: 0, color: 'emerald', id: 'pillar2', label: '2nd Pillar', monthlyContribution: 400 },
+        { amount: 20000, annualReturn: 0, color: 'cyan', id: 'pillar3', label: '3rd Pillar', monthlyContribution: 100 },
+      ],
+      baselineDate: new Date(2026, 0, 1),
+      records: [
+        {
+          balances: { investments: 50500, pillar2: 80400, pillar3: 20100, savings: 101500 },
+          recordedAt: new Date(2026, 0, 1).toISOString(),
+        },
+        {
+          balances: { investments: 54500, pillar2: 84000, pillar3: 20900, savings: 109000 },
+          recordedAt: new Date(2026, 5, 1).toISOString(),
+        },
+        {
+          balances: { investments: 61500, pillar2: 89000, pillar3: 22500, savings: 121000 },
+          recordedAt: new Date(2027, 0, 1).toISOString(),
+        },
+      ],
+    });
+
+    const totalChart = charts.find((chart) => chart.id === 'total');
+
+    expect(totalChart?.annualPoints.map((point) => point.label)).toEqual(['2026', '2027']);
+    expect(totalChart?.monthlyPointsByYear['2026'].map((point) => point.label)).toEqual(['Jan', 'Jun']);
+    expect(totalChart?.monthlyPointsByYear['2026'][1].variance).toBeCloseTo(8400, 2);
+    expect(totalChart?.annualPoints[0].variance).toBeCloseTo(8400, 2);
   });
 
   it('builds planned and actual progress chart points', () => {
