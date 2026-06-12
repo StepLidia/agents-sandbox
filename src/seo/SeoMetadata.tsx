@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const APP_NAME = 'Growly';
-const DEFAULT_SITE_URL = 'https://growly-calculator.pages.dev';
+const DEFAULT_SITE_URL = 'https://swiss-growly.com';
 const ORGANIZATION_URL = 'https://steplidia.pages.dev';
 const SEO_IMAGE_PATH = '/images/MortgageStructure.webp';
 
@@ -84,8 +84,7 @@ function getRouteSeoMetadata(pathname: string) {
 }
 
 function buildAbsoluteUrl(path: string) {
-  const origin = window.location.origin || DEFAULT_SITE_URL;
-  return new URL(path, origin).toString();
+  return new URL(path, DEFAULT_SITE_URL).toString();
 }
 
 function upsertMeta(attribute: 'name' | 'property', key: string, content: string) {
