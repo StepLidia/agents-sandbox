@@ -6,7 +6,7 @@ const DEFAULT_SITE_URL = 'https://swiss-growly.com';
 const ORGANIZATION_URL = 'https://steplidia.pages.dev';
 const ORGANIZATION_ID = `${ORGANIZATION_URL}/#organization`;
 const SEO_IMAGE_PATH = '/images/logo.webp';
-const SEO_IMAGE_ALT = 'Growly app logo for a Swiss wealth and retirement dashboard.';
+const SEO_IMAGE_ALT = 'Growly app logo for a Swiss wealth, mortgage and retirement planning dashboard.';
 
 type RouteSeoMetadata = {
   description: string;
@@ -17,9 +17,9 @@ type RouteSeoMetadata = {
 const routeSeoMetadata: RouteSeoMetadata[] = [
   {
     path: '/',
-    title: 'Growly - Swiss Wealth and Retirement Dashboard',
+    title: 'Growly - Swiss Wealth, Mortgage & Retirement Planning',
     description:
-      'Plan Swiss wealth, pension savings, expenses, mortgage costs, and long-term progress in a private local-first financial dashboard.',
+      'Plan Swiss wealth, pension savings, expenses, mortgage costs, and long-term progress in a private financial dashboard that stores data locally.',
   },
   {
     path: '/expenses',
@@ -48,7 +48,7 @@ const routeSeoMetadata: RouteSeoMetadata[] = [
   {
     path: '/contact',
     title: 'Contact Lidatron Labs - Growly',
-    description: 'Contact Lidatron Labs about Growly, a private local-first financial planning dashboard.',
+    description: 'Contact Lidatron Labs about Growly, a private financial planning dashboard.',
   },
 ];
 
