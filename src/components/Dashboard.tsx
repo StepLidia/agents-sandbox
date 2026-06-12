@@ -100,14 +100,14 @@ export function Dashboard() {
     setImportStatusTone('success');
 
     try {
-      const importedItemCount = importLocalStorageBackup(window.localStorage, await file.text());
+      importLocalStorageBackup(window.localStorage, await file.text());
       const nextSavedInputs = readSavedDashboardInputs();
 
       setAssets(mergeSavedAssets(nextSavedInputs.assets));
       setIncome(mergeSavedIncome(nextSavedInputs.income));
       setProjectionYears(getSavedNumber(nextSavedInputs.projectionYears, 30));
       setImportStatusTone('success');
-      setImportStatus(`Import successful. ${importedItemCount} saved item${importedItemCount === 1 ? '' : 's'} restored.`);
+      setImportStatus('Import successful. All data was restored.');
     } catch {
       setImportStatusTone('error');
       setImportStatus('Import failed. Choose a Growly JSON backup.');

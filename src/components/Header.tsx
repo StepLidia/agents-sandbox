@@ -94,7 +94,7 @@ export function Header({
               type="button"
             >
               <Upload className="h-4 w-4" />
-              {isImporting ? 'Importing...' : 'Import'}
+              Import
             </button>
             <input
               ref={importInputRef}
@@ -158,7 +158,9 @@ export function Header({
               {isHelpOpen && <HelpTooltip />}
             </div>
           </div>
-          {importStatus && <p className={`text-xs ${importStatusClasses}`}>{importStatus}</p>}
+          <p className={`min-h-4 text-xs transition-opacity ${importStatusClasses} ${importStatus ? 'opacity-100' : 'opacity-0'}`} aria-live="polite">
+            {importStatus || 'Import status'}
+          </p>
         </div>
       )}
     </header>
