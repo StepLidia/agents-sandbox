@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 const APP_NAME = 'Growly';
 const DEFAULT_SITE_URL = 'https://swiss-growly.com';
 const ORGANIZATION_URL = 'https://steplidia.pages.dev';
+const ORGANIZATION_ID = `${ORGANIZATION_URL}/#organization`;
 const SEO_IMAGE_PATH = '/images/MortgageStructure.webp';
 
 type RouteSeoMetadata = {
@@ -117,7 +118,7 @@ function upsertStructuredData(metadata: RouteSeoMetadata, canonicalUrl: string, 
     '@graph': [
       {
         '@type': 'Organization',
-        '@id': `${buildAbsoluteUrl('/')}#organization`,
+        '@id': ORGANIZATION_ID,
         name: 'Lidatron Labs',
         url: ORGANIZATION_URL,
       },
@@ -144,7 +145,7 @@ function upsertStructuredData(metadata: RouteSeoMetadata, canonicalUrl: string, 
           priceCurrency: 'CHF',
         },
         publisher: {
-          '@id': `${buildAbsoluteUrl('/')}#organization`,
+          '@id': ORGANIZATION_ID,
         },
       },
       {
