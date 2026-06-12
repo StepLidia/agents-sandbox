@@ -11,6 +11,8 @@ import { SummaryCard } from '../components/SummaryCard';
 
 type OverviewPageProps = {
   dashboard: ReturnType<typeof calculateDashboard>;
+  importStatus: string;
+  importStatusTone: 'error' | 'success';
   isExporting: boolean;
   isImporting: boolean;
   projectionYears: number;
@@ -28,6 +30,8 @@ type OverviewPageProps = {
 
 export function OverviewPage({
   dashboard,
+  importStatus,
+  importStatusTone,
   isExporting,
   isImporting,
   projectionYears,
@@ -41,6 +45,8 @@ export function OverviewPage({
   return (
     <>
       <Header
+        importStatus={importStatus}
+        importStatusTone={importStatusTone}
         isExporting={isExporting}
         isImporting={isImporting}
         onExportJsonBackup={onExportJsonBackup}

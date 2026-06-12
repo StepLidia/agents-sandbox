@@ -29,12 +29,24 @@ export function Dashboard() {
   const [projectionYears, setProjectionYears] = useState(() => getSavedNumber(savedInputs.projectionYears, 30));
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState('');
+  const [importStatusTone, setImportStatusTone] = useState<'error' | 'success'>('success');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
   useEffect(() => {
     saveDashboardInputs({ assets, income, projectionYears });
   }, [assets, income, projectionYears]);
+
+  useEffect(() => {
+    if (!importStatus) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => setImportStatus(''), 5000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [importStatus]);
 
   function updateAsset(
     id: AssetKind,
@@ -84,13 +96,22 @@ export function Dashboard() {
 
   async function handleImportJsonBackup(file: File) {
     setIsImporting(true);
+    setImportStatus('');
+    setImportStatusTone('success');
 
     try {
       const importedItemCount = importLocalStorageBackup(window.localStorage, await file.text());
-      window.alert(`Imported ${importedItemCount} saved item${importedItemCount === 1 ? '' : 's'}.`);
-      window.location.reload();
+      const nextSavedInputs = readSavedDashboardInputs();
+
+      setAssets(mergeSavedAssets(nextSavedInputs.assets));
+      setIncome(mergeSavedIncome(nextSavedInputs.income));
+      setProjectionYears(getSavedNumber(nextSavedInputs.projectionYears, 30));
+      setImportStatusTone('success');
+      setImportStatus(`Import successful. ${importedItemCount} saved item${importedItemCount === 1 ? '' : 's'} restored.`);
     } catch {
-      window.alert('This JSON file is not a valid Growly backup.');
+      setImportStatusTone('error');
+      setImportStatus('Import failed. Choose a Growly JSON backup.');
+    } finally {
       setIsImporting(false);
     }
   }
@@ -119,6 +140,8 @@ export function Dashboard() {
               element={
                 <OverviewPage
                   dashboard={dashboard}
+                  importStatus={importStatus}
+                  importStatusTone={importStatusTone}
                   isExporting={isExporting}
                   isImporting={isImporting}
                   projectionYears={projectionYears}

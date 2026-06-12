@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { ChevronDown, CircleHelp, Download, FileJson, FileText, Upload } from 'lucide-react';
 import { buttonClasses } from '../constants/buttonStyles';
 
 export function Header({
+  importStatus,
+  importStatusTone = 'success',
   isExporting = false,
   isImporting = false,
   onImportJsonBackup,
@@ -12,6 +14,8 @@ export function Header({
   subtitle = 'State of your financial situation',
   title = 'Overview',
 }: {
+  importStatus?: string;
+  importStatusTone?: 'error' | 'success';
   isExporting?: boolean;
   isImporting?: boolean;
   onImportJsonBackup?: (file: File) => Promise<void> | void;
@@ -25,6 +29,8 @@ export function Header({
   const importInputRef = useRef<HTMLInputElement>(null);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const importStatusClasses =
+    importStatusTone === 'success' ? 'text-emerald-700' : 'text-red-600';
 
   useEffect(() => {
     if (!isExportMenuOpen) {
@@ -62,7 +68,7 @@ export function Header({
     setIsExportMenuOpen(false);
   }
 
-  async function handleImportFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
 
     if (file) {
@@ -79,77 +85,80 @@ export function Header({
         <p className="mt-1 max-w-xs wrap-break-word text-sm text-slate-700 md:max-w-full">{subtitle}</p>
       </div>
       {showActions && (
-        <div className="flex items-center gap-2" data-pdf-exclude="true">
-          <button
-            className={buttonClasses()}
-            disabled={isImporting}
-            onClick={() => importInputRef.current?.click()}
-            type="button"
-          >
-            <Upload className="h-4 w-4" />
-            {isImporting ? 'Importing...' : 'Import'}
-          </button>
-          <input
-            ref={importInputRef}
-            accept=".json,application/json"
-            className="hidden"
-            onChange={handleImportFileChange}
-            type="file"
-          />
-          <div className="relative" ref={exportMenuRef}>
+        <div className="flex flex-col items-start gap-1" data-pdf-exclude="true">
+          <div className="flex items-center gap-2">
             <button
               className={buttonClasses()}
-              aria-controls="export-menu"
-              aria-expanded={isExportMenuOpen}
-              aria-haspopup="menu"
-              onClick={() => setIsExportMenuOpen((isOpen) => !isOpen)}
+              disabled={isImporting}
+              onClick={() => importInputRef.current?.click()}
               type="button"
             >
-              <Download className="h-4 w-4" />
-              Export
-              <ChevronDown className="h-4 w-4" />
+              <Upload className="h-4 w-4" />
+              {isImporting ? 'Importing...' : 'Import'}
             </button>
-            {isExportMenuOpen && (
-              <div
-                id="export-menu"
-                className="absolute right-0 top-12 z-30 w-48 rounded-lg border border-slate-300/30 bg-white/95 p-1 text-sm text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
-                role="menu"
+            <input
+              ref={importInputRef}
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportFileChange}
+              type="file"
+            />
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                className={buttonClasses()}
+                aria-controls="export-menu"
+                aria-expanded={isExportMenuOpen}
+                aria-haspopup="menu"
+                onClick={() => setIsExportMenuOpen((isOpen) => !isOpen)}
+                type="button"
               >
-                <button
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none disabled:cursor-wait disabled:opacity-60"
-                  disabled={isExporting}
-                  onClick={handlePdfExport}
-                  role="menuitem"
-                  type="button"
+                <Download className="h-4 w-4" />
+                Export
+                <ChevronDown className="h-4 w-4" />
+              </button>
+              {isExportMenuOpen && (
+                <div
+                  id="export-menu"
+                  className="absolute right-0 top-12 z-30 w-48 rounded-lg border border-slate-300/30 bg-white/95 p-1 text-sm text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+                  role="menu"
                 >
-                  <FileText className="h-4 w-4" />
-                  {isExporting ? 'Exporting PDF...' : 'PDF'}
-                </button>
-                <button
-                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none"
-                  onClick={handleJsonBackupExport}
-                  role="menuitem"
-                  type="button"
-                >
-                  <FileJson className="h-4 w-4" />
-                  JSON (backup)
-                </button>
-              </div>
-            )}
+                  <button
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none disabled:cursor-wait disabled:opacity-60"
+                    disabled={isExporting}
+                    onClick={handlePdfExport}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <FileText className="h-4 w-4" />
+                    {isExporting ? 'Exporting PDF...' : 'PDF'}
+                  </button>
+                  <button
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none"
+                    onClick={handleJsonBackupExport}
+                    role="menuitem"
+                    type="button"
+                  >
+                    <FileJson className="h-4 w-4" />
+                    JSON (backup)
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="relative">
+              <button
+                className={buttonClasses({ size: 'icon' })}
+                aria-controls="header-help-tooltip"
+                aria-expanded={isHelpOpen}
+                aria-label="Help"
+                type="button"
+                onClick={() => setIsHelpOpen((isOpen) => !isOpen)}
+              >
+                <CircleHelp className="h-5 w-5" />
+              </button>
+              {isHelpOpen && <HelpTooltip />}
+            </div>
           </div>
-          <div className="relative">
-            <button
-              className={buttonClasses({ size: 'icon' })}
-              aria-controls="header-help-tooltip"
-              aria-expanded={isHelpOpen}
-              aria-label="Help"
-              type="button"
-              onClick={() => setIsHelpOpen((isOpen) => !isOpen)}
-            >
-              <CircleHelp className="h-5 w-5" />
-            </button>
-            {isHelpOpen && <HelpTooltip />}
-          </div>
+          {importStatus && <p className={`text-xs ${importStatusClasses}`}>{importStatus}</p>}
         </div>
       )}
     </header>
