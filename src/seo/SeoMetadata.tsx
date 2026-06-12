@@ -5,7 +5,8 @@ const APP_NAME = 'Growly';
 const DEFAULT_SITE_URL = 'https://swiss-growly.com';
 const ORGANIZATION_URL = 'https://steplidia.pages.dev';
 const ORGANIZATION_ID = `${ORGANIZATION_URL}/#organization`;
-const SEO_IMAGE_PATH = '/images/MortgageStructure.webp';
+const SEO_IMAGE_PATH = '/images/logo.webp';
+const SEO_IMAGE_ALT = 'Growly app logo for a Swiss wealth and retirement dashboard.';
 
 type RouteSeoMetadata = {
   description: string;
@@ -67,12 +68,12 @@ export function SeoMetadata() {
     upsertMeta('property', 'og:description', metadata.description);
     upsertMeta('property', 'og:url', canonicalUrl);
     upsertMeta('property', 'og:image', imageUrl);
-    upsertMeta('property', 'og:image:alt', 'Growly financial dashboard with mortgage, wealth, and expense planning charts.');
+    upsertMeta('property', 'og:image:alt', SEO_IMAGE_ALT);
     upsertMeta('name', 'twitter:card', 'summary_large_image');
     upsertMeta('name', 'twitter:title', metadata.title);
     upsertMeta('name', 'twitter:description', metadata.description);
     upsertMeta('name', 'twitter:image', imageUrl);
-    upsertMeta('name', 'twitter:image:alt', 'Growly financial dashboard with mortgage, wealth, and expense planning charts.');
+    upsertMeta('name', 'twitter:image:alt', SEO_IMAGE_ALT);
     upsertCanonical(canonicalUrl);
     upsertStructuredData(metadata, canonicalUrl, imageUrl);
   }, [pathname]);
