@@ -306,7 +306,12 @@ export function ExpenseTrendAnalysisPage({
                 width={54}
               />
               <Tooltip content={<TrendTooltip />} cursor={{ fill: 'rgba(37,99,235,.08)' }} />
-              <Bar dataKey="monthChange" name="vs previous month" radius={[6, 6, 0, 0]}>
+              <Bar
+                dataKey="monthChange"
+                name="vs previous month"
+                radius={[6, 6, 0, 0]}
+                shape={<MonthChangeBarShape />}
+              >
                 {chartData.map((month) => (
                   <Cell
                     key={month.name}
@@ -628,6 +633,52 @@ function MonthChangeLabel({
       {formatSignedCurrency(numericValue)}
     </text>
   );
+}
+
+function MonthChangeBarShape({
+  fill,
+  height,
+  value,
+  width,
+  x,
+  y,
+}: {
+  fill?: string;
+  height?: number | string;
+  value?: number | string;
+  width?: number | string;
+  x?: number | string;
+  y?: number | string;
+}) {
+  const numericValue = Number(value ?? 0);
+  const barX = Number(x ?? 0);
+  const barY = Number(y ?? 0);
+  const barWidth = Number(width ?? 0);
+  const barHeight = Number(height ?? 0);
+
+  if (numericValue === 0) {
+    const labelX = barX + barWidth / 2;
+    const lineHalfWidth = Math.max(barWidth / 3, 10);
+
+    return (
+      <g>
+        <line
+          stroke="#64748b"
+          strokeLinecap="round"
+          strokeWidth={2}
+          x1={labelX - lineHalfWidth}
+          x2={labelX + lineHalfWidth}
+          y1={barY}
+          y2={barY}
+        />
+        <text fill="#475569" fontSize={12} fontWeight={700} textAnchor="middle" x={labelX} y={barY - 7}>
+          0
+        </text>
+      </g>
+    );
+  }
+
+  return <rect fill={fill} height={barHeight} rx={6} ry={6} width={barWidth} x={barX} y={barY} />;
 }
 
 function buildExpenseTrendMonths(
