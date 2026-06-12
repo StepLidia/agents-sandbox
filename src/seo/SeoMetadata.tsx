@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 const APP_NAME = 'Growly';
 const DEFAULT_SITE_URL = 'https://growly-calculator.pages.dev';
+const ORGANIZATION_URL = 'https://steplidia.pages.dev';
 const SEO_IMAGE_PATH = '/images/MortgageStructure.webp';
 
 type RouteSeoMetadata = {
@@ -119,7 +120,7 @@ function upsertStructuredData(metadata: RouteSeoMetadata, canonicalUrl: string, 
         '@type': 'Organization',
         '@id': `${buildAbsoluteUrl('/')}#organization`,
         name: 'Lidatron Labs',
-        url: DEFAULT_SITE_URL,
+        url: ORGANIZATION_URL,
       },
       {
         '@type': 'SoftwareApplication',

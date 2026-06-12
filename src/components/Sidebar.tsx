@@ -1,5 +1,5 @@
 import { BarChart3, CircleUserRound, Coffee, Home, LineChart, ReceiptText, X } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 const TWINT_THANK_YOU_URL = 'https://go.twint.ch/1/e/tw?tw=acq.SF-CFeDKQsSG4gqPKxcsn8YTI9RPFXNHoXvteLRjOMDbzGBzll4KLhW-DGK4jmcK.';
 
@@ -55,14 +55,6 @@ export function MobileSidebarDrawer({ isOpen, onClose }: MobileSidebarDrawerProp
 }
 
 function SidebarContent({ isMobile = false, onNavigate }: SidebarProps & { isMobile?: boolean }) {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  function handleNavigate(to: string) {
-    navigate(to);
-    onNavigate?.();
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-3 px-2">
@@ -76,18 +68,21 @@ function SidebarContent({ isMobile = false, onNavigate }: SidebarProps & { isMob
       </div>
       <nav className="mt-8 space-y-1.5">
         {navItems.map(({ end, label, icon: Icon, to }) => (
-          <button
+          <NavLink
             key={label}
-            className={`flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${isActiveRoute(location.pathname, to, end)
-              ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
-              : 'text-slate-700 hover:bg-white/45'
-              }`}
-            type="button"
-            onClick={() => handleNavigate(to)}
+            className={({ isActive }) =>
+              `flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-semibold transition ${isActive
+                ? 'border border-slate-300/30 bg-blue-600/14 text-blue-700 shadow-inner'
+                : 'text-slate-700 hover:bg-white/45'
+              }`
+            }
+            end={end}
+            to={to}
+            onClick={onNavigate}
           >
             <Icon className="h-5 w-5" />
             {label}
-          </button>
+          </NavLink>
         ))}
       </nav>
       <a
@@ -104,12 +99,4 @@ function SidebarContent({ isMobile = false, onNavigate }: SidebarProps & { isMob
       </a>
     </div>
   );
-}
-
-function isActiveRoute(pathname: string, to: string, end: boolean) {
-  if (end) {
-    return pathname === to;
-  }
-
-  return pathname === to || pathname.startsWith(`${to}/`);
 }
