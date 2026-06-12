@@ -655,6 +655,8 @@ function MonthChangeBarShape({
   const barY = Number(y ?? 0);
   const barWidth = Number(width ?? 0);
   const barHeight = Number(height ?? 0);
+  const normalizedBarHeight = Math.abs(barHeight);
+  const normalizedBarY = barHeight < 0 ? barY + barHeight : barY;
 
   if (numericValue === 0) {
     const labelX = barX + barWidth / 2;
@@ -678,7 +680,17 @@ function MonthChangeBarShape({
     );
   }
 
-  return <rect fill={fill} height={barHeight} rx={6} ry={6} width={barWidth} x={barX} y={barY} />;
+  return (
+    <rect
+      fill={fill}
+      height={normalizedBarHeight}
+      rx={6}
+      ry={6}
+      width={barWidth}
+      x={barX}
+      y={normalizedBarY}
+    />
+  );
 }
 
 function buildExpenseTrendMonths(
