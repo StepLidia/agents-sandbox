@@ -11,6 +11,7 @@ import { ExpensesPage } from '../pages/ExpensesPage';
 import { MortgagePage } from '../pages/MortgagePage';
 import { OverviewPage } from '../pages/OverviewPage';
 import { ProgressPage } from '../pages/ProgressPage';
+import { downloadLocalStorageBackup } from '../storage/localStorageBackup';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
 
@@ -76,6 +77,10 @@ export function Dashboard() {
     }
   }
 
+  function handleExportJsonBackup() {
+    downloadLocalStorageBackup(window.localStorage);
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
@@ -103,6 +108,7 @@ export function Dashboard() {
                   isExporting={isExporting}
                   projectionYears={projectionYears}
                   onAssetChange={updateAsset}
+                  onExportJsonBackup={handleExportJsonBackup}
                   onExportPdf={handleExportPdf}
                   onIncomeChange={updateIncome}
                   onProjectionYearsChange={setProjectionYears}

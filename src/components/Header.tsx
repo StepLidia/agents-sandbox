@@ -1,21 +1,61 @@
-import { useState } from 'react';
-import { CircleHelp, Download } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronDown, CircleHelp, Download, FileJson, FileText } from 'lucide-react';
 import { buttonClasses } from '../constants/buttonStyles';
 
 export function Header({
   isExporting = false,
+  onExportJsonBackup,
   onExportPdf,
   showActions = true,
   subtitle = 'State of your financial situation',
   title = 'Overview',
 }: {
   isExporting?: boolean;
+  onExportJsonBackup?: () => void;
   onExportPdf?: () => void;
   showActions?: boolean;
   subtitle?: string;
   title?: string;
 }) {
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isExportMenuOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!exportMenuRef.current?.contains(event.target as Node)) {
+        setIsExportMenuOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsExportMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isExportMenuOpen]);
+
+  function handlePdfExport() {
+    onExportPdf?.();
+    setIsExportMenuOpen(false);
+  }
+
+  function handleJsonBackupExport() {
+    onExportJsonBackup?.();
+    setIsExportMenuOpen(false);
+  }
 
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -25,10 +65,47 @@ export function Header({
       </div>
       {showActions && (
         <div className="flex items-center gap-2" data-pdf-exclude="true">
-          <button className={buttonClasses()} disabled={isExporting} onClick={onExportPdf} type="button">
-            <Download className="h-4 w-4" />
-            {isExporting ? 'Exporting...' : 'Export PDF'}
-          </button>
+          <div className="relative" ref={exportMenuRef}>
+            <button
+              className={buttonClasses()}
+              aria-controls="export-menu"
+              aria-expanded={isExportMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setIsExportMenuOpen((isOpen) => !isOpen)}
+              type="button"
+            >
+              <Download className="h-4 w-4" />
+              Export
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {isExportMenuOpen && (
+              <div
+                id="export-menu"
+                className="absolute right-0 top-12 z-30 w-48 rounded-lg border border-slate-300/30 bg-white/95 p-1 text-sm text-slate-700 shadow-xl shadow-slate-400/20 backdrop-blur-xl"
+                role="menu"
+              >
+                <button
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none disabled:cursor-wait disabled:opacity-60"
+                  disabled={isExporting}
+                  onClick={handlePdfExport}
+                  role="menuitem"
+                  type="button"
+                >
+                  <FileText className="h-4 w-4" />
+                  {isExporting ? 'Exporting PDF...' : 'PDF'}
+                </button>
+                <button
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition hover:bg-blue-50 hover:text-blue-800 focus:bg-blue-50 focus:text-blue-800 focus:outline-none"
+                  onClick={handleJsonBackupExport}
+                  role="menuitem"
+                  type="button"
+                >
+                  <FileJson className="h-4 w-4" />
+                  JSON (backup)
+                </button>
+              </div>
+            )}
+          </div>
           <div className="relative">
             <button
               className={buttonClasses({ size: 'icon' })}

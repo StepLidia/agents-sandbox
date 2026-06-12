@@ -18,6 +18,7 @@ type OverviewPageProps = {
     field: keyof Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn'>,
     value: number,
   ) => void;
+  onExportJsonBackup: () => void;
   onExportPdf: () => void;
   onIncomeChange: (field: keyof Pick<IncomePlan, 'monthlyNetIncome'>, value: number) => void;
   onProjectionYearsChange: (value: number) => void;
@@ -28,13 +29,14 @@ export function OverviewPage({
   isExporting,
   projectionYears,
   onAssetChange,
+  onExportJsonBackup,
   onExportPdf,
   onIncomeChange,
   onProjectionYearsChange,
 }: OverviewPageProps) {
   return (
     <>
-      <Header isExporting={isExporting} onExportPdf={onExportPdf} />
+      <Header isExporting={isExporting} onExportJsonBackup={onExportJsonBackup} onExportPdf={onExportPdf} />
       <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
         {dashboard.assets.map((asset) => (
           <AssetCard key={asset.id} asset={asset} onChange={onAssetChange} />
