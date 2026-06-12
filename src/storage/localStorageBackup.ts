@@ -45,6 +45,51 @@ export function downloadLocalStorageBackup(storage: Storage) {
   URL.revokeObjectURL(url);
 }
 
+export function importLocalStorageBackup(storage: Storage, backupJson: string) {
+  const backup = parseLocalStorageBackup(backupJson);
+  const currentAppKeys = Array.from({ length: storage.length }, (_, index) => storage.key(index)).filter(
+    (key): key is string => Boolean(key?.startsWith(APP_STORAGE_PREFIX)),
+  );
+
+  currentAppKeys.forEach((key) => storage.removeItem(key));
+  backup.items.forEach(({ key, value }) => storage.setItem(key, value));
+
+  return backup.items.length;
+}
+
+function parseLocalStorageBackup(backupJson: string): LocalStorageBackup {
+  const parsedBackup: unknown = JSON.parse(backupJson);
+
+  if (!isLocalStorageBackup(parsedBackup)) {
+    throw new Error('Invalid Growly backup file.');
+  }
+
+  return parsedBackup;
+}
+
+function isLocalStorageBackup(value: unknown): value is LocalStorageBackup {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const backup = value as Partial<LocalStorageBackup>;
+
+  return (
+    backup.app === 'growly-agent' &&
+    backup.version === 1 &&
+    backup.storagePrefix === APP_STORAGE_PREFIX &&
+    Array.isArray(backup.items) &&
+    backup.items.every(
+      (item) =>
+        item &&
+        typeof item === 'object' &&
+        typeof item.key === 'string' &&
+        item.key.startsWith(APP_STORAGE_PREFIX) &&
+        typeof item.value === 'string',
+    )
+  );
+}
+
 function formatBackupDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }

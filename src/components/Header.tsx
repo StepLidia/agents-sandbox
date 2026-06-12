@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, CircleHelp, Download, FileJson, FileText } from 'lucide-react';
+import { ChevronDown, CircleHelp, Download, FileJson, FileText, Upload } from 'lucide-react';
 import { buttonClasses } from '../constants/buttonStyles';
 
 export function Header({
   isExporting = false,
+  isImporting = false,
+  onImportJsonBackup,
   onExportJsonBackup,
   onExportPdf,
   showActions = true,
@@ -11,6 +13,8 @@ export function Header({
   title = 'Overview',
 }: {
   isExporting?: boolean;
+  isImporting?: boolean;
+  onImportJsonBackup?: (file: File) => Promise<void> | void;
   onExportJsonBackup?: () => void;
   onExportPdf?: () => void;
   showActions?: boolean;
@@ -18,6 +22,7 @@ export function Header({
   title?: string;
 }) {
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
@@ -57,6 +62,16 @@ export function Header({
     setIsExportMenuOpen(false);
   }
 
+  async function handleImportFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+
+    if (file) {
+      await onImportJsonBackup?.(file);
+    }
+
+    event.currentTarget.value = '';
+  }
+
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -65,6 +80,22 @@ export function Header({
       </div>
       {showActions && (
         <div className="flex items-center gap-2" data-pdf-exclude="true">
+          <button
+            className={buttonClasses()}
+            disabled={isImporting}
+            onClick={() => importInputRef.current?.click()}
+            type="button"
+          >
+            <Upload className="h-4 w-4" />
+            {isImporting ? 'Importing...' : 'Import'}
+          </button>
+          <input
+            ref={importInputRef}
+            accept=".json,application/json"
+            className="hidden"
+            onChange={handleImportFileChange}
+            type="file"
+          />
           <div className="relative" ref={exportMenuRef}>
             <button
               className={buttonClasses()}

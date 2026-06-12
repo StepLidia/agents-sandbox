@@ -12,6 +12,7 @@ import { SummaryCard } from '../components/SummaryCard';
 type OverviewPageProps = {
   dashboard: ReturnType<typeof calculateDashboard>;
   isExporting: boolean;
+  isImporting: boolean;
   projectionYears: number;
   onAssetChange: (
     id: AssetKind,
@@ -20,6 +21,7 @@ type OverviewPageProps = {
   ) => void;
   onExportJsonBackup: () => void;
   onExportPdf: () => void;
+  onImportJsonBackup: (file: File) => Promise<void> | void;
   onIncomeChange: (field: keyof Pick<IncomePlan, 'monthlyNetIncome'>, value: number) => void;
   onProjectionYearsChange: (value: number) => void;
 };
@@ -27,16 +29,24 @@ type OverviewPageProps = {
 export function OverviewPage({
   dashboard,
   isExporting,
+  isImporting,
   projectionYears,
   onAssetChange,
   onExportJsonBackup,
   onExportPdf,
+  onImportJsonBackup,
   onIncomeChange,
   onProjectionYearsChange,
 }: OverviewPageProps) {
   return (
     <>
-      <Header isExporting={isExporting} onExportJsonBackup={onExportJsonBackup} onExportPdf={onExportPdf} />
+      <Header
+        isExporting={isExporting}
+        isImporting={isImporting}
+        onExportJsonBackup={onExportJsonBackup}
+        onExportPdf={onExportPdf}
+        onImportJsonBackup={onImportJsonBackup}
+      />
       <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-2 2xl:grid-cols-4">
         {dashboard.assets.map((asset) => (
           <AssetCard key={asset.id} asset={asset} onChange={onAssetChange} />

@@ -11,7 +11,7 @@ import { ExpensesPage } from '../pages/ExpensesPage';
 import { MortgagePage } from '../pages/MortgagePage';
 import { OverviewPage } from '../pages/OverviewPage';
 import { ProgressPage } from '../pages/ProgressPage';
-import { downloadLocalStorageBackup } from '../storage/localStorageBackup';
+import { downloadLocalStorageBackup, importLocalStorageBackup } from '../storage/localStorageBackup';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
 
@@ -28,6 +28,7 @@ export function Dashboard() {
   const [income, setIncome] = useState<IncomePlan>(() => mergeSavedIncome(savedInputs.income));
   const [projectionYears, setProjectionYears] = useState(() => getSavedNumber(savedInputs.projectionYears, 30));
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const dashboard = useMemo(() => calculateDashboard(assets, income, projectionYears), [assets, income, projectionYears]);
 
@@ -81,6 +82,19 @@ export function Dashboard() {
     downloadLocalStorageBackup(window.localStorage);
   }
 
+  async function handleImportJsonBackup(file: File) {
+    setIsImporting(true);
+
+    try {
+      const importedItemCount = importLocalStorageBackup(window.localStorage, await file.text());
+      window.alert(`Imported ${importedItemCount} saved item${importedItemCount === 1 ? '' : 's'}.`);
+      window.location.reload();
+    } catch {
+      window.alert('This JSON file is not a valid Growly backup.');
+      setIsImporting(false);
+    }
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#e8eef8] text-slate-950">
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_18%_12%,rgba(37,99,235,.24),transparent_31%),radial-gradient(circle_at_72%_7%,rgba(56,189,248,.20),transparent_29%),radial-gradient(circle_at_82%_86%,rgba(96,165,250,.18),transparent_32%),linear-gradient(135deg,#f8fbff_0%,#dce7f6_47%,#f2f5fa_100%)]" />
@@ -106,10 +120,12 @@ export function Dashboard() {
                 <OverviewPage
                   dashboard={dashboard}
                   isExporting={isExporting}
+                  isImporting={isImporting}
                   projectionYears={projectionYears}
                   onAssetChange={updateAsset}
                   onExportJsonBackup={handleExportJsonBackup}
                   onExportPdf={handleExportPdf}
+                  onImportJsonBackup={handleImportJsonBackup}
                   onIncomeChange={updateIncome}
                   onProjectionYearsChange={setProjectionYears}
                 />
