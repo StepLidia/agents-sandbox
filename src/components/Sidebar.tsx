@@ -1,10 +1,11 @@
-import { BarChart3, CircleUserRound, Coffee, Home, LineChart, ReceiptText, X } from 'lucide-react';
+import { BarChart3, CircleUserRound, Coffee, Home, LayoutDashboard, LineChart, ReceiptText, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const TWINT_THANK_YOU_URL = 'https://go.twint.ch/1/e/tw?tw=acq.SF-CFeDKQsSG4gqPKxcsn8YTI9RPFXNHoXvteLRjOMDbzGBzll4KLhW-DGK4jmcK.';
 
 const navItems = [
-  { label: 'Overview', icon: BarChart3, to: '/', end: true },
+  { label: 'Overview', icon: LayoutDashboard, to: '/', end: true },
+  { label: 'Details', icon: BarChart3, to: '/details', end: true },
   { label: 'Progress', icon: LineChart, to: '/progress', end: true },
   { label: 'Expenses', icon: ReceiptText, to: '/expenses', end: false },
   { label: 'Mortgage', icon: Home, to: '/mortgage', end: true },

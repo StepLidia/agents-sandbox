@@ -22,6 +22,12 @@ const routeSeoMetadata: RouteSeoMetadata[] = [
       'Plan Swiss wealth, pension savings, expenses, mortgage costs, and long-term progress in a private financial dashboard that stores data locally.',
   },
   {
+    path: '/details',
+    title: 'Details of assets, income, and expenses - Growly',
+    description:
+      'Calculate projected wealth, retirement savings and get insights on how your assets compound in the future.',
+  },
+  {
     path: '/expenses',
     title: 'Expense Tracker and Month-over-Month Spending Analysis - Growly',
     description:

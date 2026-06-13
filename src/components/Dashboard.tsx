@@ -6,6 +6,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { MobileSidebarDrawer, Sidebar } from './Sidebar';
 import { tooltipClasses } from '../constants/tooltipStyles';
 import { ContactPage } from '../pages/ContactPage';
+import { DetailsPage } from '../pages/DetailsPage';
 import { ExpensesPage } from '../pages/ExpensesPage';
 import { MortgagePage } from '../pages/MortgagePage';
 import { OverviewPage } from '../pages/OverviewPage';
@@ -140,6 +141,15 @@ export function Dashboard() {
               path="/"
               element={
                 <OverviewPage
+                  dashboard={dashboard}
+                  projectionYears={projectionYears}
+                />
+              }
+            />
+            <Route
+              path="/details"
+              element={
+                <DetailsPage
                   dashboard={dashboard}
                   importStatus={importStatus}
                   importStatusTone={importStatusTone}

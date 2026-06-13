@@ -158,6 +158,28 @@ input[type="number"]::-webkit-inner-spin-button {
   animation: pulse-red-border 2.2s ease-out infinite;
 }
 
+.rocking-grandma {
+  animation: rocking-grandma 4.8s ease-in-out infinite;
+  transform-origin: 38% 92%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rocking-grandma {
+    animation: none;
+  }
+}
+
+@keyframes rocking-grandma {
+  0%,
+  100% {
+    transform: rotate(-1.8deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(1.8deg) translateY(2px);
+  }
+}
+
 @keyframes pulse-blue-border {
   0% {
     box-shadow:
