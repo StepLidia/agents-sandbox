@@ -94,13 +94,10 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
   return (
     <section className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-linear-to-br from-white/75 via-sky-50/70 to-emerald-50/60 px-5 py-6 shadow-sm md:min-h-[calc(100dvh-3rem)] md:px-8">
       <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-5 pb-28 md:pb-36">
-        <div className="max-w-3xl text-center">
+        <div className="max-w-3xl text-center pb-5">
           <h1 className="text-4xl font-black tracking-normal text-slate-950 md:text-5xl">
             Track your financial future
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
-            Get a quick overview of your financial situation and projections. Turn financial habits into measurable progress toward your long-term goals.
-          </p>
         </div>
 
         <div className="grid w-full max-w-md grid-cols-2 gap-3">
@@ -147,17 +144,25 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
         </div>
       </div>
       <img
-        className="pointer-events-none absolute -bottom-24 left-1/2 z-10 w-72 -translate-x-1/2 object-contain sm:w-96 md:-bottom-28 md:w-[30rem] xl:w-[34rem]"
+        className="pointer-events-none absolute -bottom-20 left-1/2 z-10 w-60 -translate-x-1/2 object-contain opacity-85 sm:w-72 md:w-96 xl:w-md"
         src="/images/vegetation.webp"
         alt=""
         aria-hidden="true"
       />
       <img
-        className="pointer-events-none absolute -bottom-2 right-2 z-20 w-48 object-contain sm:w-64 md:-bottom-1 md:right-6 md:w-80 xl:w-96"
+        className="pointer-events-none absolute -bottom-2 right-2 z-20 w-48 object-contain opacity-85 sm:w-64 md:-bottom-1 md:right-6 md:w-80 xl:w-96"
         src="/images/dream-house.webp"
         alt=""
         aria-hidden="true"
       />
+      <div className="butterfly-flight pointer-events-none absolute bottom-32 right-48 z-30 w-12 sm:bottom-40 sm:right-56 sm:w-14 md:right-72 md:w-16 xl:right-88">
+        <img
+          className="butterfly-flutter block w-full object-contain"
+          src="/images/butterfly.webp"
+          alt=""
+          aria-hidden="true"
+        />
+      </div>
     </section>
   );
 }
