@@ -1,4 +1,4 @@
-import { BarChart3, CircleUserRound, Coffee, Home, LayoutDashboard, LineChart, ReceiptText, X } from 'lucide-react';
+import { BarChart3, CircleUserRound, Coffee, Footprints, Home, LayoutDashboard, LineChart, ReceiptText, X } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const TWINT_THANK_YOU_URL = 'https://go.twint.ch/1/e/tw?tw=acq.SF-CFeDKQsSG4gqPKxcsn8YTI9RPFXNHoXvteLRjOMDbzGBzll4KLhW-DGK4jmcK.';
@@ -86,18 +86,29 @@ function SidebarContent({ isMobile = false, onNavigate }: SidebarProps & { isMob
           </NavLink>
         ))}
       </nav>
-      <a
-        className={`group mt-auto block px-3 text-center transition focus:outline-none ${isMobile ? 'pb-0 pt-2' : 'py-2'}`}
-        href={TWINT_THANK_YOU_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <p className="text-sm text-stone-700">Thank you sticker</p>
-        <div className="mx-auto mt-2 grid h-16 w-16 place-items-center rounded-3xl bg-linear-to-br from-stone-100 via-amber-50 to-slate-100 text-stone-800 shadow-inner shadow-white/70 ring-1 ring-stone-300/30 transition group-hover:scale-102">
-          <Coffee className="h-9 w-9" />
+      <div className="glass-panel mt-6 rounded-lg p-3 text-center">
+        <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-blue-500/10 text-blue-600">
+          <Footprints className="h-5 w-5" />
         </div>
-        <p className="mt-1.5 text-xs font-medium tracking-normal text-stone-600">TWINT</p>
-      </a>
+        <p className="mt-3 text-sm leading-5 text-slate-900">Small steps today create freedom tomorrow.</p>
+        <svg viewBox="0 0 180 58" className="mt-2 h-10 w-full text-violet-500" aria-hidden="true">
+          <path d="M2 50 C24 35,30 62,48 45 S78 42,90 33 S124 8,142 24 S165 31,178 14" fill="none" stroke="currentColor" strokeWidth="2" />
+        </svg>
+      </div>
+      <div className="mt-auto">
+        <a
+          className={`group block px-3 text-center transition focus:outline-none ${isMobile ? 'pb-0 pt-2' : 'py-2'}`}
+          href={TWINT_THANK_YOU_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <p className="text-sm text-slate-700">Thank you sticker</p>
+          <div className="mx-auto mt-2 grid h-16 w-16 place-items-center rounded-3xl bg-linear-to-br from-blue-50 via-cyan-50 to-slate-100 text-blue-700 shadow-inner shadow-white/70 ring-1 ring-blue-200/50 transition group-hover:scale-102">
+            <Coffee className="h-9 w-9" />
+          </div>
+          <p className="mt-1.5 text-xs font-medium tracking-normal text-slate-600">TWINT</p>
+        </a>
+      </div>
     </div>
   );
 }
