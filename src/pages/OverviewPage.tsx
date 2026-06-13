@@ -40,30 +40,30 @@ const overviewCardStyles = [
   {
     id: 'projected',
     label: 'Total projected wealth',
-    ring: 'ring-blue-300/45',
-    tone: 'from-blue-500/20 via-white/70 to-cyan-400/20',
-    valueClass: 'text-blue-700',
+    ring: 'ring-sky-200/45',
+    tone: 'from-sky-100/70 via-white/75 to-teal-50/70',
+    valueClass: 'text-sky-800',
   },
   {
     id: 'current',
     label: 'Current wealth',
-    ring: 'ring-emerald-300/45',
-    tone: 'from-emerald-500/20 via-white/70 to-teal-400/20',
-    valueClass: 'text-emerald-700',
+    ring: 'ring-emerald-200/45',
+    tone: 'from-emerald-100/65 via-white/75 to-lime-50/70',
+    valueClass: 'text-emerald-800',
   },
   {
     id: 'monthly',
     label: 'Monthly future building',
-    ring: 'ring-cyan-300/45',
-    tone: 'from-cyan-500/20 via-white/70 to-blue-400/20',
-    valueClass: 'text-cyan-700',
+    ring: 'ring-cyan-200/45',
+    tone: 'from-cyan-100/65 via-white/75 to-sky-50/70',
+    valueClass: 'text-cyan-800',
   },
   {
     id: 'horizon',
     label: 'Planning horizon',
-    ring: 'ring-rose-300/50',
-    tone: 'from-rose-400/24 via-white/70 to-rose-300/20',
-    valueClass: 'text-rose-400',
+    ring: 'ring-rose-200/45',
+    tone: 'from-rose-100/60 via-white/75 to-amber-50/70',
+    valueClass: 'text-rose-700',
   },
 ] as const;
 
@@ -108,29 +108,33 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
           </h1>
         </div>
 
-        <div className="grid w-full max-w-md grid-cols-2 gap-3">
-          {overviewCardStyles.map(({ id, label, ring, tone, valueClass }, index) => (
-            <Link
-              key={label}
-              aria-label={`Open details for ${label}`}
-              className={`glass-panel aspect-square overflow-hidden rounded-lg bg-linear-to-br ${tone} p-3 ring-1 ${ring} transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-700/30`}
-              to="/details"
-            >
-              <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
-                <p className="text-sm font-bold leading-5 text-slate-700">{label}</p>
-                {id === 'current' ? (
-                  <CurrentWealthProgressRing
-                    amount={cards[index]}
-                    amountClassName={valueClass}
-                    progressPercent={currentWealthProgressPercent}
-                  />
-                ) : (
-                  <p className={`text-xl font-black tracking-normal ${valueClass}`}>{cards[index]}</p>
-                )}
+        <Link
+          aria-label="Open financial details"
+          className="glass-panel w-full max-w-5xl overflow-hidden rounded-lg p-3 ring-1 ring-white/50 transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-700/30"
+          to="/details"
+        >
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            {overviewCardStyles.map(({ id, label, ring, tone, valueClass }, index) => (
+              <div
+                key={label}
+                className={`min-h-32 rounded-lg bg-linear-to-br ${tone} px-4 py-4 text-center shadow-inner shadow-white/40 ring-1 ${ring} md:min-h-40`}
+              >
+                <div className="flex h-full flex-col items-center justify-center gap-3">
+                  <p className="text-sm font-bold leading-5 text-slate-700">{label}</p>
+                  {id === 'current' ? (
+                    <CurrentWealthProgressRing
+                      amount={cards[index]}
+                      amountClassName={valueClass}
+                      progressPercent={currentWealthProgressPercent}
+                    />
+                  ) : (
+                    <p className={`text-2xl font-black tracking-normal ${valueClass}`}>{cards[index]}</p>
+                  )}
+                </div>
               </div>
-            </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Link>
       </div>
 
       <div className="pointer-events-none absolute -left-4 right-0 -bottom-3 z-20 h-72 overflow-visible sm:-left-6 sm:h-80 md:-left-8 md:h-88">
@@ -214,8 +218,8 @@ function CurrentWealthProgressRing({
 
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative h-28 w-28">
-        <svg className="h-28 w-28 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
+      <div className="relative h-24 w-24">
+        <svg className="h-24 w-24 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
           <circle
             cx="56"
             cy="56"
