@@ -127,14 +127,14 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
         </div>
       </div>
 
-      <div className="pointer-events-none absolute -left-4 right-0 bottom-0 z-20 h-72 overflow-visible sm:-left-6 sm:h-80 md:-left-8 md:h-88">
+      <div className="pointer-events-none absolute -left-4 right-0 -bottom-3 z-20 h-72 overflow-visible sm:-left-6 sm:h-80 md:-left-8 md:h-88">
         <FlowerAccent
-          className="bottom-6 left-0 h-44 w-36 sm:left-2 sm:h-52 sm:w-44 md:left-4 md:h-56 md:w-48"
+          className="bottom-0 left-0 h-44 w-36 sm:left-2 sm:h-52 sm:w-44 md:left-4 md:h-56 md:w-48"
           position="left bottom"
           size="21rem auto"
         />
         <FlowerAccent
-          className="bottom-6 left-44 h-40 w-36 sm:left-56 sm:h-48 sm:w-44 md:left-68 md:h-52 md:w-48 xl:left-76"
+          className="bottom-0 left-44 h-40 w-36 sm:left-56 sm:h-48 sm:w-44 md:left-68 md:h-52 md:w-48 xl:left-76"
           position="right bottom"
           size="21rem auto"
         />
@@ -146,6 +146,12 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
           />
         </div>
       </div>
+      <img
+        className="pointer-events-none absolute -bottom-2 right-2 z-20 w-48 object-contain sm:w-64 md:-bottom-1 md:right-6 md:w-80 xl:w-96"
+        src="/images/dream-house.png"
+        alt=""
+        aria-hidden="true"
+      />
     </section>
   );
 }
