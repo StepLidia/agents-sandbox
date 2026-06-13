@@ -1,7 +1,7 @@
 {
   "name": "Growly",
   "short_name": "Growly",
-  "description": "A private local-first financial dashboard for Swiss wealth, pension, expense, mortgage, and progress planning.",
+  "description": "Your private financial dashboard for Swiss wealth, pension, expense, mortgage, and progress planning.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

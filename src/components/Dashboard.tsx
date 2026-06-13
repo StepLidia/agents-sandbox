@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
-import { generateFinancialReportPdf } from '../pdf/pdfReport';
 import { buttonClasses } from '../constants/buttonStyles';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { MobileSidebarDrawer, Sidebar } from './Sidebar';
@@ -62,13 +61,15 @@ export function Dashboard() {
     setIncome((currentIncome) => ({ ...currentIncome, [field]: value }));
   }
 
-  function handleExportPdf() {
+  async function handleExportPdf() {
     if (isExporting) {
       return;
     }
 
     setIsExporting(true);
     try {
+      const { generateFinancialReportPdf } = await import('../pdf/pdfReport');
+
       generateFinancialReportPdf({
         assets: dashboard.assets,
         income: dashboard.income,
