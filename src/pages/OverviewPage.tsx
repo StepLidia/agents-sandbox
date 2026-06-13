@@ -40,22 +40,30 @@ const overviewCardStyles = [
   {
     id: 'projected',
     label: 'Total projected wealth',
-    tone: 'from-blue-600/12 via-white/52 to-cyan-500/12',
+    ring: 'ring-blue-300/45',
+    tone: 'from-blue-500/20 via-white/70 to-cyan-400/20',
+    valueClass: 'text-blue-700',
   },
   {
     id: 'current',
     label: 'Current wealth',
-    tone: 'from-emerald-600/12 via-white/52 to-teal-500/12',
+    ring: 'ring-emerald-300/45',
+    tone: 'from-emerald-500/20 via-white/70 to-teal-400/20',
+    valueClass: 'text-emerald-700',
   },
   {
     id: 'monthly',
     label: 'Monthly future building',
-    tone: 'from-violet-600/12 via-white/52 to-fuchsia-500/12',
+    ring: 'ring-cyan-300/45',
+    tone: 'from-cyan-500/20 via-white/70 to-blue-400/20',
+    valueClass: 'text-cyan-700',
   },
   {
     id: 'horizon',
     label: 'Planning horizon',
-    tone: 'from-amber-500/14 via-white/52 to-rose-500/12',
+    ring: 'ring-rose-300/50',
+    tone: 'from-rose-400/24 via-white/70 to-rose-300/20',
+    valueClass: 'text-rose-400',
   },
 ] as const;
 
@@ -101,11 +109,11 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
         </div>
 
         <div className="grid w-full max-w-md grid-cols-2 gap-3">
-          {overviewCardStyles.map(({ id, label, tone }, index) => (
+          {overviewCardStyles.map(({ id, label, ring, tone, valueClass }, index) => (
             <Link
               key={label}
               aria-label={`Open details for ${label}`}
-              className={`glass-panel aspect-square overflow-hidden rounded-lg bg-linear-to-br ${tone} p-3 transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-700/30`}
+              className={`glass-panel aspect-square overflow-hidden rounded-lg bg-linear-to-br ${tone} p-3 ring-1 ${ring} transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-700/30`}
               to="/details"
             >
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
@@ -113,10 +121,11 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
                 {id === 'current' ? (
                   <CurrentWealthProgressRing
                     amount={cards[index]}
+                    amountClassName={valueClass}
                     progressPercent={currentWealthProgressPercent}
                   />
                 ) : (
-                  <p className="text-xl font-black tracking-normal text-slate-950">{cards[index]}</p>
+                  <p className={`text-xl font-black tracking-normal ${valueClass}`}>{cards[index]}</p>
                 )}
               </div>
             </Link>
@@ -189,7 +198,15 @@ function FlowerAccent({
   );
 }
 
-function CurrentWealthProgressRing({ amount, progressPercent }: { amount: string; progressPercent: number }) {
+function CurrentWealthProgressRing({
+  amount,
+  amountClassName,
+  progressPercent,
+}: {
+  amount: string;
+  amountClassName: string;
+  progressPercent: number;
+}) {
   const radius = 42;
   const circumference = 2 * Math.PI * radius;
   const safeProgressPercent = Math.min(Math.max(progressPercent, 0), 100);
@@ -226,7 +243,7 @@ function CurrentWealthProgressRing({ amount, progressPercent }: { amount: string
           </div>
         </div>
       </div>
-      <p className="text-sm font-black tracking-normal text-slate-950">{amount}</p>
+      <p className={`text-sm font-black tracking-normal ${amountClassName}`}>{amount}</p>
     </div>
   );
 }
