@@ -141,14 +141,20 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
         <div className="rocking-grandma absolute bottom-8 left-14 w-44 origin-bottom-left sm:left-20 sm:w-60 md:left-24 md:w-72 xl:left-28">
           <img
             className="block w-full scale-x-[-1] object-contain"
-            src="/images/rocking-grandma.png"
+            src="/images/rocking-grandma.webp"
             alt="Illustration of an elderly woman reading in a rocking chair."
           />
         </div>
       </div>
       <img
+        className="pointer-events-none absolute -bottom-24 left-1/2 z-10 w-72 -translate-x-1/2 object-contain sm:w-96 md:-bottom-28 md:w-[30rem] xl:w-[34rem]"
+        src="/images/vegetation.webp"
+        alt=""
+        aria-hidden="true"
+      />
+      <img
         className="pointer-events-none absolute -bottom-2 right-2 z-20 w-48 object-contain sm:w-64 md:-bottom-1 md:right-6 md:w-80 xl:w-96"
-        src="/images/dream-house.png"
+        src="/images/dream-house.webp"
         alt=""
         aria-hidden="true"
       />
@@ -170,7 +176,7 @@ function FlowerAccent({
       className={`absolute bg-no-repeat opacity-95 ${className}`}
       aria-hidden="true"
       style={{
-        backgroundImage: 'url("/images/flowers.png")',
+        backgroundImage: 'url("/images/flowers.webp")',
         backgroundPosition: position,
         backgroundSize: size,
       }}
