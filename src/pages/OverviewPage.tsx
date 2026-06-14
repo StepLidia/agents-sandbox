@@ -118,22 +118,22 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
 
   return (
     <section
-      className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-center px-5 pt-6 pb-40 shadow-sm sm:pb-48 md:min-h-[calc(100dvh-5.5rem)] md:px-8 md:pt-5 md:pb-48 xl:pt-6 xl:pb-56"
+      className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-bottom px-5 pt-6 pb-40 shadow-sm sm:pb-48 md:min-h-[calc(100dvh-5.5rem)] md:px-8 md:pt-5 md:pb-48 xl:pt-6 xl:pb-56"
       style={{ backgroundImage: 'url("/images/background.png")' }}
     >
       <div className="absolute inset-0 bg-linear-to-br from-white/80 via-sky-50/60 to-yellow-50/64" aria-hidden="true" />
       <img
-        className="rocking-grandma pointer-events-none absolute bottom-3 left-5 z-20 w-44 object-contain opacity-80 drop-shadow-md saturate-75 sm:bottom-4 sm:w-56 md:left-10 md:w-64 xl:w-72"
+        className="rocking-grandma pointer-events-none absolute -bottom-3 left-2 z-20 w-64 object-contain opacity-80 drop-shadow-md saturate-75 sm:w-76 md:-left-9 md:w-84 xl:w-92 2xl:left-6"
         src="/images/grandma.png"
         alt=""
         aria-hidden="true"
       />
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-5 md:gap-6">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-5 md:gap-7">
         <div className="max-w-4xl text-center">
-          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-5xl xl:text-6xl">
+          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-4xl xl:text-5xl">
             Track your financial future
           </h1>
-          <p className="mt-3 text-lg font-bold text-slate-600 md:text-xl">
+          <p className="mt-5 text-lg font-bold text-slate-600 md:text-xl">
             Visualize today, plan for tomorrow, achieve your dreams.
           </p>
         </div>
