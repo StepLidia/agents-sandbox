@@ -136,13 +136,6 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
           <p className="mt-3 text-lg font-bold text-slate-600 md:text-xl">
             Visualize today, plan for tomorrow, achieve your dreams.
           </p>
-          <div className="mx-auto mt-4 flex w-48 items-center justify-center gap-3 text-sky-700" aria-hidden="true">
-            <span className="h-px flex-1 bg-sky-700" />
-            <Leaf className="h-4 w-4" />
-            <span className="h-2 w-2 rounded-full bg-sky-700" />
-            <Leaf className="h-4 w-4 scale-x-[-1]" />
-            <span className="h-px flex-1 bg-sky-700" />
-          </div>
         </div>
 
         <Link
@@ -168,8 +161,6 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
                   <div className={`pointer-events-none absolute inset-0 ${washClass}`} aria-hidden="true" />
                   <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/70 via-white/45 to-white/20" aria-hidden="true" />
                   <div className="relative flex h-full flex-col items-center justify-center gap-4">
-                    <Icon className={`h-8 w-8 ${iconClass}`} strokeWidth={1.6} />
-                    <p className={`text-sm font-bold leading-5 ${labelClass}`}>{label}</p>
                     {id === 'current' ? (
                       <CurrentWealthProgressRing
                         amount={cards[index]}
@@ -177,9 +168,13 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
                         progressPercent={currentWealthProgressPercent}
                       />
                     ) : (
-                      <p className={`text-3xl font-black tracking-normal ${valueClass}`}>
-                        {cards[index]}
-                      </p>
+                      <>
+                        <Icon className={`h-8 w-8 ${iconClass}`} strokeWidth={1.6} />
+                        <p className={`text-sm font-bold leading-5 ${labelClass}`}>{label}</p>
+                        <p className={`text-3xl font-black tracking-normal ${valueClass}`}>
+                          {cards[index]}
+                        </p>
+                      </>
                     )}
                   </div>
                 </div>
@@ -207,9 +202,9 @@ function CurrentWealthProgressRing({
   const strokeDashoffset = circumference - (safeProgressPercent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative h-24 w-24">
-        <svg className="h-24 w-24 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
+    <div className="flex flex-col items-center gap-5">
+      <div className="relative h-45 w-45">
+        <svg className="h-45 w-45 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
           <circle
             cx="56"
             cy="56"
@@ -232,12 +227,12 @@ function CurrentWealthProgressRing({
         </svg>
         <div className="absolute inset-0 grid place-items-center text-center">
           <div>
-            <p className="text-2xl font-black tracking-normal text-slate-950">{Math.round(safeProgressPercent)}%</p>
-            <p className="text-sm font-bold text-amber-700">goal</p>
+            <p className="text-3xl font-black tracking-normal text-slate-950">{Math.round(safeProgressPercent)}%</p>
+            <p className="text-lg font-bold text-amber-700">goal</p>
           </div>
         </div>
       </div>
-      <p className={`text-sm font-black tracking-normal ${amountClassName}`}>{amount}</p>
+      <p className={`text-xl font-black tracking-normal ${amountClassName}`}>{amount}</p>
     </div>
   );
 }
