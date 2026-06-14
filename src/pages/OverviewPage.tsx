@@ -1,3 +1,4 @@
+import { CalendarDays, Leaf, PiggyBank, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   buildProgressChartData,
@@ -40,30 +41,46 @@ const overviewCardStyles = [
   {
     id: 'projected',
     label: 'Total projected wealth',
-    ring: 'ring-sky-200/45',
-    tone: 'from-sky-100/70 via-white/75 to-teal-50/70',
-    valueClass: 'text-sky-800',
+    cardClass: 'border-sky-200/80 bg-sky-50/80',
+    icon: Leaf,
+    iconClass: 'text-sky-500',
+    imagePosition: '18% 62%',
+    labelClass: 'text-slate-800',
+    valueClass: 'text-sky-700',
+    washClass: 'bg-sky-50/60',
   },
   {
     id: 'current',
     label: 'Current wealth',
-    ring: 'ring-emerald-200/45',
-    tone: 'from-emerald-100/65 via-white/75 to-lime-50/70',
-    valueClass: 'text-emerald-800',
+    cardClass: 'border-amber-200/80 bg-amber-50/80',
+    icon: PiggyBank,
+    iconClass: 'text-amber-600',
+    imagePosition: '46% 58%',
+    labelClass: 'text-slate-800',
+    valueClass: 'text-amber-800',
+    washClass: 'bg-amber-50/60',
   },
   {
     id: 'monthly',
     label: 'Monthly future building',
-    ring: 'ring-cyan-200/45',
-    tone: 'from-cyan-100/65 via-white/75 to-sky-50/70',
-    valueClass: 'text-cyan-800',
+    cardClass: 'border-blue-200/80 bg-blue-50/80',
+    icon: Wallet,
+    iconClass: 'text-blue-500',
+    imagePosition: '68% 62%',
+    labelClass: 'text-slate-800',
+    valueClass: 'text-blue-900',
+    washClass: 'bg-blue-50/60',
   },
   {
     id: 'horizon',
     label: 'Planning horizon',
-    ring: 'ring-rose-200/45',
-    tone: 'from-rose-100/60 via-white/75 to-amber-50/70',
-    valueClass: 'text-rose-700',
+    cardClass: 'border-yellow-200/80 bg-yellow-50/80',
+    icon: CalendarDays,
+    iconClass: 'text-yellow-700',
+    imagePosition: '88% 58%',
+    labelClass: 'text-slate-800',
+    valueClass: 'text-yellow-800',
+    washClass: 'bg-yellow-50/60',
   },
 ] as const;
 
@@ -100,105 +117,78 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
   ];
 
   return (
-    <section className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-linear-to-br from-white/75 via-sky-50/70 to-emerald-50/60 px-5 py-6 shadow-sm md:min-h-[calc(100dvh-3rem)] md:px-8">
-      <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-center gap-5 pb-28 md:pb-36">
-        <div className="max-w-3xl text-center pb-5">
-          <h1 className="text-4xl font-black tracking-normal text-slate-950 md:text-5xl">
+    <section
+      className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-center px-5 py-6 shadow-sm md:min-h-[calc(100dvh-3rem)] md:px-8"
+      style={{ backgroundImage: 'url("/images/background.png")' }}
+    >
+      <div className="absolute inset-0 bg-linear-to-br from-white/80 via-sky-50/60 to-yellow-50/64" aria-hidden="true" />
+      <img
+        className="rocking-grandma pointer-events-none absolute bottom-2 left-2 z-10 w-32 object-contain opacity-90 sm:w-40 md:bottom-4 md:left-4 md:w-52"
+        src="/images/grandma.png"
+        alt=""
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-7 pt-10 md:pt-14">
+        <div className="max-w-4xl text-center">
+          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-6xl">
             Track your financial future
           </h1>
+          <p className="mt-3 text-lg font-bold text-slate-600 md:text-xl">
+            Visualize today, plan for tomorrow, achieve your dreams.
+          </p>
+          <div className="mx-auto mt-4 flex w-48 items-center justify-center gap-3 text-sky-700" aria-hidden="true">
+            <span className="h-px flex-1 bg-sky-700" />
+            <Leaf className="h-4 w-4" />
+            <span className="h-2 w-2 rounded-full bg-sky-700" />
+            <Leaf className="h-4 w-4 scale-x-[-1]" />
+            <span className="h-px flex-1 bg-sky-700" />
+          </div>
         </div>
 
         <Link
           aria-label="Open financial details"
-          className="glass-panel w-full max-w-5xl overflow-hidden rounded-lg p-3 ring-1 ring-white/50 transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-cyan-700/30"
+          className="w-full rounded-lg transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-sky-700/30"
           to="/details"
         >
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            {overviewCardStyles.map(({ id, label, ring, tone, valueClass }, index) => (
-              <div
-                key={label}
-                className={`min-h-32 rounded-lg bg-linear-to-br ${tone} px-4 py-4 text-center shadow-inner shadow-white/40 ring-1 ${ring} md:min-h-40`}
-              >
-                <div className="flex h-full flex-col items-center justify-center gap-3">
-                  <p className="text-sm font-bold leading-5 text-slate-700">{label}</p>
-                  {id === 'current' ? (
-                    <CurrentWealthProgressRing
-                      amount={cards[index]}
-                      amountClassName={valueClass}
-                      progressPercent={currentWealthProgressPercent}
-                    />
-                  ) : (
-                    <p className={`text-2xl font-black tracking-normal ${valueClass}`}>{cards[index]}</p>
-                  )}
+          <div className="mx-auto rounded-lg border border-white/80 bg-white/50 p-4 shadow-xl shadow-slate-300/30 backdrop-blur-md md:p-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+              {overviewCardStyles.map(({ id, label, cardClass, icon: Icon, iconClass, imagePosition, labelClass, valueClass, washClass }, index) => (
+                <div
+                  key={label}
+                  className={`relative min-h-64 overflow-hidden rounded-lg border ${cardClass} px-4 py-7 text-center shadow-md shadow-slate-300/30 backdrop-blur-sm`}
+                >
+                  <div
+                    className="pointer-events-none absolute inset-0 bg-cover opacity-30"
+                    aria-hidden="true"
+                    style={{
+                      backgroundImage: 'url("/images/background.png")',
+                      backgroundPosition: imagePosition,
+                    }}
+                  />
+                  <div className={`pointer-events-none absolute inset-0 ${washClass}`} aria-hidden="true" />
+                  <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/70 via-white/45 to-white/20" aria-hidden="true" />
+                  <div className="relative flex h-full flex-col items-center justify-center gap-4">
+                    <Icon className={`h-8 w-8 ${iconClass}`} strokeWidth={1.6} />
+                    <p className={`text-sm font-bold leading-5 ${labelClass}`}>{label}</p>
+                    {id === 'current' ? (
+                      <CurrentWealthProgressRing
+                        amount={cards[index]}
+                        amountClassName={valueClass}
+                        progressPercent={currentWealthProgressPercent}
+                      />
+                    ) : (
+                      <p className={`text-3xl font-black tracking-normal ${valueClass}`}>
+                        {cards[index]}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </Link>
       </div>
-
-      <div className="pointer-events-none absolute -left-4 right-0 -bottom-3 z-20 h-72 overflow-visible sm:-left-6 sm:h-80 md:-left-8 md:h-88">
-        <FlowerAccent
-          className="bottom-0 left-0 h-44 w-36 sm:left-2 sm:h-52 sm:w-44 md:left-4 md:h-56 md:w-48"
-          position="left bottom"
-          size="21rem auto"
-        />
-        <FlowerAccent
-          className="bottom-0 left-44 h-40 w-36 sm:left-56 sm:h-48 sm:w-44 md:left-68 md:h-52 md:w-48 xl:left-76"
-          position="right bottom"
-          size="21rem auto"
-        />
-        <div className="rocking-grandma absolute bottom-8 left-14 w-44 origin-bottom-left sm:left-20 sm:w-60 md:left-24 md:w-72 xl:left-28">
-          <img
-            className="block w-full scale-x-[-1] object-contain"
-            src="/images/rocking-grandma.webp"
-            alt="Illustration of an elderly woman reading in a rocking chair."
-          />
-        </div>
-      </div>
-      <img
-        className="pointer-events-none absolute -bottom-20 left-1/2 z-10 w-60 -translate-x-1/2 object-contain opacity-85 sm:w-72 md:w-96 xl:w-md"
-        src="/images/vegetation.webp"
-        alt=""
-        aria-hidden="true"
-      />
-      <img
-        className="pointer-events-none absolute -bottom-2 right-2 z-20 w-48 object-contain opacity-85 sm:w-64 md:-bottom-1 md:right-6 md:w-80 xl:w-96"
-        src="/images/dream-house.webp"
-        alt=""
-        aria-hidden="true"
-      />
-      <div className="butterfly-flight pointer-events-none absolute bottom-32 right-48 z-30 w-12 sm:bottom-40 sm:right-56 sm:w-14 md:right-72 md:w-16 xl:right-88">
-        <img
-          className="butterfly-flutter block w-full object-contain"
-          src="/images/butterfly.webp"
-          alt=""
-          aria-hidden="true"
-        />
-      </div>
     </section>
-  );
-}
-
-function FlowerAccent({
-  className,
-  position,
-  size,
-}: {
-  className: string;
-  position: string;
-  size: string;
-}) {
-  return (
-    <div
-      className={`absolute bg-no-repeat opacity-95 ${className}`}
-      aria-hidden="true"
-      style={{
-        backgroundImage: 'url("/images/flowers.webp")',
-        backgroundPosition: position,
-        backgroundSize: size,
-      }}
-    />
   );
 }
 
@@ -217,7 +207,7 @@ function CurrentWealthProgressRing({
   const strokeDashoffset = circumference - (safeProgressPercent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-3">
       <div className="relative h-24 w-24">
         <svg className="h-24 w-24 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
           <circle
@@ -233,7 +223,7 @@ function CurrentWealthProgressRing({
             cy="56"
             fill="none"
             r={radius}
-            stroke="rgb(5 150 105)"
+            stroke="rgb(14 165 233)"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
@@ -243,7 +233,7 @@ function CurrentWealthProgressRing({
         <div className="absolute inset-0 grid place-items-center text-center">
           <div>
             <p className="text-2xl font-black tracking-normal text-slate-950">{Math.round(safeProgressPercent)}%</p>
-            <p className="text-sm font-bold text-emerald-700">goal</p>
+            <p className="text-sm font-bold text-amber-700">goal</p>
           </div>
         </div>
       </div>
