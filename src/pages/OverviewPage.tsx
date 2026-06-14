@@ -118,19 +118,19 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
 
   return (
     <section
-      className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-center px-5 py-6 shadow-sm md:min-h-[calc(100dvh-3rem)] md:px-8"
+      className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-center px-5 pt-6 pb-40 shadow-sm sm:pb-48 md:min-h-[calc(100dvh-5.5rem)] md:px-8 md:pt-5 md:pb-48 xl:pt-6 xl:pb-56"
       style={{ backgroundImage: 'url("/images/background.png")' }}
     >
       <div className="absolute inset-0 bg-linear-to-br from-white/80 via-sky-50/60 to-yellow-50/64" aria-hidden="true" />
       <img
-        className="rocking-grandma pointer-events-none absolute bottom-2 left-2 z-10 w-32 object-contain opacity-90 sm:w-40 md:bottom-4 md:left-4 md:w-52"
+        className="rocking-grandma pointer-events-none absolute bottom-3 left-5 z-20 w-44 object-contain opacity-80 drop-shadow-md saturate-75 sm:bottom-4 sm:w-56 md:left-10 md:w-64 xl:w-72"
         src="/images/grandma.png"
         alt=""
         aria-hidden="true"
       />
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-7 pt-10 md:pt-14">
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-5 md:gap-6">
         <div className="max-w-4xl text-center">
-          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-6xl">
+          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-5xl xl:text-6xl">
             Track your financial future
           </h1>
           <p className="mt-3 text-lg font-bold text-slate-600 md:text-xl">
@@ -140,15 +140,15 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
 
         <Link
           aria-label="Open financial details"
-          className="w-full rounded-lg transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-sky-700/30"
+          className="w-full max-w-4xl rounded-lg transition hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-sky-700/30 xl:max-w-5xl"
           to="/details"
         >
-          <div className="mx-auto rounded-lg border border-white/80 bg-white/50 p-4 shadow-xl shadow-slate-300/30 backdrop-blur-md md:p-5">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+          <div className="mx-auto rounded-lg border border-white/80 bg-white/50 p-3 shadow-xl shadow-slate-300/30 backdrop-blur-md md:p-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 xl:gap-4">
               {overviewCardStyles.map(({ id, label, cardClass, icon: Icon, iconClass, imagePosition, labelClass, valueClass, washClass }, index) => (
                 <div
                   key={label}
-                  className={`relative min-h-64 overflow-hidden rounded-lg border ${cardClass} px-4 py-7 text-center shadow-md shadow-slate-300/30 backdrop-blur-sm`}
+                  className={`relative min-h-48 overflow-hidden rounded-lg border ${cardClass} px-3 py-4 text-center shadow-md shadow-slate-300/30 backdrop-blur-sm xl:min-h-56 xl:px-4 xl:py-6`}
                 >
                   <div
                     className="pointer-events-none absolute inset-0 bg-cover opacity-30"
@@ -169,9 +169,9 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
                       />
                     ) : (
                       <>
-                        <Icon className={`h-8 w-8 ${iconClass}`} strokeWidth={1.6} />
+                        <Icon className={`h-7 w-7 xl:h-8 xl:w-8 ${iconClass}`} strokeWidth={1.6} />
                         <p className={`text-sm font-bold leading-5 ${labelClass}`}>{label}</p>
-                        <p className={`text-3xl font-black tracking-normal ${valueClass}`}>
+                        <p className={`text-2xl font-black tracking-normal xl:text-3xl ${valueClass}`}>
                           {cards[index]}
                         </p>
                       </>
@@ -202,9 +202,9 @@ function CurrentWealthProgressRing({
   const strokeDashoffset = circumference - (safeProgressPercent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center gap-5">
-      <div className="relative h-45 w-45">
-        <svg className="h-45 w-45 -rotate-90" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
+    <div className="flex flex-col items-center gap-3 xl:gap-4">
+      <div className="relative h-32 w-32 xl:h-36 xl:w-36">
+        <svg className="h-32 w-32 -rotate-90 xl:h-36 xl:w-36" role="img" viewBox="0 0 112 112" aria-label={`${Math.round(safeProgressPercent)}% goal`}>
           <circle
             cx="56"
             cy="56"
@@ -227,12 +227,12 @@ function CurrentWealthProgressRing({
         </svg>
         <div className="absolute inset-0 grid place-items-center text-center">
           <div>
-            <p className="text-3xl font-black tracking-normal text-slate-950">{Math.round(safeProgressPercent)}%</p>
-            <p className="text-lg font-bold text-amber-700">goal</p>
+            <p className="text-2xl font-black tracking-normal text-slate-950 xl:text-3xl">{Math.round(safeProgressPercent)}%</p>
+            <p className="text-sm font-bold text-amber-700">goal</p>
           </div>
         </div>
       </div>
-      <p className={`text-xl font-black tracking-normal ${amountClassName}`}>{amount}</p>
+      <p className={`text-lg font-black tracking-normal ${amountClassName}`}>{amount}</p>
     </div>
   );
 }
