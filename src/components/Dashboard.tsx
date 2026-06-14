@@ -274,7 +274,7 @@ function getSavedNumber(value: unknown, fallback: number) {
 
 function Footer() {
   return (
-    <footer className="mt-auto flex flex-wrap items-center justify-center gap-2 pt-6 pb-2 text-center text-xs font-medium text-slate-600">
+    <footer className="mt-auto flex flex-wrap items-center justify-center gap-2 pt-2 pb-2 text-center text-xs font-medium text-slate-600">
       <span>&copy; </span>
       <a
         className="text-slate-700 underline decoration-slate-400/60 underline-offset-2 transition hover:text-cyan-800"

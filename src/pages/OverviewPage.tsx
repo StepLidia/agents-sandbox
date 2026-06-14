@@ -123,14 +123,21 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
     >
       <div className="absolute inset-0 bg-linear-to-br from-white/80 via-sky-50/60 to-yellow-50/64" aria-hidden="true" />
       <img
-        className="rocking-grandma pointer-events-none absolute -bottom-3 left-2 z-20 w-64 object-contain opacity-80 drop-shadow-md saturate-75 sm:w-76 md:-left-9 md:w-84 xl:w-92 2xl:left-6"
+        className="rocking-grandma pointer-events-none absolute -bottom-3 left-2 z-20 w-64 object-contain opacity-75 drop-shadow-md saturate-65 sm:w-76 md:-left-9 md:w-84 xl:w-92 2xl:left-6"
         src="/images/grandma.png"
         alt=""
         aria-hidden="true"
       />
+      <div className="butterfly-corner-flight pointer-events-none absolute bottom-12 right-10 z-20 w-14 sm:bottom-14 sm:right-14 sm:w-16 md:bottom-16 md:right-18 xl:bottom-20 xl:right-24 xl:w-20" aria-hidden="true">
+        <img
+          className="butterfly-flutter block w-full object-contain opacity-100 drop-shadow-md saturate-150"
+          src="/images/butterfly.png"
+          alt=""
+        />
+      </div>
       <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-5 md:gap-7">
         <div className="max-w-4xl text-center">
-          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-4xl xl:text-5xl">
+          <h1 className="font-serif text-4xl font-black tracking-normal text-slate-800 md:text-4xl 2xl:text-5xl">
             Track your financial future
           </h1>
           <p className="mt-5 text-lg font-bold text-slate-600 md:text-xl">
