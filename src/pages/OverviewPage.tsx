@@ -52,13 +52,13 @@ const overviewCardStyles = [
   {
     id: 'current',
     label: 'Current wealth',
-    cardClass: 'border-amber-200/80 bg-amber-50/80',
+    cardClass: 'overview-current-card',
     icon: PiggyBank,
-    iconClass: 'text-amber-600',
+    iconClass: 'text-lime-700',
     imagePosition: '46% 58%',
     labelClass: 'text-slate-800',
-    valueClass: 'text-amber-800',
-    washClass: 'bg-amber-50/60',
+    valueClass: 'overview-current-value',
+    washClass: 'overview-current-wash',
   },
   {
     id: 'monthly',
@@ -225,7 +225,8 @@ function CurrentWealthProgressRing({
             cy="56"
             fill="none"
             r={radius}
-            stroke="rgb(14 165 233)"
+            className="overview-current-ring"
+            stroke="currentColor"
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
@@ -235,7 +236,7 @@ function CurrentWealthProgressRing({
         <div className="absolute inset-0 grid place-items-center text-center">
           <div>
             <p className="text-2xl font-black tracking-normal text-slate-950 xl:text-3xl">{Math.round(safeProgressPercent)}%</p>
-            <p className="text-sm font-bold text-amber-700">goal</p>
+            <p className="overview-current-goal text-sm font-bold">goal</p>
           </div>
         </div>
       </div>

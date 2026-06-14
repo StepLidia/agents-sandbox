@@ -315,3 +315,24 @@ input[type="number"]::-webkit-inner-spin-button {
     0 0 0 3px rgba(14, 116, 144, 0.08),
     0 3px 10px rgba(80, 99, 130, 0.06);
 }
+
+.overview-current-card {
+  border-color: rgba(183, 198, 161, 0.78);
+  background-color: rgba(242, 246, 234, 0.82);
+}
+
+.overview-current-wash {
+  background-color: rgba(236, 242, 226, 0.62);
+}
+
+.overview-current-ring {
+  color: rgb(142, 160, 118);
+}
+
+.overview-current-value {
+  color: rgb(77, 98, 55);
+}
+
+.overview-current-goal {
+  color: rgb(88, 108, 64);
+}
