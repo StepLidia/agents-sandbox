@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { assets as initialAssets, calculateDashboard, incomePlan, type AssetKind, type FinancialAsset, type IncomePlan } from '../finance';
 import { buttonClasses } from '../constants/buttonStyles';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { MobileSidebarDrawer, Sidebar } from './Sidebar';
 import { tooltipClasses } from '../constants/tooltipStyles';
-import { ContactPage } from '../pages/ContactPage';
-import { DetailsPage } from '../pages/DetailsPage';
-import { ExpensesPage } from '../pages/ExpensesPage';
-import { MortgagePage } from '../pages/MortgagePage';
 import { OverviewPage } from '../pages/OverviewPage';
-import { ProgressPage } from '../pages/ProgressPage';
 import { downloadLocalStorageBackup, importLocalStorageBackup } from '../storage/localStorageBackup';
 
 const DASHBOARD_STORAGE_KEY = 'growly-dashboard-inputs-v1';
+const ContactPage = lazy(() => import('../pages/ContactPage').then((module) => ({ default: module.ContactPage })));
+const DetailsPage = lazy(() => import('../pages/DetailsPage').then((module) => ({ default: module.DetailsPage })));
+const ExpensesPage = lazy(() => import('../pages/ExpensesPage').then((module) => ({ default: module.ExpensesPage })));
+const MortgagePage = lazy(() => import('../pages/MortgagePage').then((module) => ({ default: module.MortgagePage })));
+const ProgressPage = lazy(() => import('../pages/ProgressPage').then((module) => ({ default: module.ProgressPage })));
 
 type SavedDashboardInputs = {
   assets?: Partial<Record<AssetKind, Partial<Pick<FinancialAsset, 'amount' | 'monthlyContribution' | 'annualReturn'>>>>;
@@ -136,72 +136,82 @@ export function Dashboard() {
       <div className="grid min-h-screen grid-cols-1 md:grid-cols-[232px_1fr]">
         <Sidebar />
         <section className="flex min-h-screen min-w-0 flex-col pb-4 pl-4 pr-8 pt-20 sm:px-5 md:py-4 xl:px-6">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <OverviewPage
-                  dashboard={dashboard}
-                  projectionYears={projectionYears}
-                />
-              }
-            />
-            <Route
-              path="/details"
-              element={
-                <DetailsPage
-                  dashboard={dashboard}
-                  importStatus={importStatus}
-                  importStatusTone={importStatusTone}
-                  isExporting={isExporting}
-                  isImporting={isImporting}
-                  projectionYears={projectionYears}
-                  onAssetChange={updateAsset}
-                  onExportJsonBackup={handleExportJsonBackup}
-                  onExportPdf={handleExportPdf}
-                  onImportJsonBackup={handleImportJsonBackup}
-                  onIncomeChange={updateIncome}
-                  onProjectionYearsChange={setProjectionYears}
-                />
-              }
-            />
-            <Route path="/progress" element={<ProgressPage assets={assets} projectionYears={projectionYears} />} />
-            <Route
-              path="/expenses"
-              element={
-                <ExpensesPage
-                  initialTrendVisible={false}
-                  monthlyIncome={dashboard.income.monthlyNetIncome}
-                  onTrendVisibilityChange={(isVisible) => {
-                    if (isVisible) {
-                      navigate('/expenses/trends');
-                    }
-                  }}
-                />
-              }
-            />
-            <Route
-              path="/expenses/trends"
-              element={
-                <ExpensesPage
-                  initialTrendVisible
-                  monthlyIncome={dashboard.income.monthlyNetIncome}
-                  onTrendVisibilityChange={(isVisible) => {
-                    if (!isVisible) {
-                      navigate('/expenses');
-                    }
-                  }}
-                />
-              }
-            />
-            <Route path="/mortgage" element={<MortgagePage dashboardAssets={assets} />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<RouteLoadingState />}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <OverviewPage
+                    dashboard={dashboard}
+                    projectionYears={projectionYears}
+                  />
+                }
+              />
+              <Route
+                path="/details"
+                element={
+                  <DetailsPage
+                    dashboard={dashboard}
+                    importStatus={importStatus}
+                    importStatusTone={importStatusTone}
+                    isExporting={isExporting}
+                    isImporting={isImporting}
+                    projectionYears={projectionYears}
+                    onAssetChange={updateAsset}
+                    onExportJsonBackup={handleExportJsonBackup}
+                    onExportPdf={handleExportPdf}
+                    onImportJsonBackup={handleImportJsonBackup}
+                    onIncomeChange={updateIncome}
+                    onProjectionYearsChange={setProjectionYears}
+                  />
+                }
+              />
+              <Route path="/progress" element={<ProgressPage assets={assets} projectionYears={projectionYears} />} />
+              <Route
+                path="/expenses"
+                element={
+                  <ExpensesPage
+                    initialTrendVisible={false}
+                    monthlyIncome={dashboard.income.monthlyNetIncome}
+                    onTrendVisibilityChange={(isVisible) => {
+                      if (isVisible) {
+                        navigate('/expenses/trends');
+                      }
+                    }}
+                  />
+                }
+              />
+              <Route
+                path="/expenses/trends"
+                element={
+                  <ExpensesPage
+                    initialTrendVisible
+                    monthlyIncome={dashboard.income.monthlyNetIncome}
+                    onTrendVisibilityChange={(isVisible) => {
+                      if (!isVisible) {
+                        navigate('/expenses');
+                      }
+                    }}
+                  />
+                }
+              />
+              <Route path="/mortgage" element={<MortgagePage dashboardAssets={assets} />} />
+              <Route path="/contact" element={<ContactPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
           <Footer />
         </section>
       </div>
     </main>
+  );
+}
+
+function RouteLoadingState() {
+  return (
+    <section className="glass-panel flex min-h-48 items-center justify-center p-5 text-sm font-bold text-slate-600">
+      Loading...
+    </section>
   );
 }
 

@@ -119,19 +119,19 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
   return (
     <section
       className="relative flex min-h-[calc(100dvh-7rem)] overflow-hidden rounded-lg border border-slate-200/60 bg-cover bg-bottom px-5 pt-6 pb-40 shadow-sm sm:pb-48 md:min-h-[calc(100dvh-5.5rem)] md:px-8 md:pt-5 md:pb-48 xl:pt-6 xl:pb-56"
-      style={{ backgroundImage: 'url("/images/background.png")' }}
+      style={{ backgroundImage: 'url("/images/background.webp")' }}
     >
       <div className="absolute inset-0 bg-linear-to-br from-white/80 via-sky-50/60 to-yellow-50/64" aria-hidden="true" />
       <img
         className="rocking-grandma pointer-events-none absolute -bottom-3 left-2 z-20 w-64 object-contain opacity-75 drop-shadow-md saturate-65 sm:w-76 md:-left-9 md:w-84 xl:w-92 2xl:left-6"
-        src="/images/grandma.png"
+        src="/images/grandma.webp"
         alt=""
         aria-hidden="true"
       />
       <div className="butterfly-corner-flight pointer-events-none absolute bottom-12 right-10 z-20 w-14 sm:bottom-14 sm:right-14 sm:w-16 md:bottom-16 md:right-18 xl:bottom-20 xl:right-24 xl:w-20" aria-hidden="true">
         <img
           className="butterfly-flutter block w-full object-contain opacity-100 drop-shadow-md saturate-150"
-          src="/images/butterfly.png"
+          src="/images/butterfly.webp"
           alt=""
         />
       </div>
@@ -161,7 +161,7 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
                     className="pointer-events-none absolute inset-0 bg-cover opacity-30"
                     aria-hidden="true"
                     style={{
-                      backgroundImage: 'url("/images/background.png")',
+                      backgroundImage: 'url("/images/background.webp")',
                       backgroundPosition: imagePosition,
                     }}
                   />
