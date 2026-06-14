@@ -141,7 +141,7 @@ export function OverviewPage({ dashboard, projectionYears }: OverviewPageProps) 
             Track your financial future
           </h1>
           <p className="mt-5 text-lg font-bold text-slate-600 md:text-xl">
-            Visualize today, plan for tomorrow, achieve your dreams.
+            Visualize today, plan for tomorrow, achieve your dreams
           </p>
         </div>
 
